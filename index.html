@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MS 2026 Tipovačka</title>
+    <title>MS 2026 Tipovačka - Soutěž</title>
     <style>
         :root {
             --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
@@ -34,7 +34,11 @@
         .btn-accent { background: var(--accent); color: var(--bg); }
         .btn-warn { background: var(--warning); color: var(--bg); }
         .hidden { display: none; }
-        .final-winner { text-align:center; padding:40px 20px; background:linear-gradient(45deg, #ffd700, #ff8c00); color:black; border-radius:20px; font-size:1.6rem; font-weight:900; margin-top:30px; box-shadow: 0 0 30px rgba(255,215,0,0.4); white-space: pre-line; }
+        .final-winner { text-align:center; padding:30px 15px; background:linear-gradient(45deg, #ffd700, #ff8c00); color:black; border-radius:20px; font-size:1.4rem; font-weight:900; margin-top:30px; box-shadow: 0 0 30px rgba(255,215,0,0.4); white-space: pre-line; }
+        
+        /* Export styling */
+        .export-box { background: #1e293b; padding: 15px; border-radius: 12px; margin-top: 20px; border: 1px dashed var(--accent); }
+        input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid var(--accent); background: var(--bg); color: white; box-sizing: border-box;}
     </style>
 </head>
 <body>
@@ -69,12 +73,20 @@
     </div>
 
     <div id="playoff-stages"></div>
+    
     <div id="final-winner" class="hidden final-winner"></div>
+
+    <div id="export-section" class="hidden export-box">
+        <h3 style="margin-top:0; color:var(--accent)">Hotovo! Pošli mi svůj tip:</h3>
+        <input type="text" id="user-name" placeholder="Tvoje jméno / Přezdívka">
+        <button class="btn btn-accent" onclick="exportResults()">KOPÍROVAT TIP A POSLAT</button>
+        <p style="font-size: 0.7rem; opacity: 0.6; text-align: center; margin-top: 10px;">Kliknutím se zkopíruje kód tvého tipu, který mi pošli do zprávy.</p>
+    </div>
 </div>
 
 <script>
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
-    let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: teamsData.slice(i*4, i*4+4), done: false })), thirds: [] };
+    let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: teamsData.slice(i*4, i*4+4), done: false })), thirds: [], history: [] };
 
     function init() {
         const grid = document.getElementById('groups-grid');
@@ -133,19 +145,10 @@
     function generateStage(title, teams, matchCount, stageId) {
         const container = document.getElementById('playoff-stages');
         let label = (matchCount === 16) ? "Zápas" : (matchCount === 8) ? "Osmifinále" : (matchCount === 4) ? "Čtvrtfinále" : (matchCount === 2) ? "Semifinále" : "FINÁLE";
-        
-        let html = `<div class="section-box" id="sec-${stageId}">
-            <div class="section-header" onclick="toggleSection('cont-${stageId}')"><span>${title}</span><span id="stat-${stageId}">0/${matchCount}</span></div>
-            <div id="cont-${stageId}" class="section-content active">`;
-        
+        let html = `<div class="section-box" id="sec-${stageId}"><div class="section-header" onclick="toggleSection('cont-${stageId}')"><span>${title}</span><span id="stat-${stageId}">0/${matchCount}</span></div><div id="cont-${stageId}" class="section-content active">`;
         for(let i=0; i<matchCount; i++) {
-            html += `<div class="matchup" id="match-${stageId}-${i}">
-                <div class="match-info">${label} ${i+1}</div>
-                <div class="playoff-team" onclick="pickWinner('${stageId}', ${i}, 0)">${teams[i*2] || '???'}</div>
-                <div class="playoff-team" onclick="pickWinner('${stageId}', ${i}, 1)">${teams[i*2+1] || '???'}</div>
-            </div>`;
+            html += `<div class="matchup" id="match-${stageId}-${i}"><div class="match-info">${label} ${i+1}</div><div class="playoff-team" onclick="pickWinner('${stageId}', ${i}, 0)">${teams[i*2] || '???'}</div><div class="playoff-team" onclick="pickWinner('${stageId}', ${i}, 1)">${teams[i*2+1] || '???'}</div></div>`;
         }
-        
         html += `<button class="btn btn-accent" onclick="confirmStage('${stageId}', ${matchCount})">POTVRDIT ${title}</button></div></div>`;
         container.innerHTML += html;
         window.scrollTo({ top: container.lastChild.offsetTop, behavior: 'smooth' });
@@ -165,7 +168,6 @@
             const teams = m.querySelectorAll('.playoff-team');
             return teams[0].classList.contains('selected') ? teams[1].innerText : teams[0].innerText;
         });
-
         if(winners.length + (stageId === 's3' ? 1 : 0) < count) return alert("Vyber vítěze!");
         document.getElementById(`cont-${stageId}`).style.display = 'none';
         document.getElementById(`sec-${stageId}`).querySelector('.section-header').classList.add('done');
@@ -173,21 +175,31 @@
         if(stageId === 's32') generateStage('OSMIFINÁLE', winners, 8, 's16');
         else if(stageId === 's16') generateStage('ČTVRTFINÁLE', winners, 4, 's8');
         else if(stageId === 's8') generateStage('SEMIFINÁLE', winners, 2, 's4');
-        else if(stageId === 's4') {
-            // Po semifinále generujeme zápas o 3. místo
-            generateStage('ZÁPAS O 3. MÍSTO', losers, 1, 's3');
-            // A hned pod ním finále
-            generateStage('FINÁLE', winners, 1, 's2');
-        } else if(stageId === 's3') {
-            // Jen potvrzení bronzu, nic se neděje
-        } else {
-            const bronzeWinner = document.querySelector('#cont-s3 .playoff-team.bronze-selected')?.innerText || "???";
+        else if(stageId === 's4') { generateStage('ZÁPAS O 3. MÍSTO', losers, 1, 's3'); generateStage('FINÁLE', winners, 1, 's2'); }
+        else if(stageId === 's3') {}
+        else {
+            const bronze = document.querySelector('#cont-s3 .playoff-team.bronze-selected')?.innerText || "???";
             const final = document.getElementById('final-winner');
-            final.innerHTML = `🏆 MISTR SVĚTA: ${winners[0]} 🏆\n<span style="font-size:1.1rem; color:#eee">🥈 2. místo: ${losers[0]}</span>\n<span style="font-size:1.1rem; color:var(--bronze)">🥉 3. místo: ${bronzeWinner}</span>`;
+            final.innerHTML = `🏆 MISTR SVĚTA: ${winners[0]} 🏆\n🥈 2. místo: ${losers[0]}\n🥉 3. místo: ${bronze}`;
             final.classList.remove('hidden');
+            document.getElementById('export-section').classList.remove('hidden');
             final.scrollIntoView({behavior: 'smooth'});
         }
     }
+
+    function exportResults() {
+        const name = document.getElementById('user-name').value || "Anonymní kolega";
+        const groups = state.groups.map(g => `${g.id}:${g.teams.join(',')}`).join('|');
+        const thirds = state.thirds.join(',');
+        const playoff = [...document.querySelectorAll('.playoff-team.selected, .playoff-team.bronze-selected')].map(el => el.innerText).join(',');
+        
+        const fullData = `Jméno: ${name}\n\nDATA TIPOVAČKY:\nGroups: ${groups}\nThirds: ${thirds}\nPlayoff: ${playoff}`;
+        
+        navigator.clipboard.writeText(fullData).then(() => {
+            alert(`Tip zkopírován, ${name}! Teď mi ho jen vlož (Ctrl+V) do zprávy.`);
+        });
+    }
+
     window.onload = init;
 </script>
 </body>
