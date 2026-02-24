@@ -6,232 +6,261 @@
     <title>MS 2026 Tipovačka</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --accent: #38bdf8;
-            --text: #f1f5f9;
-            --winner: #22c55e;
-            --warning: #f59e0b;
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
+            --text: #f1f5f9; --winner: #22c55e; --warning: #f59e0b;
         }
-
         body { 
-            background: var(--bg); color: var(--text); 
-            font-family: -apple-system, system-ui, sans-serif;
-            margin: 0; padding: 10px; line-height: 1.4;
-            padding-bottom: 100px;
+            background: var(--bg); color: var(--text); font-family: sans-serif;
+            margin: 0; padding: 10px; padding-bottom: 150px;
         }
-
         .container { max-width: 600px; margin: 0 auto; }
-        h1 { text-align: center; color: var(--accent); font-size: 1.4rem; margin: 15px 0; }
-
-        .groups-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 10px; margin-bottom: 20px;
-        }
-
-        .group-header {
-            background: var(--card); border: 1px solid #334155;
-            border-radius: 8px; padding: 15px 5px; text-align: center;
-            cursor: pointer; font-weight: bold; font-size: 0.8rem;
-        }
-
-        .group-header.active { background: var(--accent); color: var(--bg); }
-
-        .group-content {
-            display: none; position: absolute; z-index: 100;
-            background: #1e293b; padding: 10px; border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5); width: 220px;
-            left: 50%; transform: translateX(-50%); border: 1px solid var(--accent);
-        }
-
-        .team-item {
-            background: #334155; margin: 5px 0; padding: 10px;
-            border-radius: 6px; display: flex; justify-content: space-between;
-        }
-
-        .btn-main {
-            width: 100%; background: var(--accent); color: var(--bg);
-            border: none; padding: 15px; font-weight: bold;
-            border-radius: 10px; margin: 10px 0; font-size: 1rem; cursor: pointer;
-        }
-
-        #third-place-section, .playoff-stage { display: none; margin-top: 30px; }
         
-        .stage-title { 
-            text-align: center; background: var(--accent); color: var(--bg); 
-            padding: 5px; border-radius: 5px; margin: 20px 0 10px;
+        /* Společné styly pro sekce */
+        .section-box {
+            background: var(--card); border: 1px solid #334155;
+            border-radius: 12px; margin-bottom: 10px; overflow: hidden;
         }
-
-        .matchup { 
-            background: var(--card); padding: 10px; border-radius: 10px; 
-            margin-bottom: 10px; border: 1px solid #334155; 
+        .section-header {
+            padding: 15px; background: #2d3a4f; cursor: pointer;
+            display: flex; justify-content: space-between; font-weight: bold;
         }
+        .section-header.done { border-left: 5px solid var(--winner); }
+        .section-content { padding: 10px; display: none; }
+        .section-content.active { display: block; }
 
+        /* Skupiny mřížka */
+        .groups-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px; }
+        .group-dot { 
+            background: var(--card); padding: 10px 0; text-align: center; 
+            border-radius: 8px; border: 1px solid #334155; cursor: pointer; font-size: 0.8rem;
+        }
+        .group-dot.active { background: var(--accent); color: var(--bg); }
+        .group-dot.filled { border-color: var(--winner); color: var(--winner); }
+
+        /* Týmy */
+        .team-item {
+            background: #334155; margin: 6px 0; padding: 12px;
+            border-radius: 8px; display: flex; justify-content: space-between;
+            touch-action: none; cursor: grab;
+        }
+        .team-item.dragging { opacity: 0.5; background: var(--accent); }
+
+        /* Pavouk */
+        .matchup { background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
         .playoff-team { 
             padding: 12px; background: #334155; margin: 4px 0; 
-            border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between;
+            border-radius: 6px; cursor: pointer; font-size: 0.9rem;
         }
-
         .playoff-team.selected { background: var(--winner); font-weight: bold; }
+
+        .btn {
+            width: 100%; padding: 15px; border: none; border-radius: 8px;
+            font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        .btn-accent { background: var(--accent); color: var(--bg); }
+        .btn-warn { background: var(--warning); color: var(--bg); }
         
-        .third-item {
-            background: var(--card); padding: 10px; border-radius: 6px;
-            margin: 4px; cursor: pointer; text-align: center; border: 1px solid #334155;
-        }
-        .third-item.selected { background: var(--warning); color: var(--bg); }
-
-        .final-winner {
-            text-align: center; padding: 20px; background: gold; color: black;
-            border-radius: 15px; font-weight: bold; font-size: 1.5rem; margin-top: 20px;
-            display: none; animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🏆 MS 2026 TIPOVAČKA</h1>
-    
-    <div class="groups-grid" id="groups-grid"></div>
+    <h1 style="text-align:center; color:var(--accent)">🏆 MS 2026 TIPOVAČKA</h1>
 
-    <button id="confirm-groups-btn" class="btn-main" onclick="showThirdPlaceSelection()">POTVRDIT SKUPINY</button>
-
-    <div id="third-place-section">
-        <h3 style="color:var(--warning)">Vyber 8 týmů ze 3. míst</h3>
-        <div id="third-place-list" style="display:grid; grid-template-columns: 1fr 1fr;"></div>
-        <button class="btn-main" style="background:var(--warning)" onclick="startRoundOf32()">HRÁT ŠESTNÁCTIFINÁLE</button>
+    <div class="section-box" id="sec-groups">
+        <div class="section-header" onclick="toggleSection('groups-content')">
+            <span>1. ZÁKLADNÍ SKUPINY</span>
+            <span id="stat-groups">0/12</span>
+        </div>
+        <div id="groups-content" class="section-content active">
+            <div class="groups-grid" id="groups-grid"></div>
+            <div id="group-editor" style="margin-top:15px; border-top:1px solid #334155; padding-top:10px;" class="hidden">
+                <h4 id="edit-title" style="text-align:center; margin:5px"></h4>
+                <div id="team-list-container"></div>
+            </div>
+            <button class="btn btn-accent" id="btn-confirm-groups" onclick="confirmAllGroups()">POTVRDIT VŠECHNY SKUPINY</button>
+        </div>
     </div>
 
-    <div id="s32" class="playoff-stage"><div class="stage-title">ŠESTNÁCTIFINÁLE (1/16)</div><div id="m32"></div></div>
-    <div id="s16" class="playoff-stage"><div class="stage-title">OSMIFINÁLE</div><div id="m16"></div></div>
-    <div id="s8" class="playoff-stage"><div class="stage-title">ČTVRTFINÁLE</div><div id="m8"></div></div>
-    <div id="s4" class="playoff-stage"><div class="stage-title">SEMIFINÁLE</div><div id="m4"></div></div>
-    <div id="s2" class="playoff-stage"><div class="stage-title">FINÁLE</div><div id="m2"></div></div>
+    <div class="section-box hidden" id="sec-thirds">
+        <div class="section-header" onclick="toggleSection('thirds-content')">
+            <span>2. NEJLEPŠÍ TÝMY ZE 3. MÍST</span>
+            <span id="stat-thirds">0/8</span>
+        </div>
+        <div id="thirds-content" class="section-content">
+            <div id="thirds-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px"></div>
+            <button class="btn btn-warn" onclick="confirmThirds()">POTVRDIT POSTUPUJÍCÍ</button>
+        </div>
+    </div>
 
-    <div id="champion-box" class="final-winner"></div>
+    <div id="playoff-stages"></div>
+
+    <div id="final-winner" class="hidden" style="text-align:center; padding:30px; background:gold; color:black; border-radius:15px; font-size:1.5rem; font-weight:bold; margin-top:20px"></div>
 </div>
 
 <script>
-    const teams = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
+    const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
+    
+    let state = {
+        groups: Array.from({length:12}, (_, i) => ({
+            id: String.fromCharCode(65+i),
+            teams: teamsData.slice(i*4, i*4+4),
+            done: false
+        })),
+        thirds: [],
+        playoff: { s32: [], s16: [], s8: [], s4: [], s2: [] }
+    };
 
     function init() {
         const grid = document.getElementById('groups-grid');
-        for (let i = 0; i < 12; i++) {
-            const letter = String.fromCharCode(65 + i);
-            const gTeams = teams.slice(i * 4, i * 4 + 4);
-            grid.innerHTML += `
-                <div style="position:relative">
-                    <div class="group-header" id="h-${letter}" onclick="toggleGroup('${letter}')">Skupina ${letter}</div>
-                    <div class="group-content" id="c-${letter}">
-                        <div id="L-${letter}">${gTeams.map((t, idx) => `<div class="team-item" onclick="moveUp(this,'${letter}')"><span>${t}</span><span style="opacity:0.5">${idx+1}</span></div>`).join('')}</div>
-                        <button class="btn-main" onclick="toggleGroup('${letter}')">Hotovo</button>
+        state.groups.forEach(g => {
+            grid.innerHTML += `<div class="group-dot" id="dot-${g.id}" onclick="editGroup('${g.id}')">${g.id}</div>`;
+        });
+    }
+
+    function editGroup(id) {
+        document.querySelectorAll('.group-dot').forEach(d => d.classList.remove('active'));
+        document.getElementById(`dot-${id}`).classList.add('active');
+        const editor = document.getElementById('group-editor');
+        editor.classList.remove('hidden');
+        document.getElementById('edit-title').innerText = `Pořadí Skupiny ${id}`;
+        renderTeamList(id);
+    }
+
+    function renderTeamList(groupId) {
+        const group = state.groups.find(g => g.id === groupId);
+        const container = document.getElementById('team-list-container');
+        container.innerHTML = `<div class="team-list" id="L-${groupId}">
+            ${group.teams.map((t, i) => `<div class="team-item" draggable="true" ondragstart="dragStart(event)" ondragover="dragOver(event)" ondragend="dragEnd(event, '${groupId}')">
+                <span>${t}</span><span>${i+1}.</span>
+            </div>`).join('')}
+        </div>`;
+        group.done = true;
+        document.getElementById(`dot-${groupId}`).classList.add('filled');
+        updateStats();
+    }
+
+    // Drag & Drop
+    let dragEl = null;
+    function dragStart(e) { dragEl = e.currentTarget; dragEl.classList.add('dragging'); }
+    function dragOver(e) {
+        e.preventDefault();
+        const list = dragEl.parentNode;
+        const siblings = [...list.querySelectorAll('.team-item:not(.dragging)')];
+        let nextSibling = siblings.find(sib => e.clientY <= sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+        list.insertBefore(dragEl, nextSibling);
+    }
+    function dragEnd(e, groupId) {
+        dragEl.classList.remove('dragging');
+        const list = [...document.querySelectorAll(`#L-${groupId} .team-item span:first-child`)];
+        state.groups.find(g => g.id === groupId).teams = list.map(span => span.innerText);
+        renderTeamList(groupId);
+    }
+
+    function updateStats() {
+        const doneCount = state.groups.filter(g => g.done).length;
+        document.getElementById('stat-groups').innerText = `${doneCount}/12`;
+    }
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('active');
+    }
+
+    function confirmAllGroups() {
+        if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď nejdříve všechny skupiny!");
+        document.getElementById('groups-content').classList.remove('active');
+        document.getElementById('sec-groups').querySelector('.section-header').classList.add('done');
+        
+        const thirdsGrid = document.getElementById('thirds-grid');
+        thirdsGrid.innerHTML = '';
+        state.groups.forEach(g => {
+            thirdsGrid.innerHTML += `<div class="third-item team-item" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]} (${g.id})</div>`;
+        });
+        document.getElementById('sec-thirds').classList.remove('hidden');
+        document.getElementById('thirds-content').classList.add('active');
+    }
+
+    function selectThird(el, team) {
+        if(el.classList.contains('selected')) {
+            el.classList.remove('selected');
+            el.style.background = "";
+            state.thirds = state.thirds.filter(t => t !== team);
+        } else {
+            if(state.thirds.length >= 8) return;
+            el.classList.add('selected');
+            el.style.background = "var(--warning)";
+            state.thirds.push(team);
+        }
+        document.getElementById('stat-thirds').innerText = `${state.thirds.length}/8`;
+    }
+
+    function confirmThirds() {
+        if(state.thirds.length !== 8) return alert("Vyber přesně 8 týmů!");
+        document.getElementById('thirds-content').classList.remove('active');
+        document.getElementById('sec-thirds').querySelector('.section-header').classList.add('done');
+        
+        let allQualified = [];
+        state.groups.forEach(g => allQualified.push(g.teams[0], g.teams[1]));
+        allQualified.push(...state.thirds);
+        
+        generateStage('ŠESTNÁCTIFINÁLE', allQualified, 16, 's32');
+    }
+
+    function generateStage(title, teams, matchCount, stageId) {
+        const container = document.getElementById('playoff-stages');
+        const html = `
+            <div class="section-box" id="sec-${stageId}">
+                <div class="section-header" onclick="toggleSection('cont-${stageId}')">
+                    <span>${title}</span>
+                    <span id="stat-${stageId}">0/${matchCount}</span>
+                </div>
+                <div id="cont-${stageId}" class="section-content active">
+                    <div id="grid-${stageId}">
+                        ${Array.from({length: matchCount}, (_, i) => `
+                            <div class="matchup" id="match-${stageId}-${i}">
+                                <div class="playoff-team" onclick="pickWinner('${stageId}', ${i}, 0)">${teams[i*2] || '???'}</div>
+                                <div class="playoff-team" onclick="pickWinner('${stageId}', ${i}, 1)">${teams[i*2+1] || '???'}</div>
+                            </div>
+                        `).join('')}
                     </div>
-                </div>`;
-        }
+                    <button class="btn btn-accent" onclick="confirmStage('${stageId}', ${matchCount})">POTVRDIT KOLO</button>
+                </div>
+            </div>`;
+        container.innerHTML += html;
     }
 
-    function toggleGroup(l) {
-        const c = document.getElementById(`c-${l}`);
-        const isVisible = c.style.display === 'block';
-        document.querySelectorAll('.group-content').forEach(el => el.style.display = 'none');
-        c.style.display = isVisible ? 'none' : 'block';
-        document.getElementById(`h-${l}`).classList.add('active');
-    }
-
-    function moveUp(el, l) {
-        const list = document.getElementById(`L-${l}`);
-        if (el.previousElementSibling) list.insertBefore(el, el.previousElementSibling);
-        else list.appendChild(el);
-    }
-
-    function showThirdPlaceSelection() {
-        const list = document.getElementById('third-place-list');
-        list.innerHTML = '';
-        for (let i = 0; i < 12; i++) {
-            const l = String.fromCharCode(65 + i);
-            const team = document.querySelectorAll(`#L-${l} span:first-child`)[2].innerText;
-            list.innerHTML += `<div class="third-item" onclick="selectThird(this)">${team} (${l})</div>`;
-        }
-        document.getElementById('third-place-section').style.display = 'block';
-        document.getElementById('confirm-groups-btn').style.display = 'none';
-    }
-
-    function selectThird(el) {
-        if (!el.classList.contains('selected') && document.querySelectorAll('.third-item.selected').length >= 8) return;
-        el.classList.toggle('selected');
-    }
-
-    function startRoundOf32() {
-        const selected = document.querySelectorAll('.third-item.selected');
-        if (selected.length !== 8) return alert("Vyber 8 týmů!");
+    function pickWinner(stageId, matchIdx, teamIdx) {
+        const match = document.getElementById(`match-${stageId}-${matchIdx}`);
+        match.querySelectorAll('.playoff-team').forEach(t => t.classList.remove('selected'));
+        match.querySelectorAll('.playoff-team')[teamIdx].classList.add('selected');
         
-        let finalists = [];
-        for (let i = 0; i < 12; i++) {
-            const l = String.fromCharCode(65 + i);
-            const items = document.querySelectorAll(`#L-${l} span:first-child`);
-            finalists.push(items[0].innerText, items[1].innerText);
-        }
-        selected.forEach(t => finalists.push(t.innerText.split(' (')[0]));
+        const winners = document.querySelectorAll(`#cont-${stageId} .playoff-team.selected`).length;
+        const total = document.querySelectorAll(`#cont-${stageId} .matchup`).length;
+        document.getElementById(`stat-${stageId}`).innerText = `${winners}/${total}`;
+    }
+
+    function confirmStage(stageId, matchCount) {
+        const winners = [...document.querySelectorAll(`#cont-${stageId} .playoff-team.selected`)].map(el => el.innerText);
+        if(winners.length < matchCount) return alert("Dokonči všechny zápasy!");
         
-        buildStage(finalists, 'm32', 's32', 16, 'm16', 's16');
-    }
+        document.getElementById(`cont-${stageId}`).classList.remove('active');
+        document.getElementById(`sec-${stageId}`).querySelector('.section-header').classList.add('done');
 
-    function buildStage(teams, containerId, sectionId, matchCount, nextContainerId, nextSectionId) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '';
-        for (let i = 0; i < matchCount; i++) {
-            container.innerHTML += `
-                <div class="matchup">
-                    <div class="playoff-team" onclick="pick(this, '${nextContainerId}', '${nextSectionId}', ${i})">${teams[i*2] || '???'}</div>
-                    <div class="playoff-team" onclick="pick(this, '${nextContainerId}', '${nextSectionId}', ${i})">${teams[i*2+1] || '???'}</div>
-                </div>`;
+        if(matchCount === 16) generateStage('OSMIFINÁLE', winners, 8, 's16');
+        else if(matchCount === 8) generateStage('ČTVRTFINÁLE', winners, 4, 's8');
+        else if(matchCount === 4) generateStage('SEMIFINÁLE', winners, 2, 's4');
+        else if(matchCount === 2) generateStage('FINÁLE', winners, 1, 's2');
+        else {
+            const final = document.getElementById('final-winner');
+            final.innerText = "MISTR SVĚTA: " + winners[0];
+            final.classList.remove('hidden');
         }
-        document.getElementById(sectionId).style.display = 'block';
-        window.scrollTo({ top: document.getElementById(sectionId).offsetTop, behavior: 'smooth' });
-    }
-
-    function pick(el, nextContainerId, nextSectionId, matchIdx) {
-        const parent = el.parentElement;
-        parent.querySelectorAll('.playoff-team').forEach(t => t.classList.remove('selected'));
-        el.classList.add('selected');
-
-        const winnerName = el.innerText;
-        
-        // Logika pro posun do dalšího kola
-        if (nextContainerId === 'undefined') {
-            const box = document.getElementById('champion-box');
-            box.innerText = "MISTR SVĚTA: " + winnerName;
-            box.style.display = 'block';
-            return;
-        }
-
-        let nextStageCount;
-        if (nextContainerId === 'm16') nextStageCount = 8;
-        else if (nextContainerId === 'm8') nextStageCount = 4;
-        else if (nextContainerId === 'm4') nextStageCount = 2;
-        else if (nextContainerId === 'm2') nextStageCount = 1;
-
-        if (!document.getElementById(nextContainerId).innerHTML) {
-            const emptyTeams = Array(nextStageCount * 2).fill('???');
-            buildStage(emptyTeams, nextContainerId, nextSectionId, nextStageCount, getNextStage(nextContainerId)[0], getNextStage(nextContainerId)[1]);
-        }
-
-        const nextMatchups = document.querySelectorAll(`#${nextContainerId} .matchup`);
-        const targetMatchIdx = Math.floor(matchIdx / 2);
-        const teamPos = matchIdx % 2;
-        nextMatchups[targetMatchIdx].querySelectorAll('.playoff-team')[teamPos].innerText = winnerName;
-    }
-
-    function getNextStage(id) {
-        if (id === 'm16') return ['m8', 's8'];
-        if (id === 'm8') return ['m4', 's4'];
-        if (id === 'm4') return ['m2', 's2'];
-        return ['undefined', 'undefined'];
     }
 
     window.onload = init;
 </script>
+
 </body>
 </html>
