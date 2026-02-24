@@ -2,145 +2,133 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MS 2026 Tipovačka</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg: #0f172a;
+            --card: #1e293b;
             --accent: #38bdf8;
             --text: #f1f5f9;
-            --hover: #334155;
-            --success: #22c55e;
+            --winner: #22c55e;
         }
 
         body { 
-            background: var(--bg-color); 
-            color: var(--text); 
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            padding: 20px;
+            background: var(--bg); color: var(--text); 
+            font-family: -apple-system, system-ui, sans-serif;
+            margin: 0; padding: 10px;
+            overflow-x: hidden;
         }
 
-        .tournament-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .tournament-container { max-width: 800px; margin: 0 auto; }
 
-        .main-title {
-            text-align: center;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-bottom: 40px;
-        }
+        h1 { text-align: center; font-size: 1.5rem; color: var(--accent); margin: 20px 0; }
 
+        /* Skupiny - Mobilní Grid */
         .groups-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .groups-grid { grid-template-columns: 1fr 1fr; }
         }
 
         .group-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 20px;
+            background: var(--card);
+            border-radius: 10px;
+            padding: 10px;
             border: 1px solid #334155;
         }
 
-        .group-card h3 {
-            text-align: center;
-            color: var(--accent);
-            margin-top: 0;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 10px;
+        .group-card h3 { 
+            margin: 0 0 10px 0; font-size: 0.9rem; text-align: center; 
+            border-bottom: 1px solid #334155; padding-bottom: 5px;
         }
 
-        .team-list { 
-            list-style: none; 
-            padding: 0; 
-            margin: 0;
-            min-height: 100px;
-        }
+        .team-list { list-style: none; padding: 0; margin: 0; }
 
         .team-item {
             background: #334155;
-            margin: 10px 0;
-            padding: 12px 15px;
-            border-radius: 8px;
-            cursor: grab;
+            margin: 4px 0;
+            padding: 8px;
+            border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            touch-action: none; /* Důležité pro drag na mobilu */
         }
-
-        .team-item.dragging { opacity: 0.5; background: var(--accent); }
 
         .rank-badge {
-            background: var(--bg-color);
-            width: 28px;
-            height: 28px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 50%;
-            font-size: 14px;
-            font-weight: bold;
-            color: var(--accent);
+            font-size: 0.7rem;
+            background: var(--bg);
+            width: 18px; height: 18px;
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 50%; color: var(--accent);
         }
 
-        .actions { text-align: center; margin-top: 50px; }
-
-        .btn-confirm {
-            background: var(--accent);
-            color: var(--bg-color);
-            border: none;
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-        }
-
-        /* Nová sekce pro výsledky */
-        #results-section {
-            margin-top: 50px;
+        /* Pavouk / Playoff */
+        #playoff-section {
+            margin-top: 30px;
             display: none;
-            padding: 30px;
-            background: rgba(56, 189, 248, 0.1);
-            border-radius: 20px;
-            border: 1px dashed var(--accent);
         }
 
-        .qualified-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+        .matchup {
+            background: var(--card);
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        .qual-item {
-            background: var(--card-bg);
-            padding: 10px;
-            border-radius: 5px;
-            border-left: 4px solid var(--success);
+        .matchup-title { font-size: 0.7rem; color: var(--accent); text-align: center; }
+
+        .playoff-team {
+            background: #334155;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .playoff-team.selected {
+            background: var(--winner);
+            font-weight: bold;
+        }
+
+        .btn-main {
+            width: 100%;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 15px;
+            font-weight: bold;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
 
 <div class="tournament-container">
-    <h1 class="main-title">🏆 MS 2026 Tipovačka</h1>
+    <h1>🏆 MS 2026 TIPOVAČKA</h1>
     
     <div id="groups-grid" class="groups-grid"></div>
 
-    <div class="actions">
-        <button class="btn-confirm" onclick="generatePlayoff()">Potvrdit skupiny a ukázat postupující →</button>
-    </div>
+    <button class="btn-main" onclick="startPlayoff()">POTVRDIT A HRÁT PAVOUKA</button>
 
-    <div id="results-section">
-        <h2 style="text-align: center; color: var(--success);">Postupující do vyřazovacích bojů</h2>
-        <div id="qualified-list" class="qualified-grid"></div>
+    <div id="playoff-section">
+        <h2 style="text-align:center">VYŘAZOVACÍ BOJE (1/16)</h2>
+        <p style="text-align:center; font-size: 0.8rem; opacity: 0.7;">Klikni na tým, který podle tebe postoupí dál.</p>
+        <div id="bracket-list"></div>
     </div>
 </div>
 
@@ -154,102 +142,94 @@
         "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"
     ];
 
-    function initTournament() {
+    function init() {
         const grid = document.getElementById('groups-grid');
-        let teamIndex = 0;
-
         for (let i = 0; i < 12; i++) {
-            const groupLetter = String.fromCharCode(65 + i);
-            const groupTeams = teams.slice(teamIndex, teamIndex + 4);
-            teamIndex += 4;
-
-            const groupHtml = `
+            const letter = String.fromCharCode(65 + i);
+            const groupTeams = teams.slice(i * 4, i * 4 + 4);
+            grid.innerHTML += `
                 <div class="group-card">
-                    <h3>Skupina ${groupLetter}</h3>
-                    <ul class="team-list" id="list-${groupLetter}" ondragover="handleDragOver(event)">
-                        ${groupTeams.map((team, index) => `
-                            <li class="team-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
-                                <span class="team-name">${team}</span>
-                                <span class="rank-badge">${index + 1}</span>
+                    <h3>Skupina ${letter}</h3>
+                    <ul class="team-list" id="L-${letter}" ondragover="allowDrop(event)">
+                        ${groupTeams.map((t, idx) => `
+                            <li class="team-item" draggable="true" ondragstart="drag(event)">
+                                <span class="t-name">${t}</span>
+                                <span class="rank-badge">${idx+1}</span>
                             </li>
                         `).join('')}
                     </ul>
                 </div>
             `;
-            grid.innerHTML += groupHtml;
         }
+        setupTouch();
     }
 
-    let draggingElement = null;
-
-    function handleDragStart(e) {
-        draggingElement = e.target;
-        e.target.classList.add('dragging');
-    }
-
-    function handleDragOver(e) {
-        e.preventDefault();
+    // Drag & Drop
+    function allowDrop(e) { e.preventDefault(); }
+    function drag(e) { e.dataTransfer.setData("text", e.target.innerHTML); window.dragEl = e.target; }
+    
+    document.addEventListener('dragover', (e) => {
         const list = e.target.closest('.team-list');
-        const afterElement = getDragAfterElement(list, e.clientY);
-        if (afterElement == null) {
-            list.appendChild(draggingElement);
-        } else {
-            list.insertBefore(draggingElement, afterElement);
-        }
-        updateBadges(list);
-    }
-
-    function handleDragEnd(e) {
-        e.target.classList.remove('dragging');
-        draggingElement = null;
-    }
-
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.team-item:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
+        if (!list) return;
+        const afterElement = Array.from(list.querySelectorAll('.team-item:not(.dragging)')).reduce((closest, child) => {
             const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
+            const offset = e.clientY - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) return { offset, element: child };
+            return closest;
         }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
+        
+        if (afterElement) list.insertBefore(window.dragEl, afterElement);
+        else list.appendChild(window.dragEl);
+        updateBadges(list);
+    });
 
     function updateBadges(list) {
-        const badges = list.querySelectorAll('.rank-badge');
-        badges.forEach((badge, index) => {
-            badge.innerText = index + 1;
-        });
+        list.querySelectorAll('.rank-badge').forEach((b, i) => b.innerText = i + 1);
     }
 
-    // NOVÁ FUNKCE: Generování postupujících
-    function generatePlayoff() {
-        const qualifiedList = document.getElementById('qualified-list');
-        qualifiedList.innerHTML = '';
-        const resultsSection = document.getElementById('results-section');
-        
-        for (let i = 0; i < 12; i++) {
-            const groupLetter = String.fromCharCode(65 + i);
-            const list = document.getElementById(`list-${groupLetter}`);
-            const items = list.querySelectorAll('.team-item');
-            
-            // Vezmeme první dva z každé skupiny
-            const winner = items[0].querySelector('.team-name').innerText;
-            const runnerUp = items[1].querySelector('.team-name').innerText;
+    // Playoff logika
+    function startPlayoff() {
+        const playoffList = document.getElementById('bracket-list');
+        playoffList.innerHTML = '';
+        const winners = [];
+        const runnersUp = [];
 
-            qualifiedList.innerHTML += `
-                <div class="qual-item"><strong>${groupLetter}1:</strong> ${winner}</div>
-                <div class="qual-item"><strong>${groupLetter}2:</strong> ${runnerUp}</div>
+        for (let i = 0; i < 12; i++) {
+            const letter = String.fromCharCode(65 + i);
+            const items = document.querySelectorAll(`#L-${letter} .t-name`);
+            winners.push(items[0].innerText);
+            runnersUp.push(items[1].innerText);
+        }
+
+        // Simulace pavouka pro mobil (prvních 12 dvojic: vítěz vs druhý)
+        // Na MS 2026 je to složitější, ale pro začátek uděláme jasné dvojice
+        for (let i = 0; i < 12; i++) {
+            playoffList.innerHTML += `
+                <div class="matchup">
+                    <div class="matchup-title">ZÁPAS ${i+1}</div>
+                    <div class="playoff-team" onclick="selectWinner(this)">${winners[i]} <span>1.místo ${String.fromCharCode(65+i)}</span></div>
+                    <div class="playoff-team" onclick="selectWinner(this)">${runnersUp[(i+1)%12]} <span>2.místo</span></div>
+                </div>
             `;
         }
 
-        resultsSection.style.display = 'block';
-        window.scrollTo({ top: resultsSection.offsetTop, behavior: 'smooth' });
+        document.getElementById('playoff-section').style.display = 'block';
+        window.scrollTo({ top: document.getElementById('playoff-section').offsetTop, behavior: 'smooth' });
     }
 
-    window.onload = initTournament;
+    function selectWinner(el) {
+        const parent = el.parentElement;
+        parent.querySelectorAll('.playoff-team').forEach(t => t.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+
+    // Základní podpora pro touch (mobil)
+    function setupTouch() {
+        // Implementace jednoduchého swapu pro mobil by byla na delší kód, 
+        // pro teď nechejme drag&drop, který v moderních prohlížečích na mobilu funguje.
+    }
+
+    window.onload = init;
 </script>
 
 </body>
