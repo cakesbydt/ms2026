@@ -18,86 +18,75 @@
             background: var(--bg); color: var(--text); 
             font-family: -apple-system, system-ui, sans-serif;
             margin: 0; padding: 10px; line-height: 1.4;
+            padding-bottom: 100px;
         }
 
         .container { max-width: 600px; margin: 0 auto; }
         h1 { text-align: center; color: var(--accent); font-size: 1.4rem; margin: 15px 0; }
 
-        /* Skládací skupiny */
         .groups-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-bottom: 20px;
         }
-
-        .group-wrapper { position: relative; }
 
         .group-header {
-            background: var(--card);
-            border: 1px solid #334155;
-            border-radius: 8px;
-            padding: 15px 5px;
-            text-align: center;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.3s;
+            background: var(--card); border: 1px solid #334155;
+            border-radius: 8px; padding: 15px 5px; text-align: center;
+            cursor: pointer; font-weight: bold; font-size: 0.8rem;
         }
 
-        .group-header.completed { border-color: var(--winner); color: var(--winner); }
         .group-header.active { background: var(--accent); color: var(--bg); }
 
         .group-content {
-            display: none;
-            position: absolute;
-            top: 100%; left: 0; right: 0;
-            background: #1e293b;
-            z-index: 100;
-            padding: 10px;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            width: 250px;
-            left: 50%; transform: translateX(-50%);
+            display: none; position: absolute; z-index: 100;
+            background: #1e293b; padding: 10px; border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); width: 220px;
+            left: 50%; transform: translateX(-50%); border: 1px solid var(--accent);
         }
-
-        @media (max-width: 400px) { .group-content { width: 200px; } }
 
         .team-item {
-            background: #334155;
-            margin: 5px 0; padding: 10px;
-            border-radius: 6px; display: flex;
-            justify-content: space-between; font-size: 0.9rem;
+            background: #334155; margin: 5px 0; padding: 10px;
+            border-radius: 6px; display: flex; justify-content: space-between;
         }
-
-        /* Sekce pro výběr 3. míst */
-        #third-place-section {
-            display: none;
-            background: rgba(245, 158, 11, 0.1);
-            padding: 15px; border-radius: 12px; margin: 20px 0;
-            border: 1px solid var(--warning);
-        }
-
-        .third-place-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-        }
-
-        .third-item {
-            background: var(--card); padding: 10px; border-radius: 6px;
-            font-size: 0.8rem; cursor: pointer; text-align: center;
-        }
-
-        .third-item.selected { background: var(--warning); color: var(--bg); font-weight: bold; }
 
         .btn-main {
             width: 100%; background: var(--accent); color: var(--bg);
             border: none; padding: 15px; font-weight: bold;
-            border-radius: 10px; margin: 10px 0; font-size: 1rem;
+            border-radius: 10px; margin: 10px 0; font-size: 1rem; cursor: pointer;
         }
 
-        #playoff-section { display: none; margin-top: 30px; }
-        .matchup { background: var(--card); padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #334155; }
-        .playoff-team { padding: 10px; background: #334155; margin: 5px 0; border-radius: 6px; cursor: pointer; }
-        .playoff-team.selected { background: var(--winner); }
+        #third-place-section, .playoff-stage { display: none; margin-top: 30px; }
+        
+        .stage-title { 
+            text-align: center; background: var(--accent); color: var(--bg); 
+            padding: 5px; border-radius: 5px; margin: 20px 0 10px;
+        }
+
+        .matchup { 
+            background: var(--card); padding: 10px; border-radius: 10px; 
+            margin-bottom: 10px; border: 1px solid #334155; 
+        }
+
+        .playoff-team { 
+            padding: 12px; background: #334155; margin: 4px 0; 
+            border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between;
+        }
+
+        .playoff-team.selected { background: var(--winner); font-weight: bold; }
+        
+        .third-item {
+            background: var(--card); padding: 10px; border-radius: 6px;
+            margin: 4px; cursor: pointer; text-align: center; border: 1px solid #334155;
+        }
+        .third-item.selected { background: var(--warning); color: var(--bg); }
+
+        .final-winner {
+            text-align: center; padding: 20px; background: gold; color: black;
+            border-radius: 15px; font-weight: bold; font-size: 1.5rem; margin-top: 20px;
+            display: none; animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
     </style>
 </head>
 <body>
@@ -110,16 +99,18 @@
     <button id="confirm-groups-btn" class="btn-main" onclick="showThirdPlaceSelection()">POTVRDIT SKUPINY</button>
 
     <div id="third-place-section">
-        <h3 style="color:var(--warning); margin-top:0">Vyber 8 postupujících ze 3. míst</h3>
-        <p style="font-size:0.7rem">Na MS 2026 postupuje 8 nejlepších týmů, které skončily na 3. místě.</p>
-        <div id="third-place-list" class="third-place-grid"></div>
-        <button class="btn-main" style="background:var(--warning)" onclick="startFinalPlayoff()">VYGENEROVAT PAVOUKA</button>
+        <h3 style="color:var(--warning)">Vyber 8 týmů ze 3. míst</h3>
+        <div id="third-place-list" style="display:grid; grid-template-columns: 1fr 1fr;"></div>
+        <button class="btn-main" style="background:var(--warning)" onclick="startRoundOf32()">HRÁT ŠESTNÁCTIFINÁLE</button>
     </div>
 
-    <div id="playoff-section">
-        <h2 style="text-align:center">PAVOUK (ROUND OF 32)</h2>
-        <div id="bracket-list"></div>
-    </div>
+    <div id="s32" class="playoff-stage"><div class="stage-title">ŠESTNÁCTIFINÁLE (1/16)</div><div id="m32"></div></div>
+    <div id="s16" class="playoff-stage"><div class="stage-title">OSMIFINÁLE</div><div id="m16"></div></div>
+    <div id="s8" class="playoff-stage"><div class="stage-title">ČTVRTFINÁLE</div><div id="m8"></div></div>
+    <div id="s4" class="playoff-stage"><div class="stage-title">SEMIFINÁLE</div><div id="m4"></div></div>
+    <div id="s2" class="playoff-stage"><div class="stage-title">FINÁLE</div><div id="m2"></div></div>
+
+    <div id="champion-box" class="final-winner"></div>
 </div>
 
 <script>
@@ -131,95 +122,113 @@
             const letter = String.fromCharCode(65 + i);
             const gTeams = teams.slice(i * 4, i * 4 + 4);
             grid.innerHTML += `
-                <div class="group-wrapper">
-                    <div class="group-header" id="head-${letter}" onclick="toggleGroup('${letter}')">Skupina ${letter}</div>
-                    <div class="group-content" id="cont-${letter}">
-                        <div class="team-list" id="L-${letter}">
-                            ${gTeams.map((t, idx) => `
-                                <div class="team-item" onclick="moveUp(this, '${letter}')">
-                                    <span>${t}</span>
-                                    <span class="badge">${idx+1}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <button class="btn-main" style="padding:5px; margin-top:10px" onclick="toggleGroup('${letter}')">Zavřít</button>
+                <div style="position:relative">
+                    <div class="group-header" id="h-${letter}" onclick="toggleGroup('${letter}')">Skupina ${letter}</div>
+                    <div class="group-content" id="c-${letter}">
+                        <div id="L-${letter}">${gTeams.map((t, idx) => `<div class="team-item" onclick="moveUp(this,'${letter}')"><span>${t}</span><span style="opacity:0.5">${idx+1}</span></div>`).join('')}</div>
+                        <button class="btn-main" onclick="toggleGroup('${letter}')">Hotovo</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
     }
 
-    function toggleGroup(letter) {
-        const contents = document.querySelectorAll('.group-content');
-        const content = document.getElementById(`cont-${letter}`);
-        const header = document.getElementById(`head-${letter}`);
-        const isVisible = content.style.display === 'block';
-        
-        contents.forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.group-header').forEach(h => h.classList.remove('active'));
-        
-        if (!isVisible) {
-            content.style.display = 'block';
-            header.classList.add('active');
-        }
-        header.classList.add('completed');
+    function toggleGroup(l) {
+        const c = document.getElementById(`c-${l}`);
+        const isVisible = c.style.display === 'block';
+        document.querySelectorAll('.group-content').forEach(el => el.style.display = 'none');
+        c.style.display = isVisible ? 'none' : 'block';
+        document.getElementById(`h-${l}`).classList.add('active');
     }
 
-    function moveUp(el, letter) {
-        const list = document.getElementById(`L-${letter}`);
-        if (el.previousElementSibling) {
-            list.insertBefore(el, el.previousElementSibling);
-            list.querySelectorAll('.badge').forEach((b, i) => b.innerText = i + 1);
-        } else {
-            list.appendChild(el); // Pokud je nahoře, skočí dolů
-            list.querySelectorAll('.badge').forEach((b, i) => b.innerText = i + 1);
-        }
+    function moveUp(el, l) {
+        const list = document.getElementById(`L-${l}`);
+        if (el.previousElementSibling) list.insertBefore(el, el.previousElementSibling);
+        else list.appendChild(el);
     }
 
     function showThirdPlaceSelection() {
         const list = document.getElementById('third-place-list');
         list.innerHTML = '';
         for (let i = 0; i < 12; i++) {
-            const letter = String.fromCharCode(65 + i);
-            const thirdTeam = document.querySelectorAll(`#L-${letter} .team-item span:first-child`)[2].innerText;
-            list.innerHTML += `<div class="third-item" onclick="this.classList.toggle('selected')">${thirdTeam} (${letter})</div>`;
+            const l = String.fromCharCode(65 + i);
+            const team = document.querySelectorAll(`#L-${l} span:first-child`)[2].innerText;
+            list.innerHTML += `<div class="third-item" onclick="selectThird(this)">${team} (${l})</div>`;
         }
         document.getElementById('third-place-section').style.display = 'block';
         document.getElementById('confirm-groups-btn').style.display = 'none';
-        window.scrollTo({ top: document.getElementById('third-place-section').offsetTop, behavior: 'smooth' });
     }
 
-    function startFinalPlayoff() {
-        const selectedThirds = document.querySelectorAll('.third-item.selected');
-        if (selectedThirds.length !== 8) {
-            alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
+    function selectThird(el) {
+        if (!el.classList.contains('selected') && document.querySelectorAll('.third-item.selected').length >= 8) return;
+        el.classList.toggle('selected');
+    }
+
+    function startRoundOf32() {
+        const selected = document.querySelectorAll('.third-item.selected');
+        if (selected.length !== 8) return alert("Vyber 8 týmů!");
+        
+        let finalists = [];
+        for (let i = 0; i < 12; i++) {
+            const l = String.fromCharCode(65 + i);
+            const items = document.querySelectorAll(`#L-${l} span:first-child`);
+            finalists.push(items[0].innerText, items[1].innerText);
+        }
+        selected.forEach(t => finalists.push(t.innerText.split(' (')[0]));
+        
+        buildStage(finalists, 'm32', 's32', 16, 'm16', 's16');
+    }
+
+    function buildStage(teams, containerId, sectionId, matchCount, nextContainerId, nextSectionId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        for (let i = 0; i < matchCount; i++) {
+            container.innerHTML += `
+                <div class="matchup">
+                    <div class="playoff-team" onclick="pick(this, '${nextContainerId}', '${nextSectionId}', ${i})">${teams[i*2] || '???'}</div>
+                    <div class="playoff-team" onclick="pick(this, '${nextContainerId}', '${nextSectionId}', ${i})">${teams[i*2+1] || '???'}</div>
+                </div>`;
+        }
+        document.getElementById(sectionId).style.display = 'block';
+        window.scrollTo({ top: document.getElementById(sectionId).offsetTop, behavior: 'smooth' });
+    }
+
+    function pick(el, nextContainerId, nextSectionId, matchIdx) {
+        const parent = el.parentElement;
+        parent.querySelectorAll('.playoff-team').forEach(t => t.classList.remove('selected'));
+        el.classList.add('selected');
+
+        const winnerName = el.innerText;
+        
+        // Logika pro posun do dalšího kola
+        if (nextContainerId === 'undefined') {
+            const box = document.getElementById('champion-box');
+            box.innerText = "MISTR SVĚTA: " + winnerName;
+            box.style.display = 'block';
             return;
         }
 
-        const finalists = [];
-        for (let i = 0; i < 12; i++) {
-            const letter = String.fromCharCode(65 + i);
-            const items = document.querySelectorAll(`#L-${letter} .team-item span:first-child`);
-            finalists.push(items[0].innerText); // 1. místo
-            finalists.push(items[1].innerText); // 2. místo
-        }
-        selectedThirds.forEach(t => finalists.push(t.innerText.split(' (')[0]));
+        let nextStageCount;
+        if (nextContainerId === 'm16') nextStageCount = 8;
+        else if (nextContainerId === 'm8') nextStageCount = 4;
+        else if (nextContainerId === 'm4') nextStageCount = 2;
+        else if (nextContainerId === 'm2') nextStageCount = 1;
 
-        const bracket = document.getElementById('bracket-list');
-        bracket.innerHTML = '';
-        // Náhodné promíchání pro pavouka 32 týmů
-        finalists.sort(() => Math.random() - 0.5);
-
-        for (let i = 0; i < 16; i++) {
-            bracket.innerHTML += `
-                <div class="matchup">
-                    <div class="playoff-team" onclick="this.parentElement.querySelectorAll('.playoff-team').forEach(p=>p.classList.remove('selected')); this.classList.add('selected')">${finalists[i*2]}</div>
-                    <div class="playoff-team" onclick="this.parentElement.querySelectorAll('.playoff-team').forEach(p=>p.classList.remove('selected')); this.classList.add('selected')">${finalists[i*2+1]}</div>
-                </div>
-            `;
+        if (!document.getElementById(nextContainerId).innerHTML) {
+            const emptyTeams = Array(nextStageCount * 2).fill('???');
+            buildStage(emptyTeams, nextContainerId, nextSectionId, nextStageCount, getNextStage(nextContainerId)[0], getNextStage(nextContainerId)[1]);
         }
-        document.getElementById('playoff-section').style.display = 'block';
-        window.scrollTo({ top: document.getElementById('playoff-section').offsetTop, behavior: 'smooth' });
+
+        const nextMatchups = document.querySelectorAll(`#${nextContainerId} .matchup`);
+        const targetMatchIdx = Math.floor(matchIdx / 2);
+        const teamPos = matchIdx % 2;
+        nextMatchups[targetMatchIdx].querySelectorAll('.playoff-team')[teamPos].innerText = winnerName;
+    }
+
+    function getNextStage(id) {
+        if (id === 'm16') return ['m8', 's8'];
+        if (id === 'm8') return ['m4', 's4'];
+        if (id === 'm4') return ['m2', 's2'];
+        return ['undefined', 'undefined'];
     }
 
     window.onload = init;
