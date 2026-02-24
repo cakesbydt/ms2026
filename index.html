@@ -28,7 +28,6 @@
         .bracket-col h6 { margin: 0 0 8px 0; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; text-align: center; }
         .b-item { font-size: 0.75rem; padding: 5px; margin: 4px 0; background: #0f172a; border-radius: 4px; border-left: 3px solid #475569; }
         
-        /* Barvy výsledků */
         .status-correct { color: var(--winner) !important; font-weight: bold; border-left-color: var(--winner) !important; }
         .status-wrong { color: var(--lose) !important; text-decoration: line-through; opacity: 0.8; border-left-color: var(--lose) !important; }
 
@@ -109,7 +108,10 @@
 
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
     
-    let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: teamsData.slice(i*4, i*4+4), done: false })), thirds: [], playoff: {} };
+    // Pomocná konstanta pro základní týmy ve skupinách
+    const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
+
+    let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), thirds: [], playoff: {} };
     let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
 
     async function init() {
@@ -127,9 +129,7 @@
 
     function getStatusClass(userTeam, realValue, isArray = false) {
         if (!realValue || (isArray && realValue.length === 0) || realValue === "") return "";
-        if (isArray) {
-            return realValue.includes(userTeam) ? "status-correct" : "status-wrong";
-        }
+        if (isArray) return realValue.includes(userTeam) ? "status-correct" : "status-wrong";
         return userTeam === realValue ? "status-correct" : "status-wrong";
     }
 
@@ -177,7 +177,52 @@
             </div></td></tr>`).join('');
     }
 
-    // --- FORMULÁŘ LOGIKA ---
+    // --- ADMIN SEKCE ---
+    function checkAdminAccess() { if (prompt("Heslo:") === ADMIN_HESLO) { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('user-form').classList.add('hidden'); genAdminForm(); } }
+    
+    function genAdminForm() {
+        const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
+        
+        // 1. Skupiny - Zde omezíme výběr pouze na týmy dané skupiny
+        for(let i=0; i<12; i++) {
+            const gid = String.fromCharCode(65+i); 
+            const val = currentResults.groups[i] || ["","","",""];
+            const groupTeams = GROUP_TEAMS_STATIC[i]; // Jen tyto 4 týmy
+            
+            let h = `<div class="admin-card"><h4>Skupina ${gid}</h4>`;
+            for(let p=0; p<4; p++) {
+                h += `<div style="display:flex;gap:5px;margin-bottom:2px"><span>${p+1}.</span>${genSel(`g-${i}-${p}`, val[p], groupTeams)}</div>`;
+            }
+            cont.innerHTML += h + `</div>`;
+        }
+        
+        // 2. Play-off - Zde zůstává výběr ze všech týmů
+        [{id:'s32',n:'1/16',c:16},{id:'s16',n:'1/8',c:8},{id:'s8',n:'1/4',c:4},{id:'s4',n:'Semis',c:4}].forEach(s => {
+            let h = `<div class="admin-card"><h4>${s.n}</h4>`;
+            for(let j=0; j<s.c; j++) h += `${genSel(`${s.id}-${j}`, (currentResults[s.id]||[])[j], teamsData)}`;
+            cont.innerHTML += h + `</div>`;
+        });
+        
+        cont.innerHTML += `<div class="admin-card"><h4>Finále</h4>Zlato: ${genSel('f-w', currentResults.winner, teamsData)}<br>Bronz: ${genSel('f-b', currentResults.bronze, teamsData)}</div>`;
+    }
+
+    function genSel(id, val, filterList) {
+        let h = `<select id="${id}" style="padding:4px; font-size:0.7rem"><option value="">--</option>`;
+        [...filterList].sort().forEach(t => h += `<option value="${t}" ${t===val?'selected':''}>${t}</option>`);
+        return h + `</select>`;
+    }
+
+    async function saveAdminResults() {
+        let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
+        for(let i=0; i<12; i++) { let g = []; for(let p=0; p<4; p++) g.push(document.getElementById(`g-${i}-${p}`).value); res.groups.push(g); }
+        const f = (id, c) => { let a = []; for(let j=0; j<c; j++) a.push(document.getElementById(`${id}-${j}`).value); return a.filter(v=>v!==""); };
+        res.s32=f('s32',16); res.s16=f('s16',8); res.s8=f('s8',4); res.s4=f('s4',4);
+        res.winner = document.getElementById('f-w').value; res.bronze = document.getElementById('f-b').value;
+        await supabaseClient.from('nastaveni').upsert({ id: 1, vysledky: res });
+        location.reload();
+    }
+
+    // --- OSTATNÍ LOGIKA (Zůstává stejná jako dříve) ---
     function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); renderTeamList(id); }
     function renderTeamList(gid) {
         const g = state.groups.find(x => x.id === gid);
@@ -224,46 +269,12 @@
         else if(sid==='s4') { genStage('O 3. MÍSTO', loss, 1, 's3'); genStage('FINÁLE', wins, 1, 's2'); }
         else if(sid==='s2') { state.playoff.winner = wins[0]; state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; document.getElementById('winner-display').innerText = "VÁŠ VÍTĚZ: " + wins[0]; document.getElementById('final-box').classList.remove('hidden'); }
     }
-
-    // --- ADMIN ---
-    function checkAdminAccess() { if (prompt("Heslo:") === ADMIN_HESLO) { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('user-form').classList.add('hidden'); genAdminForm(); } }
-    function genAdminForm() {
-        const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
-        for(let i=0; i<12; i++) {
-            const gid = String.fromCharCode(65+i); const val = currentResults.groups[i] || ["","","",""];
-            let h = `<div class="admin-card"><h4>Skupina ${gid}</h4>`;
-            for(let p=0; p<4; p++) h += `<div style="display:flex;gap:5px;margin-bottom:2px"><span>${p+1}.</span>${genSel(`g-${i}-${p}`, val[p])}</div>`;
-            cont.innerHTML += h + `</div>`;
-        }
-        [{id:'s32',n:'1/16',c:16},{id:'s16',n:'1/8',c:8},{id:'s8',n:'1/4',c:4},{id:'s4',n:'Semis',c:4}].forEach(s => {
-            let h = `<div class="admin-card"><h4>${s.n}</h4>`;
-            for(let j=0; j<s.c; j++) h += `${genSel(`${s.id}-${j}`, (currentResults[s.id]||[])[j])}`;
-            cont.innerHTML += h + `</div>`;
-        });
-        cont.innerHTML += `<div class="admin-card"><h4>Finále</h4>Zlato: ${genSel('f-w', currentResults.winner)}<br>Bronz: ${genSel('f-b', currentResults.bronze)}</div>`;
-    }
-    function genSel(id, val) {
-        let h = `<select id="${id}" style="padding:4px; font-size:0.7rem"><option value="">--</option>`;
-        [...teamsData].sort().forEach(t => h += `<option value="${t}" ${t===val?'selected':''}>${t}</option>`);
-        return h + `</select>`;
-    }
-    async function saveAdminResults() {
-        let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
-        for(let i=0; i<12; i++) { let g = []; for(let p=0; p<4; p++) g.push(document.getElementById(`g-${i}-${p}`).value); res.groups.push(g); }
-        const f = (id, c) => { let a = []; for(let j=0; j<c; j++) a.push(document.getElementById(`${id}-${j}`).value); return a.filter(v=>v!==""); };
-        res.s32=f('s32',16); res.s16=f('s16',8); res.s8=f('s8',4); res.s4=f('s4',4);
-        res.winner = document.getElementById('f-w').value; res.bronze = document.getElementById('f-b').value;
-        await supabaseClient.from('nastaveni').upsert({ id: 1, vysledky: res });
-        location.reload();
-    }
-
     async function saveToSupabase() {
         const name = document.getElementById('user-name').value; if(!name) return alert("Jméno!");
         const data = { groups: state.groups.map(g => g.teams), s32: state.playoff.s32, s16: state.playoff.s16, s8: state.playoff.s8, s4: state.playoff.s4, bronze: state.playoff.bronze, winner: state.playoff.winner };
         await supabaseClient.from('tipy').insert([{ name, tip_data: data }]);
         location.reload();
     }
-
     function closeAdmin() { document.getElementById('admin-panel').classList.add('hidden'); document.getElementById('user-form').classList.remove('hidden'); }
     function toggleSection(id) { document.getElementById(id).classList.toggle('active'); }
     function toggleDetail(id) { const el = document.getElementById(id); el.style.display = (el.style.display==='table-row')?'none':'table-row'; }
