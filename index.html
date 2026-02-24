@@ -71,39 +71,36 @@
         <button class="btn btn-accent" id="save-btn" onclick="saveToSupabase()">ODESLAT TIP DO DATABÁZE</button>
     </div>
 
-  <div class="section-box" style="margin-top: 50px; border-color: #ef4444;">
-    <div class="section-header" onclick="toggleSection('admin-box')">🔒 ADMIN PANEL (VÝSLEDKY)</div>
-    <div id="admin-box" class="section-content">
-        <input type="password" id="admin-pass" placeholder="Admin heslo">
-        <button class="btn" style="background:#ef4444; color:white" onclick="loadResults()">AKTUALIZOVAT TABULKU</button>
-        
-        <div id="admin-results" class="hidden" style="overflow-x: auto;">
-            <table id="results-table" style="min-width: 600px;">
-                <thead>
-                    <tr>
-                        <th>Jméno</th>
-                        <th>Vítěz 🏆</th>
-                        <th>Finále</th>
-                        <th>3. místo</th>
-                        <th>Čas</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body"></tbody>
-            </table>
+    <div class="section-box" style="margin-top: 50px; border-color: #ef4444;">
+        <div class="section-header" onclick="toggleSection('admin-box')">🔒 ADMIN PANEL (VÝSLEDKY)</div>
+        <div id="admin-box" class="section-content">
+            <input type="password" id="admin-pass" placeholder="Admin heslo">
+            <button class="btn" style="background:#ef4444; color:white" onclick="loadResults()">AKTUALIZOVAT TABULKU</button>
+            
+            <div id="admin-results" class="hidden" style="overflow-x: auto;">
+                <table id="results-table" style="min-width: 600px;">
+                    <thead>
+                        <tr>
+                            <th>Jméno</th>
+                            <th>Vítěz 🏆</th>
+                            <th>Finále</th>
+                            <th>3. místo</th>
+                            <th>Čas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-</div>
-
-<script>
     // --- KONFIGURACE SUPABASE ---
     const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
-    const SB_KEY = "sb_publishable_H9egZ3Rrq5LYi02NxpvjCQ_xDXOQP4X"; 
+    const SB_KEY = "sb_publishable_H9egZ3Rrq5LYiO2NxpvjCQ_xDXOQP4X"; 
     const ADMIN_HESLO = "Matysek.2019";
 
-    // OPRAVA: Prohlížeč nepotřebuje 'exports'
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
@@ -203,7 +200,6 @@
         const tipString = `Skupiny: ${state.groups.map(g=>g.teams[0]).join(',')} | Playoff: ${allPicks}`;
         document.getElementById('save-btn').disabled = true;
         
-        // OPRAVA: Používáme správný název proměnné
         const { error } = await supabaseClient.from('tipy').insert([{ name: name, tip_data: tipString }]);
         
         if(error) {
@@ -220,19 +216,15 @@
         const { data, error } = await supabaseClient
             .from('tipy')
             .select('*')
-            .order('created_at', { ascending: false }); // Nejnovější tipy nahoře
+            .order('created_at', { ascending: false });
 
         if(error) return alert("Chyba při načítání: " + error.message);
         
         const body = document.getElementById('table-body');
-        body.innerHTML = ""; // Vyčistit tabulku
+        body.innerHTML = ""; 
 
         data.forEach(row => {
-            // Rozsekáme data, která jsme uložili pomocí oddělovače "|" a ","
-            // tipString vypadal takto: Skupiny: A,B,C... | Playoff: Win32|Win16|Win8|Win4|Bronze|Winner
             const parts = row.tip_data.split('|');
-            
-            // Poslední prvek je Vítěz, předposlední je 3. místo, pak finalisté
             const winner = parts[parts.length - 1] || "---";
             const bronze = parts[parts.length - 2] || "---";
             const finalPair = parts[parts.length - 3] ? parts[parts.length - 3] : "---";
@@ -251,7 +243,6 @@
         
         document.getElementById('admin-results').classList.remove('hidden');
     }
-</script>
 
     function toggleSection(id) {
         const el = document.getElementById(id);
