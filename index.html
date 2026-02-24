@@ -218,30 +218,53 @@
             .select('*')
             .order('created_at', { ascending: false });
 
-        if(error) return alert("Chyba při načítání: " + error.message);
+        if(error) return alert("Chyba: " + error.message);
         
         const body = document.getElementById('table-body');
         body.innerHTML = ""; 
 
-        data.forEach(row => {
+        data.forEach((row, index) => {
             const parts = row.tip_data.split('|');
+            
+            // Analýza dat
+            const groupsPart = parts[0].replace("Skupiny: ", "");
             const winner = parts[parts.length - 1] || "---";
             const bronze = parts[parts.length - 2] || "---";
-            const finalPair = parts[parts.length - 3] ? parts[parts.length - 3] : "---";
-            const date = new Date(row.created_at).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute:'2-digit' });
+            const finalPair = parts[parts.length - 3] || "---";
+            
+            // Vytvoříme ID pro rozbalovací detail
+            const detailId = `detail-${index}`;
 
             body.innerHTML += `
-                <tr>
+                <tr style="border-top: 2px solid #334155;">
                     <td style="color:var(--accent); font-weight:bold;">${row.name}</td>
                     <td style="background: rgba(34, 197, 94, 0.2); font-weight:bold;">${winner}</td>
                     <td>${finalPair}</td>
-                    <td style="color:var(--bronze)">${bronze}</td>
-                    <td style="font-size: 0.7rem; color: #64748b;">${date}</td>
+                    <td><button onclick="toggleDetail('${detailId}')" style="padding:5px; font-size:0.7rem; cursor:pointer;">ZOBRAZIT VŠE ↓</button></td>
+                    <td style="font-size: 0.7rem; color: #64748b;">${new Date(row.created_at).toLocaleDateString()}</td>
+                </tr>
+                <tr id="${detailId}" class="hidden" style="background: #0f172a;">
+                    <td colspan="5" style="padding: 15px; font-size: 0.85rem; line-height: 1.6;">
+                        <div style="border-left: 3px solid var(--accent); padding-left: 10px;">
+                            <b style="color:var(--accent)">Vítězové skupin (A-L):</b><br>
+                            ${groupsPart}<br><br>
+                            <b style="color:var(--accent)">Celý průběh playoff (postupně):</b><br>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                ${parts.slice(1).map(p => `<span style="background:#334155; padding: 2px 6px; border-radius:4px;">${p}</span>`).join(' ')}
+                            </div>
+                        </div>
+                    </td>
                 </tr>
             `;
         });
         
         document.getElementById('admin-results').classList.remove('hidden');
+    }
+
+    // Pomocná funkce pro rozbalení detailu
+    function toggleDetail(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('hidden');
     }
 
     function toggleSection(id) {
