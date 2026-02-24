@@ -71,34 +71,42 @@
         <button class="btn btn-accent" id="save-btn" onclick="saveToSupabase()">ODESLAT TIP DO DATABÁZE</button>
     </div>
 
-    <div class="section-box" style="margin-top: 50px; border-color: #ef4444;">
-        <div class="section-header" onclick="toggleSection('admin-box')">🔒 ADMIN PANEL (VÝSLEDKY)</div>
-        <div id="admin-box" class="section-content">
-            <input type="password" id="admin-pass" placeholder="Admin heslo">
-            <button class="btn" style="background:#ef4444; color:white" onclick="loadResults()">AKTUALIZOVAT TABULKU</button>
-            
-            <div id="admin-results" class="hidden" style="overflow-x: auto;">
-                <table id="results-table" style="min-width: 600px;">
-                    <thead>
-                        <tr>
-                            <th>Jméno</th>
-                            <th>Vítěz 🏆</th>
-                            <th>Finále</th>
-                            <th>3. místo</th>
-                            <th>Čas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
+<div class="section-box" style="margin-top: 50px; border-color: #ef4444;">
+    <div class="section-header" onclick="toggleSection('admin-box')">🔒 ADMIN PANEL & LIVE TABULKA</div>
+    <div id="admin-box" class="section-content">
+        <input type="password" id="admin-pass" placeholder="Admin heslo">
+        
+        <div style="background: #000; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+            <h4 style="margin:0 0 10px 0; color:var(--accent)">🏆 NASTAVIT OFICIÁLNÍ VÝSLEDKY</h4>
+            <input type="text" id="real-winner" placeholder="Skutečný vítěz (přesně název)">
+            <input type="text" id="real-finalists" placeholder="Finalisté (tým1|tým2)">
+            <p style="font-size: 0.7rem; color: #64748b;">Zadej data a klikni na aktualizaci pro přepočet bodů.</p>
+        </div>
+
+        <button class="btn" style="background:#ef4444; color:white" onclick="loadResults()">PŘEPOČÍTAT BODY A TABULKU</button>
+        
+        <div id="admin-results" class="hidden" style="overflow-x: auto; margin-top:15px;">
+            <table id="results-table" style="min-width: 600px;">
+                <thead>
+                    <tr>
+                        <th>Hráč</th>
+                        <th>Body ⭐</th>
+                        <th>Vítěz 🏆</th>
+                        <th>Detail</th>
+                        <th>Čas</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
         </div>
     </div>
+</div>
 </div>
 
 <script>
     // --- KONFIGURACE SUPABASE ---
     const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
-    const SB_KEY = "sb_publishable_H9egZ3Rrq5LYi02NxpvjCQ_xDXOQP4X"; 
+    const SB_KEY = "sb_publishable_H9egZ3Rrq5LYiO2NxpvjCQ_xDXOQP4X"; 
     const ADMIN_HESLO = "Matysek.2019";
 
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -106,8 +114,86 @@
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
     let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: teamsData.slice(i*4, i*4+4), done: false })), thirds: [] };
 
+    // --- LOGIKA BODOVÁNÍ ---
+    function calculatePoints(userTip, realWinner, realFinals, realGroupWinners) {
+        let pts = 0;
+        const parts = userTip.split('|');
+        const userGroups = parts[0].replace("Skupiny: ", "").split(',');
+        const userWinner = parts[parts.length - 1];
+        const userFinalists = parts[parts.length - 3];
+
+        // 1. Body za vítěze skupin (2 body za každého)
+        if (realGroupWinners) {
+            const rGW = realGroupWinners.split(',').map(s => s.trim().toLowerCase());
+            userGroups.forEach((team, idx) => {
+                if (rGW[idx] && team.trim().toLowerCase() === rGW[idx]) pts += 2;
+            });
+        }
+
+        // 2. Body za vítěze MS (10 bodů)
+        if (realWinner && userWinner && userWinner.trim().toLowerCase() === realWinner.trim().toLowerCase()) {
+            pts += 10;
+        }
+
+        // 3. Body za finalisty (5 bodů za každého trefeného ve finále)
+        if (realFinals && userFinalists) {
+            const rF = realFinals.split('|').map(s => s.trim().toLowerCase());
+            const uF = userFinalists.split('vs').map(s => s.trim().toLowerCase()); // Rozdělí dvojici ve finále
+            uF.forEach(team => { if(rF.includes(team)) pts += 5; });
+        }
+        return pts;
+    }
+
+    // --- ADMIN FUNKCE ---
+    async function loadResults() {
+        if(document.getElementById('admin-pass').value !== ADMIN_HESLO) return alert("Špatné heslo!");
+        
+        // Načtení zadaných "skutečných" výsledků z inputů
+        const realW = document.getElementById('real-winner')?.value || "";
+        const realF = document.getElementById('real-finalists')?.value || "";
+        const realG = document.getElementById('real-groups')?.value || ""; // Přidali jsme input pro vítěze skupin
+
+        const { data, error } = await supabaseClient
+            .from('tipy')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if(error) return alert("Chyba: " + error.message);
+        
+        const body = document.getElementById('table-body');
+        body.innerHTML = ""; 
+
+        data.forEach((row, index) => {
+            const pts = calculatePoints(row.tip_data, realW, realF, realG);
+            const parts = row.tip_data.split('|');
+            const winner = parts[parts.length - 1] || "---";
+            const detailId = `detail-${index}`;
+
+            body.innerHTML += `
+                <tr style="border-top: 2px solid #334155;">
+                    <td style="color:var(--accent); font-weight:bold;">${row.name}</td>
+                    <td style="color:yellow; font-weight:bold; font-size:1.1rem;">${pts} ⭐</td>
+                    <td style="color:var(--winner)">${winner}</td>
+                    <td><button onclick="toggleDetail('${detailId}')" style="cursor:pointer;">DETAIL</button></td>
+                    <td style="font-size: 0.7rem; color: #64748b;">${new Date(row.created_at).toLocaleDateString()}</td>
+                </tr>
+                <tr id="${detailId}" class="hidden" style="background: #0f172a;">
+                    <td colspan="5" style="padding: 15px; font-size: 0.85rem; line-height: 1.6;">
+                        <div style="border-left: 3px solid var(--accent); padding-left: 10px;">
+                            <b style="color:var(--accent)">Kompletní tip (postupně):</b><br>
+                            ${row.tip_data.replace(/\|/g, ' ➔ ')}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('admin-results').classList.remove('hidden');
+    }
+
+    // --- ZÁKLADNÍ FUNKCE TIPOVAČKY ---
     function init() {
         const grid = document.getElementById('groups-grid');
+        if (!grid) return;
         state.groups.forEach(g => { grid.innerHTML += `<div class="group-dot" id="dot-${g.id}" onclick="editGroup('${g.id}')">${g.id}</div>`; });
     }
 
@@ -170,7 +256,8 @@
     function pick(sid, mi, ti) {
         const m = document.getElementById(`m-${sid}-${mi}`);
         m.querySelectorAll('.playoff-team').forEach(t => t.classList.remove('selected', 'bronze-selected'));
-        m.querySelectorAll('.playoff-team')[ti].classList.add(sid==='s3'?'bronze-selected':'selected');
+        const teams = m.querySelectorAll('.playoff-team');
+        teams[ti].classList.add(sid==='s3'?'bronze-selected':'selected');
     }
 
     function confirmStage(sid, count) {
@@ -210,67 +297,8 @@
         }
     }
 
-    async function loadResults() {
-        if(document.getElementById('admin-pass').value !== ADMIN_HESLO) return alert("Špatné heslo!");
-        
-        const { data, error } = await supabaseClient
-            .from('tipy')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if(error) return alert("Chyba: " + error.message);
-        
-        const body = document.getElementById('table-body');
-        body.innerHTML = ""; 
-
-        data.forEach((row, index) => {
-            const parts = row.tip_data.split('|');
-            
-            // Analýza dat
-            const groupsPart = parts[0].replace("Skupiny: ", "");
-            const winner = parts[parts.length - 1] || "---";
-            const bronze = parts[parts.length - 2] || "---";
-            const finalPair = parts[parts.length - 3] || "---";
-            
-            // Vytvoříme ID pro rozbalovací detail
-            const detailId = `detail-${index}`;
-
-            body.innerHTML += `
-                <tr style="border-top: 2px solid #334155;">
-                    <td style="color:var(--accent); font-weight:bold;">${row.name}</td>
-                    <td style="background: rgba(34, 197, 94, 0.2); font-weight:bold;">${winner}</td>
-                    <td>${finalPair}</td>
-                    <td><button onclick="toggleDetail('${detailId}')" style="padding:5px; font-size:0.7rem; cursor:pointer;">ZOBRAZIT VŠE ↓</button></td>
-                    <td style="font-size: 0.7rem; color: #64748b;">${new Date(row.created_at).toLocaleDateString()}</td>
-                </tr>
-                <tr id="${detailId}" class="hidden" style="background: #0f172a;">
-                    <td colspan="5" style="padding: 15px; font-size: 0.85rem; line-height: 1.6;">
-                        <div style="border-left: 3px solid var(--accent); padding-left: 10px;">
-                            <b style="color:var(--accent)">Vítězové skupin (A-L):</b><br>
-                            ${groupsPart}<br><br>
-                            <b style="color:var(--accent)">Celý průběh playoff (postupně):</b><br>
-                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
-                                ${parts.slice(1).map(p => `<span style="background:#334155; padding: 2px 6px; border-radius:4px;">${p}</span>`).join(' ')}
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        document.getElementById('admin-results').classList.remove('hidden');
-    }
-
-    // Pomocná funkce pro rozbalení detailu
-    function toggleDetail(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('hidden');
-    }
-
-    function toggleSection(id) {
-        const el = document.getElementById(id);
-        el.classList.toggle('active');
-    }
+    function toggleDetail(id) { document.getElementById(id).classList.toggle('hidden'); }
+    function toggleSection(id) { document.getElementById(id).classList.toggle('active'); }
 
     window.onload = init;
 </script>
