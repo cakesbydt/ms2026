@@ -9,28 +9,23 @@
         :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; --winner: #22c55e; --bronze: #cd7f32; --warn: #f59e0b; }
         body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 10px; padding-bottom: 100px; line-height: 1.4; }
         .container { max-width: 600px; margin: 0 auto; }
-        
         .section-box { background: var(--card); border: 1px solid #334155; border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
         .section-header { padding: 15px; background: #2d3a4f; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; align-items: center; }
         .section-header.done { border-left: 5px solid var(--winner); color: var(--winner); }
         .section-content { padding: 12px; display: none; }
         .active { display: block; }
-
         .groups-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .group-dot { background: #0f172a; padding: 12px 0; text-align: center; border-radius: 8px; border: 1px solid #334155; cursor: pointer; }
         .group-dot.filled { border-color: var(--winner); border-width: 2px; }
         .group-dot.selected-dot { background: var(--accent); color: var(--bg); }
-
         .team-item { background: #334155; margin: 6px 0; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; touch-action: none; cursor: grab; }
         .matchup { background: #0f172a; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #334155; }
         .playoff-team { padding: 12px; background: #334155; margin: 5px 0; border-radius: 6px; cursor: pointer; }
         .selected { background: var(--winner) !important; font-weight: bold; color: white; }
         .bronze-selected { background: var(--bronze) !important; font-weight: bold; color: white; }
-
         .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; }
         .btn-accent { background: var(--accent); color: #000; }
         input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #000; color: #fff; box-sizing: border-box; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.8rem; }
         th, td { border: 1px solid #334155; padding: 10px; text-align: left; }
         .hidden { display: none; }
@@ -92,12 +87,13 @@
 </div>
 
 <script>
-  // --- KONFIGURACE SUPABASE ---
-const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
-const SB_KEY = "sb_publishable_H9egZ3Rrq5LYiO2NxpvjCQ_xDXOQ..."; // doplň celý ten klíč ze screenshotu
-const ADMIN_HESLO = "Matysek.2019"; // tohle si zvol sám pro přístup k tabulce
+    // --- KONFIGURACE SUPABASE ---
+    const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
+    const SB_KEY = "sb_publishable_H9egZ3Rrq5LYi02NxpvjCQ_xDXOQP4X"; 
+    const ADMIN_HESLO = "Matysek.2019";
 
-    const supabase = exports.supabaseJs.createClient(SB_URL, SB_KEY);
+    // OPRAVA: Prohlížeč nepotřebuje 'exports'
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
     let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: teamsData.slice(i*4, i*4+4), done: false })), thirds: [] };
@@ -192,29 +188,35 @@ const ADMIN_HESLO = "Matysek.2019"; // tohle si zvol sám pro přístup k tabulc
     async function saveToSupabase() {
         const name = document.getElementById('user-name').value;
         if(!name) return alert("Zadej jméno!");
-        
-        // Sbalíme všechna data do jednoho stringu
         const allPicks = [...document.querySelectorAll('.selected, .bronze-selected')].map(e => e.innerText).join('|');
         const tipString = `Skupiny: ${state.groups.map(g=>g.teams[0]).join(',')} | Playoff: ${allPicks}`;
-
         document.getElementById('save-btn').disabled = true;
-        const { error } = await supabase.from('tipy').insert([{ name: name, tip_data: tipString }]);
         
-        if(error) alert("Chyba: " + error.message);
-        else alert("Uloženo! Tvůj tip je v databázi.");
+        // OPRAVA: Používáme správný název proměnné
+        const { error } = await supabaseClient.from('tipy').insert([{ name: name, tip_data: tipString }]);
+        
+        if(error) {
+            alert("Chyba: " + error.message);
+            document.getElementById('save-btn').disabled = false;
+        } else {
+            alert("Uloženo! Tvůj tip je v databázi.");
+        }
     }
 
     async function loadResults() {
         if(document.getElementById('admin-pass').value !== ADMIN_HESLO) return alert("Špatné heslo!");
-        const { data, error } = await supabase.from('tipy').select('*');
+        const { data, error } = await supabaseClient.from('tipy').select('*');
         if(error) return alert(error.message);
-        
         const body = document.getElementById('table-body');
         body.innerHTML = data.map(r => `<tr><td><b>${r.name}</b></td><td>${r.tip_data.substring(0,50)}...</td></tr>`).join('');
         document.getElementById('admin-results').classList.remove('hidden');
     }
 
-    function toggleSection(id) { document.getElementById(id).classList.toggle('active'); }
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        el.classList.toggle('active');
+    }
+
     window.onload = init;
 </script>
 </body>
