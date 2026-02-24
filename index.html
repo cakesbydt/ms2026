@@ -28,8 +28,9 @@
         .bracket-col h6 { margin: 0 0 8px 0; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; text-align: center; }
         .b-item { font-size: 0.75rem; padding: 5px; margin: 4px 0; background: #0f172a; border-radius: 4px; border-left: 3px solid #475569; }
         
+        /* Barvy výsledků - Bez přeškrtávání */
         .status-correct { color: var(--winner) !important; font-weight: bold; border-left-color: var(--winner) !important; }
-        .status-wrong { color: var(--lose) !important; text-decoration: line-through; opacity: 0.8; border-left-color: var(--lose) !important; }
+        .status-wrong { color: var(--lose) !important; font-weight: bold; border-left-color: var(--lose) !important; }
 
         .groups-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .group-dot { background: #0f172a; padding: 12px 0; text-align: center; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
@@ -64,10 +65,10 @@
     </div>
 
     <div id="admin-panel" class="hidden section-box" style="border: 2px solid #ef4444; background: #1a1a1a;">
-        <div class="section-header" style="background:#ef4444;">🔧 SPRÁVA VÝSLEDKŮ (ADMIN)</div>
+        <div class="section-header" style="background:#ef4444;">🔧 ADMIN: VYHODNOCENÍ</div>
         <div class="section-content active">
             <div class="admin-grid" id="admin-form-container"></div>
-            <button class="btn btn-accent" onclick="saveAdminResults()" style="background:#ef4444; color:white;">ULOŽIT VŠECHNY VÝSLEDKY</button>
+            <button class="btn btn-accent" onclick="saveAdminResults()" style="background:#ef4444; color:white;">ULOŽIT VÝSLEDKY</button>
             <button class="btn" onclick="closeAdmin()">ZAVŘÍT</button>
         </div>
     </div>
@@ -108,7 +109,6 @@
 
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
     
-    // Pomocná konstanta pro základní týmy ve skupinách
     const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
 
     let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), thirds: [], playoff: {} };
@@ -177,32 +177,24 @@
             </div></td></tr>`).join('');
     }
 
-    // --- ADMIN SEKCE ---
+    // --- ADMIN ---
     function checkAdminAccess() { if (prompt("Heslo:") === ADMIN_HESLO) { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('user-form').classList.add('hidden'); genAdminForm(); } }
     
     function genAdminForm() {
         const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
-        
-        // 1. Skupiny - Zde omezíme výběr pouze na týmy dané skupiny
         for(let i=0; i<12; i++) {
             const gid = String.fromCharCode(65+i); 
             const val = currentResults.groups[i] || ["","","",""];
-            const groupTeams = GROUP_TEAMS_STATIC[i]; // Jen tyto 4 týmy
-            
+            const groupTeams = GROUP_TEAMS_STATIC[i];
             let h = `<div class="admin-card"><h4>Skupina ${gid}</h4>`;
-            for(let p=0; p<4; p++) {
-                h += `<div style="display:flex;gap:5px;margin-bottom:2px"><span>${p+1}.</span>${genSel(`g-${i}-${p}`, val[p], groupTeams)}</div>`;
-            }
+            for(let p=0; p<4; p++) h += `<div style="display:flex;gap:5px;margin-bottom:2px"><span>${p+1}.</span>${genSel(`g-${i}-${p}`, val[p], groupTeams)}</div>`;
             cont.innerHTML += h + `</div>`;
         }
-        
-        // 2. Play-off - Zde zůstává výběr ze všech týmů
         [{id:'s32',n:'1/16',c:16},{id:'s16',n:'1/8',c:8},{id:'s8',n:'1/4',c:4},{id:'s4',n:'Semis',c:4}].forEach(s => {
             let h = `<div class="admin-card"><h4>${s.n}</h4>`;
             for(let j=0; j<s.c; j++) h += `${genSel(`${s.id}-${j}`, (currentResults[s.id]||[])[j], teamsData)}`;
             cont.innerHTML += h + `</div>`;
         });
-        
         cont.innerHTML += `<div class="admin-card"><h4>Finále</h4>Zlato: ${genSel('f-w', currentResults.winner, teamsData)}<br>Bronz: ${genSel('f-b', currentResults.bronze, teamsData)}</div>`;
     }
 
@@ -222,7 +214,7 @@
         location.reload();
     }
 
-    // --- OSTATNÍ LOGIKA (Zůstává stejná jako dříve) ---
+    // --- LOGIKA FORMULÁŘE ---
     function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); renderTeamList(id); }
     function renderTeamList(gid) {
         const g = state.groups.find(x => x.id === gid);
