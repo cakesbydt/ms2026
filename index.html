@@ -147,7 +147,13 @@
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
     const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
 
-    let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), thirds: [], playoff: {} };
+    // 1. Uprav si začátek state (přidáme s3, s2 atd. pro historii)
+let state = { 
+    groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), 
+    thirds: [], 
+    playoff: {},
+    history: {} // Sem si budeme ukládat týmy pro každé kolo, aby při návratu nezmizely
+};
     let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
 
     async function init() {
@@ -264,12 +270,50 @@
         window.scrollTo(0,0);
     }
 
-    function genStage(title, teams, count, id, prevPhase, prevDot) {
-        const cont = document.getElementById('playoff-container');
-        let h = `<div class="section-box" id="sec-${id}"><div class="section-header"><span>${title}</span><button class="btn btn-back" onclick="goBack('sec-${id}', '${prevPhase}', '${prevDot}')">ZPĚT</button></div><div class="section-content" style="padding:20px;"><div class="playoff-form-grid">`;
-        for(let i=0; i<count; i++) h += `<div class="matchup" id="m-${id}-${i}"><div class="playoff-team" onclick="pk('${id}',${i},0)">${teams[i*2]||'??'}</div><div class="playoff-team" onclick="pk('${id}',${i},1)">${teams[i*2+1]||'??'}</div></div>`;
-        cont.innerHTML = h + `</div><button class="btn btn-primary" style="margin-top:20px;" onclick="cfS('${id}', ${count})">Potvrdit kolo</button></div></div>`;
+   // 3. KOMPLETNĚ PŘEPSANÁ genStage (vyměň ji celou)
+function genStage(title, teams, count, id, prevPhase, prevDot) {
+    const cont = document.getElementById('playoff-container');
+    
+    // Uložíme nebo načteme týmy z historie
+    const currentTeams = getTeamsForStage(id, teams);
+    const prevWins = state.playoff[id] || [];
+
+    // Vytvoříme unikátní DIV pro toto kolo, pokud ještě neexistuje
+    let stageDiv = document.getElementById(`sec-${id}`);
+    if (!stageDiv) {
+        stageDiv = document.createElement('div');
+        stageDiv.id = `sec-${id}`;
+        stageDiv.className = 'section-box';
+        cont.appendChild(stageDiv);
     }
+
+    let h = `
+        <div class="section-header">
+            <span>${title}</span>
+            <button class="btn btn-back" onclick="goBack('sec-${id}', '${prevPhase}', '${prevDot}')">ZPĚT</button>
+        </div>
+        <div class="section-content" style="padding:20px;">
+            <div class="playoff-form-grid">`;
+    
+    for(let i=0; i<count; i++) {
+        let t1 = currentTeams[i*2] || '??';
+        let t2 = currentTeams[i*2+1] || '??';
+        let sel1 = prevWins.includes(t1) ? 'selected' : '';
+        let sel2 = prevWins.includes(t2) ? 'selected' : '';
+
+        h += `
+            <div class="matchup" id="m-${id}-${i}">
+                <div class="playoff-team ${sel1}" onclick="pk('${id}',${i},0)">${t1}</div>
+                <div class="playoff-team ${sel2}" onclick="pk('${id}',${i},1)">${t2}</div>
+            </div>`;
+    }
+    
+    stageDiv.innerHTML = h + `</div><button class="btn btn-primary" style="margin-top:20px;" onclick="cfS('${id}', ${count})">Potvrdit kolo</button></div>`;
+    
+    // Zobrazení správného kola a skrytí ostatních
+    document.querySelectorAll('#playoff-container .section-box, main > .section-box').forEach(div => div.classList.add('hidden'));
+    stageDiv.classList.remove('hidden');
+}
 
     function pk(sid, mi, ti) {
         const m = document.getElementById(`m-${sid}-${mi}`);
@@ -277,19 +321,44 @@
         m.querySelectorAll('.playoff-team')[ti].classList.add('selected');
     }
 
-    function cfS(sid, count) {
-        const wins = [...document.querySelectorAll(`#sec-${sid} .selected`)].map(e => e.innerText);
-        const loss = [...document.querySelectorAll(`#sec-${sid} .matchup`)].map(m => { const t = m.querySelectorAll('.playoff-team'); return t[0].classList.contains('selected') ? t[1].innerText : t[0].innerText; });
-        if(wins.length < count) return alert("Vyber vítěze všech zápasů!");
-        state.playoff[sid] = wins;
-        document.getElementById(`sec-${sid}`).classList.add('hidden');
-        if(sid==='s32') genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
-        else if(sid==='s16') genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s3');
-        else if(sid==='s8') genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
-        else if(sid==='s4') { document.getElementById('dot-s4').classList.add('active'); genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s3'); genStage('Finále', wins, 1, 's2', 'sec-s3', 'dot-s4'); }
-        else if(sid==='s2') { state.playoff.winner = wins[0]; state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; document.getElementById('sec-s3').classList.add('hidden'); document.getElementById('winner-display').innerText = "TVŮJ VÍTĚZ: " + wins[0]; document.getElementById('final-box').classList.remove('hidden'); }
-        window.scrollTo(0,0);
+    // 4. OPRAVENÁ cfS (aby při změně vítěze promazala historii budoucích kol)
+function cfS(sid, count) {
+    const wins = [...document.querySelectorAll(`#sec-${sid} .selected`)].map(e => e.innerText);
+    const loss = [...document.querySelectorAll(`#sec-${sid} .matchup`)].map(m => { 
+        const t = m.querySelectorAll('.playoff-team'); 
+        return t[0].classList.contains('selected') ? t[1].innerText : t[0].innerText; 
+    });
+
+    if(wins.length < count) return alert("Vyber vítěze všech zápasů!");
+    
+    state.playoff[sid] = wins;
+
+    // Pokud změníme vítěze v s32, musíme smazat historii pro s16, s8 atd., protože se změní složení
+    const order = ['s32', 's16', 's8', 's4', 's3', 's2'];
+    let idx = order.indexOf(sid);
+    for(let i = idx + 1; i < order.length; i++) {
+        delete state.history[order[i]];
+        const nextDiv = document.getElementById(`sec-${order[i]}`);
+        if(nextDiv) nextDiv.remove(); // Odstraníme staré verze budoucích kol
     }
+
+    if(sid==='s32') genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
+    else if(sid==='s16') genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s3');
+    else if(sid==='s8') genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
+    else if(sid==='s4') { 
+        document.getElementById('dot-s4').classList.add('active'); 
+        genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s3'); 
+        genStage('Finále', wins, 1, 's2', 'sec-s3', 'dot-s4'); 
+    }
+    else if(sid==='s2') { 
+        state.playoff.winner = wins[0]; 
+        state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; 
+        document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
+        document.getElementById('winner-display').innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
+        document.getElementById('final-box').classList.remove('hidden'); 
+    }
+    window.scrollTo(0,0);
+}
 
     function checkAdmin() { if(prompt("Heslo:") === "Matysek.2019") { document.getElementById('admin-panel').classList.toggle('hidden'); genAdminForm(); } }
     function genAdminForm() {
@@ -324,6 +393,14 @@
         await supabaseClient.from('tipy').insert([{ name, tip_data: data }]);
         location.reload();
     }
+
+    // 2. Tuhle funkci vlož do scriptu - zajistí, že se data neztratí
+function getTeamsForStage(id, fallbackTeams) {
+    if (fallbackTeams && fallbackTeams.length > 0) {
+        state.history[id] = fallbackTeams;
+    }
+    return state.history[id] || [];
+}
 
     window.onload = init;
 </script>
