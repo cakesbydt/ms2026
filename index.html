@@ -7,108 +7,260 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; --winner: #22c55e; --lose: #ef4444; --border: #334155; }
-        body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding: 10px; line-height: 1.5; }
-        .container { max-width: 1000px; margin: 0 auto; position: relative; }
-        
-        .section-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
-        .section-header { padding: 15px; background: #2d3a4f; cursor: pointer; display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px solid var(--border); }
-        .section-content { padding: 12px; display: none; }
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --accent: #38bdf8; 
+            --text: #f1f5f9; 
+            --winner: #22c55e; 
+            --lose: #ef4444; 
+            --border: #334155; 
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            line-height: 1.6; 
+        }
+
+        /* --- LAYOUT PRO PC (Širokoúhlý) --- */
+        .container { 
+            width: 95%; 
+            max-width: 1400px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            position: relative; 
+        }
+
+        /* Sekce vedle sebe na velkých displejích */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr; /* Žebříček a formulář vedle sebe */
+                align-items: start;
+            }
+            .full-width { grid-column: span 2; }
+        }
+
+        /* --- KOMPONENTY --- */
+        .section-box { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            overflow: hidden; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header { 
+            padding: 18px; 
+            background: #2d3a4f; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            font-weight: bold; 
+            border-bottom: 1px solid var(--border);
+            font-size: 1.1rem;
+        }
+
+        .section-content { padding: 20px; display: none; }
         .active { display: block; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: center; border-bottom: 1px solid var(--border); }
-        .tip-detail { background: #020617; display: none; border: 2px solid var(--accent); }
-        .detail-container { padding: 15px; }
-        .groups-summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .detail-group-card { background: #1e293b; padding: 8px; border-radius: 8px; border-left: 3px solid var(--accent); font-size: 0.8rem; }
+        /* Tabulky */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; text-align: center; border-bottom: 1px solid var(--border); }
+        th { background: rgba(0,0,0,0.2); color: var(--accent); }
+
+        /* Detail tipu */
+        .tip-detail { background: #020617; display: none; }
+        .detail-container { padding: 20px; }
         
-        .bracket-scroll { display: flex; overflow-x: auto; gap: 12px; padding: 10px 0; }
-        .bracket-col { flex: 0 0 150px; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 8px; border: 1px solid #334155; }
-        .bracket-col h6 { margin: 0 0 8px 0; font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; text-align: center; }
-        .b-item { font-size: 0.75rem; padding: 5px; margin: 4px 0; background: #0f172a; border-radius: 4px; border-left: 3px solid #475569; }
-        
-        /* Barvy výsledků - Bez přeškrtávání */
+        /* Skupiny v detailu - Grid pro PC */
+        .groups-summary { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 15px; 
+            margin-bottom: 25px; 
+        }
+
+        .detail-group-card { 
+            background: #1e293b; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border-left: 4px solid var(--accent); 
+            font-size: 0.9rem; 
+        }
+
+        /* Pavouk */
+        .bracket-scroll { 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 15px; 
+            padding: 15px 0; 
+            scrollbar-width: thin;
+        }
+        .bracket-col { 
+            flex: 0 0 180px; 
+            background: rgba(255,255,255,0.03); 
+            padding: 10px; 
+            border-radius: 10px; 
+            border: 1px solid #334155; 
+        }
+        .b-item { 
+            font-size: 0.85rem; 
+            padding: 8px; 
+            margin: 6px 0; 
+            background: #0f172a; 
+            border-radius: 6px; 
+            border-left: 4px solid #475569; 
+        }
+
+        /* --- BARVY --- */
         .status-correct { color: var(--winner) !important; font-weight: bold; border-left-color: var(--winner) !important; }
         .status-wrong { color: var(--lose) !important; font-weight: bold; border-left-color: var(--lose) !important; }
 
-        .groups-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .group-dot { background: #0f172a; padding: 12px 0; text-align: center; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
-        .group-dot.filled { border-color: var(--winner); border-width: 2px; }
-        .team-item { background: #334155; margin: 6px 0; padding: 12px; border-radius: 8px; display: flex; justify-content: space-between; cursor: grab; }
-        .playoff-team { padding: 12px; background: #334155; margin: 5px 0; border-radius: 6px; cursor: pointer; }
-        .selected { background: var(--winner) !important; color: white; }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-accent { background: var(--accent); color: #000; }
-        .admin-trigger { position: absolute; top: 10px; right: 10px; color: #475569; cursor: pointer; font-size: 1.5rem; z-index: 100; }
-        .hidden { display: none; }
-        input, select { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid var(--border); background: #000; color: #fff; }
+        /* --- FORMULÁŘ --- */
+        .groups-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
+            gap: 10px; 
+        }
+        .group-dot { 
+            background: #0f172a; 
+            padding: 15px 0; 
+            text-align: center; 
+            border-radius: 10px; 
+            border: 1px solid var(--border); 
+            cursor: pointer; 
+            font-weight: bold;
+        }
+        .group-dot.filled { border-color: var(--winner); color: var(--winner); border-width: 2px; }
 
-        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .admin-card { background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #ef4444; }
+        .team-item { 
+            background: #334155; 
+            margin: 8px 0; 
+            padding: 15px; 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            cursor: grab;
+            transition: transform 0.2s;
+        }
+        .team-item:hover { transform: scale(1.02); }
+
+        .playoff-team { 
+            padding: 15px; 
+            background: #334155; 
+            margin: 8px 0; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center;
+            font-weight: 500;
+        }
+        .selected { background: var(--winner) !important; color: white; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+
+        .btn { width: 100%; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.3s; }
+        .btn-accent { background: var(--accent); color: #000; }
+        .btn-accent:hover { background: #7dd3fc; }
+
+        .admin-trigger { position: absolute; top: 20px; right: 20px; color: #475569; cursor: pointer; font-size: 1.8rem; opacity: 0.5; }
+        .admin-trigger:hover { opacity: 1; }
+        
+        .hidden { display: none; }
+        input, select { width: 100%; padding: 14px; margin: 8px 0; border-radius: 8px; border: 1px solid var(--border); background: #000; color: #fff; box-sizing: border-box; }
+
+        /* Admin Grid - na PC více sloupců */
+        .admin-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); 
+            gap: 20px; 
+        }
+        .admin-card { background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #ef4444; }
+
+        /* Mobilní úpravy */
+        @media (max-width: 600px) {
+            .container { padding: 10px; width: 100%; box-sizing: border-box; }
+            th, td { padding: 10px 5px; font-size: 0.85rem; }
+            .btn { padding: 15px; }
+            .groups-grid { grid-template-columns: repeat(4, 1fr); }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="admin-trigger" onclick="checkAdminAccess()"><i class="fas fa-cog"></i></div>
-    <h1 style="text-align:center; color:var(--accent);">🏆 MS 2026 TIPOVAČKA</h1>
+    <h1 style="text-align:center; color:var(--accent); margin-bottom: 30px;">🏆 MS 2026 TIPOVAČKA</h1>
 
-    <div class="section-box" style="border: 2px solid var(--accent);">
-        <div class="section-header" onclick="toggleSection('leaderboard-content')">📊 AKTUÁLNÍ POŘADÍ</div>
-        <div id="leaderboard-content" class="section-content active">
-            <table>
-                <thead><tr><th>#</th><th>Hráč</th><th>Body</th><th>Info</th></tr></thead>
-                <tbody id="public-body"></tbody>
-            </table>
+    <div class="main-grid">
+        <div class="section-box" style="border: 2px solid var(--accent);">
+            <div class="section-header" onclick="toggleSection('leaderboard-content')">📊 AKTUÁLNÍ POŘADÍ</div>
+            <div id="leaderboard-content" class="section-content active">
+                <table>
+                    <thead><tr><th>#</th><th>Hráč</th><th>Body</th><th>Info</th></tr></thead>
+                    <tbody id="public-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="user-form">
+            <div class="section-box">
+                <div class="section-header" onclick="toggleSection('groups-content')"><span>1. SKUPINY (Seřaď 1.-4.)</span></div>
+                <div id="groups-content" class="section-content active">
+                    <p style="font-size: 0.8rem; color: #94a3b8;">Klikni na skupinu a seřaď týmy přetažením.</p>
+                    <div class="groups-grid" id="groups-grid"></div>
+                    <div id="group-editor" class="hidden" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
+                        <h4 id="edit-title" style="text-align:center; color:var(--accent)"></h4>
+                        <div id="team-list-container"></div>
+                    </div>
+                    <button class="btn btn-accent" style="margin-top:20px" onclick="confirmAllGroups()">POTVRDIT SKUPINY</button>
+                </div>
+            </div>
+
+            <div class="section-box hidden" id="sec-thirds">
+                <div class="section-header"><span>2. POSTUPUJÍCÍ ZE 3. MÍST</span> <span id="stat-thirds">0/8</span></div>
+                <div id="thirds-content" class="section-content active">
+                    <div id="thirds-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px"></div>
+                    <button class="btn btn-accent" onclick="confirmThirds()">POTVRDIT TÝMY</button>
+                </div>
+            </div>
+
+            <div id="playoff-stages"></div>
+
+            <div id="final-box" class="hidden section-box" style="padding: 30px; text-align: center; border: 2px solid var(--winner);">
+                <h2 id="winner-display" style="color:var(--winner); margin-bottom: 20px;"></h2>
+                <input type="text" id="user-name" placeholder="Zadej své jméno" style="text-align: center; font-size: 1.2rem;">
+                <button class="btn btn-accent" onclick="saveToSupabase()" style="background: var(--winner); color: white;">ODESLAT KOMPLETNÍ TIP</button>
+            </div>
         </div>
     </div>
 
-    <div id="admin-panel" class="hidden section-box" style="border: 2px solid #ef4444; background: #1a1a1a;">
-        <div class="section-header" style="background:#ef4444;">🔧 ADMIN: VYHODNOCENÍ</div>
+    <div id="admin-panel" class="hidden section-box full-width" style="border: 2px solid #ef4444; background: #1a1a1a; margin-top: 20px;">
+        <div class="section-header" style="background:#ef4444;">🔧 ADMIN: SPRÁVA VÝSLEDKŮ</div>
         <div class="section-content active">
             <div class="admin-grid" id="admin-form-container"></div>
-            <button class="btn btn-accent" onclick="saveAdminResults()" style="background:#ef4444; color:white;">ULOŽIT VÝSLEDKY</button>
-            <button class="btn" onclick="closeAdmin()">ZAVŘÍT</button>
-        </div>
-    </div>
-
-    <div id="user-form">
-        <div class="section-box">
-            <div class="section-header" onclick="toggleSection('groups-content')"><span>1. SKUPINY (Seřaď 1.-4.)</span></div>
-            <div id="groups-content" class="section-content active">
-                <div class="groups-grid" id="groups-grid"></div>
-                <div id="group-editor" class="hidden">
-                    <h4 id="edit-title" style="text-align:center; color:var(--accent)"></h4>
-                    <div id="team-list-container"></div>
-                </div>
-                <button class="btn btn-accent" onclick="confirmAllGroups()">POTVRDIT SKUPINY</button>
-            </div>
-        </div>
-        <div class="section-box hidden" id="sec-thirds">
-            <div class="section-header"><span>2. POSTUPUJÍCÍ ZE 3. MÍST (Vyber 8)</span> <span id="stat-thirds">0/8</span></div>
-            <div id="thirds-content" class="section-content active">
-                <div id="thirds-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px"></div>
-                <button class="btn btn-accent" onclick="confirmThirds()">POTVRDIT TÝMY</button>
-            </div>
-        </div>
-        <div id="playoff-stages"></div>
-        <div id="final-box" class="hidden section-box" style="padding: 20px; text-align: center;">
-            <h2 id="winner-display" style="color:var(--winner)"></h2>
-            <input type="text" id="user-name" placeholder="Zadej své jméno">
-            <button class="btn btn-accent" onclick="saveToSupabase()">ODESLAT KOMPLETNÍ TIP</button>
+            <button class="btn btn-accent" onclick="saveAdminResults()" style="background:#ef4444; color:white; margin-top:30px;">ULOŽIT VŠECHNY VÝSLEDKY</button>
+            <button class="btn" onclick="closeAdmin()" style="margin-top:10px">ZAVŘÍT BEZ ULOŽENÍ</button>
         </div>
     </div>
 </div>
 
 <script>
+    /* KONFIGURACE A LOGIKA (Zůstává stejná jako v předchozí verzi, jen s úpravou layoutu) */
     const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsYWJvY3dlem1wd254cnd4aWhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Mjc0MzEsImV4cCI6MjA4NzUwMzQzMX0.0K7vzYzfzSbBihVzUbHrpI5w8ohCsMlQyWyxRPcHy5c";
     const ADMIN_HESLO = "Matysek.2019";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
-    
     const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
 
     let state = { groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), thirds: [], playoff: {} };
@@ -149,18 +301,18 @@
         body.innerHTML = processed.map((r, i) => `
             <tr>
                 <td>${i+1}.</td>
-                <td style="color:var(--accent); font-weight:bold">${r.name}</td>
+                <td style="color:var(--accent); font-weight:bold; text-align:left">${r.name}</td>
                 <td style="color:yellow; font-weight:bold">${r.points}</td>
-                <td><button onclick="toggleDetail('det-${r.id}')">INFO</button></td>
+                <td><button class="btn" style="padding: 5px 10px; font-size:0.7rem; width:auto" onclick="toggleDetail('det-${r.id}')">ZOBRAZIT</button></td>
             </tr>
             <tr id="det-${r.id}" class="tip-detail"><td colspan="4"><div class="detail-container">
                 <div class="groups-summary">${(r.tip.groups||[]).map((g, idx) => `
                     <div class="detail-group-card">
-                        <h5>Skupina ${String.fromCharCode(65+idx)}</h5>
+                        <h5 style="margin-top:0; color:var(--accent)">Skupina ${String.fromCharCode(65+idx)}</h5>
                         ${g.map((t, p) => {
                             const realGroup = currentResults.groups ? currentResults.groups[idx] : null;
                             const cls = realGroup ? getStatusClass(t, realGroup[p]) : "";
-                            return `<div class="${cls}">${p+1}. ${t}</div>`;
+                            return `<div class="${cls}" style="font-size:0.8rem">${p+1}. ${t}</div>`;
                         }).join('')}
                     </div>`).join('')}
                 </div>
@@ -169,7 +321,7 @@
                         <div class="bracket-col"><h6>${st.replace('s','1/')}</h6>
                         ${(r.tip[st]||[]).map(t => `<div class="b-item ${getStatusClass(t, currentResults[st], true)}">${t}</div>`).join('')}</div>
                     `).join('')}
-                    <div class="bracket-col"><h6>FINÁLE</h6>
+                    <div class="bracket-col" style="border-color:var(--winner)"><h6>FINÁLE</h6>
                         <div class="b-item ${getStatusClass(r.tip.winner, currentResults.winner)}">🥇 ${r.tip.winner}</div>
                         <div class="b-item ${getStatusClass(r.tip.bronze, currentResults.bronze)}">🥉 ${r.tip.bronze}</div>
                     </div>
@@ -177,44 +329,7 @@
             </div></td></tr>`).join('');
     }
 
-    // --- ADMIN ---
-    function checkAdminAccess() { if (prompt("Heslo:") === ADMIN_HESLO) { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('user-form').classList.add('hidden'); genAdminForm(); } }
-    
-    function genAdminForm() {
-        const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
-        for(let i=0; i<12; i++) {
-            const gid = String.fromCharCode(65+i); 
-            const val = currentResults.groups[i] || ["","","",""];
-            const groupTeams = GROUP_TEAMS_STATIC[i];
-            let h = `<div class="admin-card"><h4>Skupina ${gid}</h4>`;
-            for(let p=0; p<4; p++) h += `<div style="display:flex;gap:5px;margin-bottom:2px"><span>${p+1}.</span>${genSel(`g-${i}-${p}`, val[p], groupTeams)}</div>`;
-            cont.innerHTML += h + `</div>`;
-        }
-        [{id:'s32',n:'1/16',c:16},{id:'s16',n:'1/8',c:8},{id:'s8',n:'1/4',c:4},{id:'s4',n:'Semis',c:4}].forEach(s => {
-            let h = `<div class="admin-card"><h4>${s.n}</h4>`;
-            for(let j=0; j<s.c; j++) h += `${genSel(`${s.id}-${j}`, (currentResults[s.id]||[])[j], teamsData)}`;
-            cont.innerHTML += h + `</div>`;
-        });
-        cont.innerHTML += `<div class="admin-card"><h4>Finále</h4>Zlato: ${genSel('f-w', currentResults.winner, teamsData)}<br>Bronz: ${genSel('f-b', currentResults.bronze, teamsData)}</div>`;
-    }
-
-    function genSel(id, val, filterList) {
-        let h = `<select id="${id}" style="padding:4px; font-size:0.7rem"><option value="">--</option>`;
-        [...filterList].sort().forEach(t => h += `<option value="${t}" ${t===val?'selected':''}>${t}</option>`);
-        return h + `</select>`;
-    }
-
-    async function saveAdminResults() {
-        let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
-        for(let i=0; i<12; i++) { let g = []; for(let p=0; p<4; p++) g.push(document.getElementById(`g-${i}-${p}`).value); res.groups.push(g); }
-        const f = (id, c) => { let a = []; for(let j=0; j<c; j++) a.push(document.getElementById(`${id}-${j}`).value); return a.filter(v=>v!==""); };
-        res.s32=f('s32',16); res.s16=f('s16',8); res.s8=f('s8',4); res.s4=f('s4',4);
-        res.winner = document.getElementById('f-w').value; res.bronze = document.getElementById('f-b').value;
-        await supabaseClient.from('nastaveni').upsert({ id: 1, vysledky: res });
-        location.reload();
-    }
-
-    // --- LOGIKA FORMULÁŘE ---
+    // --- FORMULÁŘ LOGIKA ---
     function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); renderTeamList(id); }
     function renderTeamList(gid) {
         const g = state.groups.find(x => x.id === gid);
@@ -231,7 +346,8 @@
         if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin!");
         document.getElementById('sec-thirds').classList.remove('hidden');
         const grid = document.getElementById('thirds-grid'); grid.innerHTML = '';
-        state.groups.forEach(g => grid.innerHTML += `<div class="team-item" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]} (${g.id})</div>`);
+        state.groups.forEach(g => grid.innerHTML += `<div class="team-item" style="padding:10px; font-size:0.8rem" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]} (${g.id})</div>`);
+        window.scrollTo({top: document.getElementById('sec-thirds').offsetTop, behavior: 'smooth'});
     }
     function selectThird(el, team) {
         if(el.classList.contains('selected')) { el.classList.remove('selected'); state.thirds = state.thirds.filter(t => t !== team); }
@@ -239,34 +355,71 @@
         document.getElementById('stat-thirds').innerText = `${state.thirds.length}/8`;
     }
     function confirmThirds() {
-        if(state.thirds.length !== 8) return alert("Vyber 8 týmů!");
+        if(state.thirds.length !== 8) return alert("Vyber přesně 8 týmů!");
         let q = []; state.groups.forEach(g => q.push(g.teams[0], g.teams[1])); q.push(...state.thirds);
         genStage('ŠESTNÁCTIFINÁLE', q, 16, 's32');
     }
     function genStage(title, teams, count, id) {
         const cont = document.getElementById('playoff-stages');
-        let h = `<div class="section-box" id="sec-${id}"><div class="section-header"><span>${title}</span></div><div class="section-content active">`;
-        for(let i=0; i<count; i++) h += `<div class="matchup" id="m-${id}-${i}" style="background:#000; padding:10px; margin-bottom:5px; border-radius:8px"><div class="playoff-team" onclick="pk('${id}',${i},0)">${teams[i*2]||'??'}</div><div class="playoff-team" onclick="pk('${id}',${i},1)">${teams[i*2+1]||'??'}</div></div>`;
-        cont.innerHTML += h + `<button class="btn btn-accent" onclick="cfS('${id}', ${count})">POTVRDIT KOLO</button></div></div>`;
+        let h = `<div class="section-box" id="sec-${id}"><div class="section-header"><span>${title}</span></div><div class="section-content active"><div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px">`;
+        for(let i=0; i<count; i++) h += `<div class="matchup" id="m-${id}-${i}" style="background:rgba(0,0,0,0.2); padding:10px; border-radius:10px"><div class="playoff-team" onclick="pk('${id}',${i},0)">${teams[i*2]||'??'}</div><div class="playoff-team" onclick="pk('${id}',${i},1)">${teams[i*2+1]||'??'}</div></div>`;
+        cont.innerHTML += h + `</div><button class="btn btn-accent" style="margin-top:20px" onclick="cfS('${id}', ${count})">POTVRDIT KOLO</button></div></div>`;
+        window.scrollTo({top: cont.lastChild.offsetTop, behavior: 'smooth'});
     }
     function pk(sid, mi, ti) { const m = document.getElementById(`m-${sid}-${mi}`); m.querySelectorAll('.playoff-team').forEach(t => t.classList.remove('selected')); m.querySelectorAll('.playoff-team')[ti].classList.add('selected'); }
     function cfS(sid, count) {
         const wins = [...document.querySelectorAll(`#sec-${sid} .selected`)].map(e => e.innerText);
         const loss = [...document.querySelectorAll(`#sec-${sid} .matchup`)].map(m => { const t = m.querySelectorAll('.playoff-team'); return t[0].classList.contains('selected') ? t[1].innerText : t[0].innerText; });
-        if(wins.length < count) return alert("Vyber vítěze!");
+        if(wins.length < count) return alert("Vyber vítěze všech zápasů!");
         state.playoff[sid] = wins;
         if(sid==='s32') genStage('OSMIFINÁLE', wins, 8, 's16');
         else if(sid==='s16') genStage('ČTVRTFINÁLE', wins, 4, 's8');
         else if(sid==='s8') genStage('SEMIFINÁLE', wins, 2, 's4');
         else if(sid==='s4') { genStage('O 3. MÍSTO', loss, 1, 's3'); genStage('FINÁLE', wins, 1, 's2'); }
-        else if(sid==='s2') { state.playoff.winner = wins[0]; state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; document.getElementById('winner-display').innerText = "VÁŠ VÍTĚZ: " + wins[0]; document.getElementById('final-box').classList.remove('hidden'); }
+        else if(sid==='s2') { state.playoff.winner = wins[0]; state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; document.getElementById('winner-display').innerText = "VÁŠ VÍTĚZ: " + wins[0]; document.getElementById('final-box').classList.remove('hidden'); window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'}); }
     }
-    async function saveToSupabase() {
-        const name = document.getElementById('user-name').value; if(!name) return alert("Jméno!");
-        const data = { groups: state.groups.map(g => g.teams), s32: state.playoff.s32, s16: state.playoff.s16, s8: state.playoff.s8, s4: state.playoff.s4, bronze: state.playoff.bronze, winner: state.playoff.winner };
-        await supabaseClient.from('tipy').insert([{ name, tip_data: data }]);
+
+    // --- ADMIN ---
+    function checkAdminAccess() { if (prompt("Heslo:") === ADMIN_HESLO) { document.getElementById('admin-panel').classList.remove('hidden'); document.getElementById('user-form').classList.add('hidden'); genAdminForm(); } }
+    function genAdminForm() {
+        const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
+        for(let i=0; i<12; i++) {
+            const gid = String.fromCharCode(65+i); const val = currentResults.groups[i] || ["","","",""];
+            const groupTeams = GROUP_TEAMS_STATIC[i];
+            let h = `<div class="admin-card"><h4>Skupina ${gid}</h4>`;
+            for(let p=0; p<4; p++) h += `<div style="display:flex;gap:5px;margin-bottom:5px"><span>${p+1}.</span>${genSel(`g-${i}-${p}`, val[p], groupTeams)}</div>`;
+            cont.innerHTML += h + `</div>`;
+        }
+        [{id:'s32',n:'1/16',c:16},{id:'s16',n:'1/8',c:8},{id:'s8',n:'1/4',c:4},{id:'s4',n:'Semis',c:4}].forEach(s => {
+            let h = `<div class="admin-card"><h4>${s.n}</h4>`;
+            for(let j=0; j<s.c; j++) h += `${genSel(`${s.id}-${j}`, (currentResults[s.id]||[])[j], teamsData)}`;
+            cont.innerHTML += h + `</div>`;
+        });
+        cont.innerHTML += `<div class="admin-card" style="border-color:var(--accent)"><h4>Finále</h4>Zlato: ${genSel('f-w', currentResults.winner, teamsData)}<br>Bronz: ${genSel('f-b', currentResults.bronze, teamsData)}</div>`;
+    }
+    function genSel(id, val, filterList) {
+        let h = `<select id="${id}" style="padding:8px; font-size:0.8rem"><option value="">--</option>`;
+        [...filterList].sort().forEach(t => h += `<option value="${t}" ${t===val?'selected':''}>${t}</option>`);
+        return h + `</select>`;
+    }
+    async function saveAdminResults() {
+        let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
+        for(let i=0; i<12; i++) { let g = []; for(let p=0; p<4; p++) g.push(document.getElementById(`g-${i}-${p}`).value); res.groups.push(g); }
+        const f = (id, c) => { let a = []; for(let j=0; j<c; j++) a.push(document.getElementById(`${id}-${j}`).value); return a.filter(v=>v!==""); };
+        res.s32=f('s32',16); res.s16=f('s16',8); res.s8=f('s8',4); res.s4=f('s4',4);
+        res.winner = document.getElementById('f-w').value; res.bronze = document.getElementById('f-b').value;
+        await supabaseClient.from('nastaveni').upsert({ id: 1, vysledky: res });
         location.reload();
     }
+
+    async function saveToSupabase() {
+        const name = document.getElementById('user-name').value; if(!name) return alert("Musíš zadat své jméno!");
+        const data = { groups: state.groups.map(g => g.teams), s32: state.playoff.s32, s16: state.playoff.s16, s8: state.playoff.s8, s4: state.playoff.s4, bronze: state.playoff.bronze, winner: state.playoff.winner };
+        await supabaseClient.from('tipy').insert([{ name, tip_data: data }]);
+        alert("Tip byl úspěšně odeslán!");
+        location.reload();
+    }
+
     function closeAdmin() { document.getElementById('admin-panel').classList.add('hidden'); document.getElementById('user-form').classList.remove('hidden'); }
     function toggleSection(id) { document.getElementById(id).classList.toggle('active'); }
     function toggleDetail(id) { const el = document.getElementById(id); el.style.display = (el.style.display==='table-row')?'none':'table-row'; }
