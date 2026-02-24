@@ -71,19 +71,30 @@
         <button class="btn btn-accent" id="save-btn" onclick="saveToSupabase()">ODESLAT TIP DO DATABÁZE</button>
     </div>
 
-    <div class="section-box" style="margin-top: 50px; border-color: #ef4444;">
-        <div class="section-header" onclick="toggleSection('admin-box')">🔒 ADMIN PANEL (POUZE ORGANIZÁTOR)</div>
-        <div id="admin-box" class="section-content">
-            <input type="password" id="admin-pass" placeholder="Admin heslo">
-            <button class="btn" style="background:#ef4444; color:white" onclick="loadResults()">ZOBRAZIT TIPY KOLEGŮ</button>
-            <div id="admin-results" class="hidden">
-                <table id="results-table">
-                    <thead><tr><th>Jméno</th><th>Tip (Zkráceně)</th></tr></thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
+  <div class="section-box" style="margin-top: 50px; border-color: #ef4444;">
+    <div class="section-header" onclick="toggleSection('admin-box')">🔒 ADMIN PANEL (VÝSLEDKY)</div>
+    <div id="admin-box" class="section-content">
+        <input type="password" id="admin-pass" placeholder="Admin heslo">
+        <button class="btn" style="background:#ef4444; color:white" onclick="loadResults()">AKTUALIZOVAT TABULKU</button>
+        
+        <div id="admin-results" class="hidden" style="overflow-x: auto;">
+            <table id="results-table" style="min-width: 600px;">
+                <thead>
+                    <tr>
+                        <th>Jméno</th>
+                        <th>Vítěz 🏆</th>
+                        <th>Finále</th>
+                        <th>3. místo</th>
+                        <th>Čas</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
         </div>
     </div>
+</div>
+
+<script>
 </div>
 
 <script>
@@ -205,12 +216,42 @@
 
     async function loadResults() {
         if(document.getElementById('admin-pass').value !== ADMIN_HESLO) return alert("Špatné heslo!");
-        const { data, error } = await supabaseClient.from('tipy').select('*');
-        if(error) return alert(error.message);
+        
+        const { data, error } = await supabaseClient
+            .from('tipy')
+            .select('*')
+            .order('created_at', { ascending: false }); // Nejnovější tipy nahoře
+
+        if(error) return alert("Chyba při načítání: " + error.message);
+        
         const body = document.getElementById('table-body');
-        body.innerHTML = data.map(r => `<tr><td><b>${r.name}</b></td><td>${r.tip_data.substring(0,50)}...</td></tr>`).join('');
+        body.innerHTML = ""; // Vyčistit tabulku
+
+        data.forEach(row => {
+            // Rozsekáme data, která jsme uložili pomocí oddělovače "|" a ","
+            // tipString vypadal takto: Skupiny: A,B,C... | Playoff: Win32|Win16|Win8|Win4|Bronze|Winner
+            const parts = row.tip_data.split('|');
+            
+            // Poslední prvek je Vítěz, předposlední je 3. místo, pak finalisté
+            const winner = parts[parts.length - 1] || "---";
+            const bronze = parts[parts.length - 2] || "---";
+            const finalPair = parts[parts.length - 3] ? parts[parts.length - 3] : "---";
+            const date = new Date(row.created_at).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute:'2-digit' });
+
+            body.innerHTML += `
+                <tr>
+                    <td style="color:var(--accent); font-weight:bold;">${row.name}</td>
+                    <td style="background: rgba(34, 197, 94, 0.2); font-weight:bold;">${winner}</td>
+                    <td>${finalPair}</td>
+                    <td style="color:var(--bronze)">${bronze}</td>
+                    <td style="font-size: 0.7rem; color: #64748b;">${date}</td>
+                </tr>
+            `;
+        });
+        
         document.getElementById('admin-results').classList.remove('hidden');
     }
+</script>
 
     function toggleSection(id) {
         const el = document.getElementById(id);
