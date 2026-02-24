@@ -143,32 +143,54 @@
         return pts;
     }
 
-    async function loadAndCalculate() {
-        const { data, error } = await supabaseClient.from('tipy').select('*');
-        if(error) return;
+   async function loadAndCalculate() {
+        console.log("Start přepočtu...");
+        const pass = document.getElementById('admin-pass').value;
+        if(pass !== "" && pass !== ADMIN_HESLO) return alert("Špatné heslo pro přepočet!");
 
-        // Tady by se načetla "skutečná" data z jiné tabulky, pro teď simulujeme z Admin inputů
+        const { data, error } = await supabaseClient.from('tipy').select('*');
+        if(error) {
+            console.error("Chyba Supabase:", error);
+            return alert("Chyba při načítání dat!");
+        }
+
         const real = {
             winner: document.getElementById('admin-winner').value,
             bronze: document.getElementById('admin-bronze').value,
-            s4: [...document.querySelectorAll('.admin-semi-select')].map(s => s.value),
-            groups: [] // Pro plnou verzi by se zadalo v adminu
+            s4: [...document.querySelectorAll('.admin-semi-select')].map(s => s.value).filter(v => v !== ""),
+            groups: [] // Pro plnou verzi by se muselo zadat v adminu
         };
 
-        const processed = data.map(row => {
-            const tip = JSON.parse(row.tip_data);
-            return { name: row.name, points: calculatePoints(tip, real), winner: tip.winner };
-        }).sort((a, b) => b.points - a.points);
+        console.log("Oficiální výsledky nastaveny:", real);
 
         const body = document.getElementById('public-body');
-        body.innerHTML = processed.map((r, i) => `
-            <tr>
-                <td>${i+1}.</td>
-                <td style="font-weight:bold; color:var(--accent)">${r.name}</td>
-                <td style="color:yellow; font-weight:bold">${r.points}</td>
-                <td style="font-size:0.7rem">${r.winner}</td>
-            </tr>
-        `).join('');
+        body.innerHTML = ""; 
+
+        const processed = data.map(row => {
+            try {
+                // Tady je ta pojistka pro staré vs nové tipy
+                const tip = JSON.parse(row.tip_data);
+                const pts = calculatePoints(tip, real);
+                return { name: row.name, points: pts, winner: tip.winner };
+            } catch (e) {
+                console.warn("Přeskočen starý formát tipu u hráče:", row.name);
+                return null;
+            }
+        }).filter(r => r !== null).sort((a, b) => b.points - a.points);
+
+        if (processed.length === 0) {
+            body.innerHTML = "<tr><td colspan='4'>Žádná platná data k zobrazení</td></tr>";
+        } else {
+            body.innerHTML = processed.map((r, i) => `
+                <tr>
+                    <td>${i+1}.</td>
+                    <td style="font-weight:bold; color:var(--accent)">${r.name}</td>
+                    <td style="color:yellow; font-weight:bold">${r.points}</td>
+                    <td style="font-size:0.7rem">${r.winner || '---'}</td>
+                </tr>
+            `).join('');
+            console.log("Tabulka úspěšně vykreslena.");
+        }
     }
 
     // --- LOGIKA FORMULÁŘE ---
