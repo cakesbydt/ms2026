@@ -11,8 +11,7 @@
         body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; margin: 0; padding: 10px; }
         .container { max-width: 800px; margin: 0 auto; position: relative; }
         
-        /* Admin Button - Ozubené kolečko */
-        .admin-trigger { position: absolute; top: 10px; right: 10px; color: #475569; cursor: pointer; font-size: 1.5rem; transition: transform 0.3s; }
+        .admin-trigger { position: absolute; top: 10px; right: 10px; color: #475569; cursor: pointer; font-size: 1.5rem; transition: transform 0.3s; z-index: 100; }
         .admin-trigger:hover { transform: rotate(90deg); color: var(--accent); }
 
         .section-box { background: var(--card); border: 1px solid #334155; border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
@@ -20,7 +19,6 @@
         .section-content { padding: 12px; display: none; }
         .active { display: block; }
         
-        /* Tabulka a Tlačítka */
         .groups-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .group-dot { background: #0f172a; padding: 12px 0; text-align: center; border-radius: 8px; border: 1px solid #334155; cursor: pointer; }
         .group-dot.filled { border-color: var(--winner); border-width: 2px; }
@@ -34,7 +32,6 @@
         th, td { border: 1px solid #334155; padding: 12px; text-align: center; }
         .tip-detail { background: #000; color: #94a3b8; font-size: 0.8rem; text-align: left; padding: 15px; display: none; border: 1px solid var(--accent); }
         
-        /* Admin Panel Styling */
         #admin-panel { border: 2px solid #ef4444; background: #1a1a1a; display: none; padding: 20px; border-radius: 12px; margin-top: 20px; }
         .hidden { display: none; }
         input, select { width: 100%; padding: 12px; margin: 5px 0; border-radius: 8px; border: 1px solid #334155; background: #000; color: #fff; }
@@ -43,7 +40,7 @@
 <body>
 
 <div class="container">
-    <div class="admin-trigger" onclick="unlockAdmin()"><i class="fas fa-cog"></i></div>
+    <div class="admin-trigger" onclick="checkAdminAccess()"><i class="fas fa-cog"></i></div>
     
     <h1 style="text-align:center; color:var(--accent); margin-bottom:30px;">🏆 MS 2026 TIPOVAČKA</h1>
 
@@ -60,7 +57,7 @@
                     </tr>
                 </thead>
                 <tbody id="public-body">
-                    <tr><td colspan="4">Načítám výsledky...</td></tr>
+                    <tr><td colspan="4">Načítám data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -68,7 +65,7 @@
 
     <div id="user-form">
         <div class="section-box">
-            <div class="section-header" onclick="toggleSection('groups-content')"><span>1. SKUPINY (Seřaď 1. až 4. místo)</span> <span id="stat-groups">0/12</span></div>
+            <div class="section-header" onclick="toggleSection('groups-content')"><span>1. SKUPINY (Pořadí 1-4)</span> <span id="stat-groups">0/12</span></div>
             <div id="groups-content" class="section-content active">
                 <div class="groups-grid" id="groups-grid"></div>
                 <div id="group-editor" class="hidden">
@@ -78,34 +75,31 @@
                 <button class="btn btn-accent" onclick="confirmAllGroups()">POTVRDIT SKUPINY</button>
             </div>
         </div>
-
         <div class="section-box hidden" id="sec-thirds">
-            <div class="section-header" onclick="toggleSection('thirds-content')"><span>2. POSTUPUJÍCÍ ZE 3. MÍST (Vyber 8)</span> <span id="stat-thirds">0/8</span></div>
+            <div class="section-header" onclick="toggleSection('thirds-content')"><span>2. POSTUPUJÍCÍ ZE 3. MÍST</span> <span id="stat-thirds">0/8</span></div>
             <div id="thirds-content" class="section-content">
                 <div id="thirds-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px"></div>
                 <button class="btn btn-accent" onclick="confirmThirds()">POTVRDIT TÝMY</button>
             </div>
         </div>
-
         <div id="playoff-stages"></div>
-
         <div id="final-box" class="hidden section-box" style="padding: 20px; text-align: center;">
             <h2 id="winner-display" style="color:var(--winner)"></h2>
-            <input type="text" id="user-name" placeholder="Tvoje jméno / Přezdívka">
-            <button class="btn btn-accent" id="save-btn" onclick="saveToSupabase()">ODESLAT TIP DO SOUTĚŽE</button>
+            <input type="text" id="user-name" placeholder="Tvoje jméno">
+            <button class="btn btn-accent" id="save-btn" onclick="saveToSupabase()">ODESLAT TIP</button>
         </div>
     </div>
 
     <div id="admin-panel">
-        <h2 style="color:#ef4444; margin-top:0;">🔧 Admin vyhodnocení</h2>
+        <h2 style="color:#ef4444; margin-top:0;">🔧 Admin Panel</h2>
         <div style="background: #000; padding: 15px; border-radius: 8px;">
-            <label>Skutečný Vítěz MS:</label> <select id="admin-winner"></select>
-            <label>Vítěz o Bronz:</label> <select id="admin-bronze"></select>
-            <label>Semifinalisté (4 týmy):</label>
+            <label>Vítěz MS:</label> <select id="admin-winner"></select>
+            <label>Bronz:</label> <select id="admin-bronze"></select>
+            <label>Semifinalisté:</label>
             <div id="admin-semis" style="display:grid; grid-template-columns:1fr 1fr; gap:5px"></div>
-            <button class="btn" style="background:#ef4444; color:white; margin-top:20px;" onclick="adminCalculate()">PŘEPOČÍTAT A ZVEŘEJNIT BODY</button>
+            <button class="btn" style="background:#ef4444; color:white; margin-top:20px;" onclick="adminCalculate()">VYHODNOTIT TABULKU</button>
         </div>
-        <button class="btn" onclick="location.reload()" style="background:#334155; color:white">ZAVŘÍT ADMINA</button>
+        <button class="btn" onclick="closeAdmin()" style="background:#334155; color:white; margin-top:10px;">ZAVŘÍT ADMINA</button>
     </div>
 </div>
 
@@ -121,8 +115,6 @@
     function init() {
         const grid = document.getElementById('groups-grid');
         state.groups.forEach(g => { grid.innerHTML += `<div class="group-dot" id="dot-${g.id}" onclick="editGroup('${g.id}')">${g.id}</div>`; });
-        
-        // Admin selects setup
         ['admin-winner', 'admin-bronze'].forEach(id => {
             const s = document.getElementById(id);
             s.innerHTML = '<option value="">-- vybrat --</option>';
@@ -134,17 +126,35 @@
             s.innerHTML = '<option value="">-- tým --</option>';
             [...teamsData].sort().forEach(t => s.innerHTML += `<option value="${t}">${t}</option>`);
         });
-
         loadData();
     }
 
-    function unlockAdmin() {
-        const p = prompt("Zadej heslo pro vstup do Admin sekce:");
-        if(p === ADMIN_HESLO) {
-            document.getElementById('user-form').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'block';
-            window.scrollTo(0,0);
-        } else { alert("Nepovolený přístup!"); }
+    // --- LOGIKA HESLA A ADMINA (10 MINUT) ---
+    function checkAdminAccess() {
+        const lastAuth = sessionStorage.getItem('adminAuth');
+        const now = new Date().getTime();
+
+        if (lastAuth && (now - lastAuth < 10 * 60 * 1000)) {
+            openAdmin();
+        } else {
+            const p = prompt("Zadej heslo:");
+            if (p === ADMIN_HESLO) {
+                sessionStorage.setItem('adminAuth', now);
+                openAdmin();
+            } else {
+                alert("Špatné heslo!");
+            }
+        }
+    }
+
+    function openAdmin() {
+        document.getElementById('user-form').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+    }
+
+    function closeAdmin() {
+        document.getElementById('admin-panel').style.display = 'none';
+        document.getElementById('user-form').style.display = 'block';
     }
 
     async function loadData() {
@@ -160,8 +170,7 @@
         };
         const { data } = await supabaseClient.from('tipy').select('*');
         renderTable(data, real);
-        document.getElementById('admin-panel').style.display = 'none';
-        document.getElementById('user-form').style.display = 'block';
+        closeAdmin();
     }
 
     function renderTable(data, real) {
@@ -182,19 +191,19 @@
                 <td>${i+1}.</td>
                 <td style="font-weight:bold; color:var(--accent)">${r.name}</td>
                 <td style="color:yellow; font-weight:bold">${r.points} ⭐</td>
-                <td><button onclick="toggleDetail('det-${r.id}')" style="background:none; border:1px solid #444; color:#fff; cursor:pointer; border-radius:4px;">INFO</button></td>
+                <td><button onclick="toggleDetail('det-${r.id}')" style="background:none; border:1px solid #444; color:#fff; padding:4px 8px; border-radius:4px; cursor:pointer;">INFO</button></td>
             </tr>
             <tr id="det-${r.id}" class="tip-detail">
                 <td colspan="4">
                     <strong>Vítěz:</strong> ${r.tip.winner || '?'}<br>
-                    <strong>Týmy v SF:</strong> ${r.tip.s4 ? r.tip.s4.join(', ') : '?'}<br>
+                    <strong>Týmy SF:</strong> ${r.tip.s4 ? r.tip.s4.join(', ') : '?'}<br>
                     <strong>Vítězové skupin:</strong> ${r.tip.groups ? r.tip.groups.map(g => g[0]).join(', ') : '?'}
                 </td>
             </tr>
         `).join('');
     }
 
-    // --- LOGIKA FORMULÁŘE (Zjednodušeno) ---
+    // --- FORM LOGIKA ---
     function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); renderTeamList(id); }
     function renderTeamList(gid) {
         const g = state.groups.find(x => x.id === gid);
@@ -212,7 +221,6 @@
         document.getElementById('sec-thirds').classList.remove('hidden');
         const grid = document.getElementById('thirds-grid'); grid.innerHTML = '';
         state.groups.forEach(g => grid.innerHTML += `<div class="team-item" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]} (${g.id})</div>`);
-        toggleSection('thirds-content');
     }
     function selectThird(el, team) {
         if(el.classList.contains('selected')) { el.classList.remove('selected'); state.thirds = state.thirds.filter(t => t !== team); }
@@ -242,7 +250,7 @@
             const t = m.querySelectorAll('.playoff-team');
             return t[0].classList.contains('selected') ? t[1].innerText : t[0].innerText;
         });
-        if(wins.length < count) return alert("Vyber vítěze všech zápasů!");
+        if(wins.length < count) return alert("Vyber vítěze!");
         state.playoff[sid] = wins;
         if(sid==='s32') genStage('OSMIFINÁLE', wins, 8, 's16');
         else if(sid==='s16') genStage('ČTVRTFINÁLE', wins, 4, 's8');
@@ -255,7 +263,7 @@
         if(!name) return alert("Zadej jméno!");
         const data = { groups: state.groups.map(g => g.teams), s32: state.playoff.s32, s16: state.playoff.s16, s8: state.playoff.s8, s4: state.playoff.s4, bronze: state.playoff.bronze, winner: state.playoff.winner };
         const { error } = await supabaseClient.from('tipy').insert([{ name: name, tip_data: data }]);
-        if(!error) { alert("Tip úspěšně odeslán do databáze!"); location.reload(); }
+        if(!error) { alert("Tip uložen!"); location.reload(); }
     }
     function toggleSection(id) { document.getElementById(id).classList.toggle('active'); }
     function toggleDetail(id) { const el = document.getElementById(id); el.style.display = (el.style.display==='table-row')?'none':'table-row'; }
