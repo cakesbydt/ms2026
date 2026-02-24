@@ -11,12 +11,13 @@
             --accent: #38bdf8;
             --text: #f1f5f9;
             --hover: #334155;
+            --success: #22c55e;
         }
 
         body { 
             background: var(--bg-color); 
             color: var(--text); 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
             padding: 20px;
         }
@@ -45,7 +46,6 @@
             border-radius: 15px;
             padding: 20px;
             border: 1px solid #334155;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
         .group-card h3 {
@@ -60,6 +60,7 @@
             list-style: none; 
             padding: 0; 
             margin: 0;
+            min-height: 100px;
         }
 
         .team-item {
@@ -72,18 +73,9 @@
             justify-content: space-between;
             align-items: center;
             transition: all 0.2s ease;
-            user-select: none;
         }
 
-        .team-item:hover {
-            background: #475569;
-            transform: scale(1.02);
-        }
-
-        .team-item.dragging {
-            opacity: 0.5;
-            background: var(--accent);
-        }
+        .team-item.dragging { opacity: 0.5; background: var(--accent); }
 
         .rank-badge {
             background: var(--bg-color);
@@ -98,10 +90,7 @@
             color: var(--accent);
         }
 
-        .actions {
-            text-align: center;
-            margin-top: 50px;
-        }
+        .actions { text-align: center; margin-top: 50px; }
 
         .btn-confirm {
             background: var(--accent);
@@ -112,11 +101,29 @@
             font-weight: bold;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s;
         }
 
-        .btn-confirm:hover {
-            transform: scale(1.05);
+        /* Nová sekce pro výsledky */
+        #results-section {
+            margin-top: 50px;
+            display: none;
+            padding: 30px;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 20px;
+            border: 1px dashed var(--accent);
+        }
+
+        .qualified-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .qual-item {
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid var(--success);
         }
     </style>
 </head>
@@ -125,11 +132,15 @@
 <div class="tournament-container">
     <h1 class="main-title">🏆 MS 2026 Tipovačka</h1>
     
-    <div id="groups-grid" class="groups-grid">
-        </div>
+    <div id="groups-grid" class="groups-grid"></div>
 
     <div class="actions">
-        <button class="btn-confirm" onclick="confirmGroups()">Potvrdit pořadí a jít na pavouka →</button>
+        <button class="btn-confirm" onclick="generatePlayoff()">Potvrdit skupiny a ukázat postupující →</button>
+    </div>
+
+    <div id="results-section">
+        <h2 style="text-align: center; color: var(--success);">Postupující do vyřazovacích bojů</h2>
+        <div id="qualified-list" class="qualified-grid"></div>
     </div>
 </div>
 
@@ -155,9 +166,9 @@
             const groupHtml = `
                 <div class="group-card">
                     <h3>Skupina ${groupLetter}</h3>
-                    <ul class="team-list" id="list-${groupLetter}">
+                    <ul class="team-list" id="list-${groupLetter}" ondragover="handleDragOver(event)">
                         ${groupTeams.map((team, index) => `
-                            <li class="team-item" draggable="true" ondragstart="handleDragStart(event)" ondragover="handleDragOver(event)" ondragend="handleDragEnd(event)">
+                            <li class="team-item" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)">
                                 <span class="team-name">${team}</span>
                                 <span class="rank-badge">${index + 1}</span>
                             </li>
@@ -169,7 +180,6 @@
         }
     }
 
-    // Drag & Drop logika
     let draggingElement = null;
 
     function handleDragStart(e) {
@@ -191,6 +201,7 @@
 
     function handleDragEnd(e) {
         e.target.classList.remove('dragging');
+        draggingElement = null;
     }
 
     function getDragAfterElement(container, y) {
@@ -213,9 +224,29 @@
         });
     }
 
-    function confirmGroups() {
-        alert("Skupiny uloženy! Teď bychom měli vygenerovat pavouka (Osmifinále).");
-        // Tady příště napíšeme logiku pro pavouka
+    // NOVÁ FUNKCE: Generování postupujících
+    function generatePlayoff() {
+        const qualifiedList = document.getElementById('qualified-list');
+        qualifiedList.innerHTML = '';
+        const resultsSection = document.getElementById('results-section');
+        
+        for (let i = 0; i < 12; i++) {
+            const groupLetter = String.fromCharCode(65 + i);
+            const list = document.getElementById(`list-${groupLetter}`);
+            const items = list.querySelectorAll('.team-item');
+            
+            // Vezmeme první dva z každé skupiny
+            const winner = items[0].querySelector('.team-name').innerText;
+            const runnerUp = items[1].querySelector('.team-name').innerText;
+
+            qualifiedList.innerHTML += `
+                <div class="qual-item"><strong>${groupLetter}1:</strong> ${winner}</div>
+                <div class="qual-item"><strong>${groupLetter}2:</strong> ${runnerUp}</div>
+            `;
+        }
+
+        resultsSection.style.display = 'block';
+        window.scrollTo({ top: resultsSection.offsetTop, behavior: 'smooth' });
     }
 
     window.onload = initTournament;
