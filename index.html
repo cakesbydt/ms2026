@@ -30,8 +30,7 @@
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
     .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
     
-    
-        
+    header { text-align: center; padding: 15px 0; }
     .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
     
     .step-dot { 
@@ -76,51 +75,6 @@
     .group-card { background: #0f172a; border: 1px solid var(--border); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; }
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
-
-
-/* Styl pro hlavní logo v záhlaví */
-.main-header-logo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 30px;
-}
-
-.main-logo-img {
-    height: 120px; /* Větší logo na hlavní stránce */
-    width: auto;
-    filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
-}
-
-/* Aktivní tab - ta, na které právě pracuješ */
-.phase-tab.active {
-    background: var(--accent) !important; /* Tvoje modrá/žlutá */
-    color: #000 !important;
-    font-weight: bold;
-}
-
-/* Hotový tab - to, co už je vyplněné */
-.phase-tab.completed {
-    background: var(--winner) !important; /* Zelená */
-    color: #000 !important;
-}
-        
-
-.host-info-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-    background: rgba(255,255,255,0.05);
-    padding: 5px 15px;
-    border-radius: 20px;
-}
-
-.host-info-bar img {
-    height: 16px;
-    border-radius: 2px;
-}
-        
 
         /* --- OPRAVA HLAVIČKY A MŘÍŽKY --- */
 .thirds-header-row {
@@ -453,7 +407,7 @@ let state = {
         document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
         document.getElementById(dotId).classList.add('active');
         // Místo ručního odebírání active tříd stačí:
-updateStepper(tabId);
+updateStepper(dotId);
     }
 
    function editGroup(id) { 
@@ -531,7 +485,7 @@ function confirmAllGroups() {
     
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
-    updateStepper('tab-s2');
+    updateStepper('dot-s2');
 
     const container = document.getElementById('thirds-grid'); 
     
@@ -609,10 +563,10 @@ function confirmAllGroups() {
 
     // 5. Generování pavouka 1/16 finále (32 týmů -> 16 zápasů)
     // Parametry: Název, týmy, počet zápasů, ID fáze, ID předchozí fáze (pro tlačítko zpět), ID tečky předchozí fáze
-    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'tab-s2');
+    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
 
     // 6. Aktivace nové tečky v stepperu pro pavouka
-    updateStepper('tab-s32');
+    updateStepper('dot-s32');
 
     // 7. Scroll nahoru, ať uživatel vidí začátek pavouka
     window.scrollTo(0, 0);
@@ -624,17 +578,17 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     
     // --- MAPOVÁNÍ STEPPERU ---
     const dotMap = {
-        's32': 'tab-s32',
-        's16': 'tab-s16',
-        's8':  'tab-s8',
-        's4':  'tab-s4',
-        's3':  'tab-fin',
-        's2':  'tab-fin'
+        's32': 'dot-s32',
+        's16': 'dot-s16',
+        's8':  'dot-s8',
+        's4':  'dot-s4',
+        's3':  'dot-fin',
+        's2':  'dot-fin'
     };
     
     // Pokud ID existuje v mapě, aktualizujeme barvy v záhlaví (žlutá pro aktivní)
-    if (tabMap[id]) {
-        updateStepper(tabMap[id]);
+    if (dotMap[id]) {
+        updateStepper(dotMap[id]);
     }
     // -------------------------
 
@@ -797,33 +751,26 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     }
 
 function updateStepper(activeId) {
-    // Definujeme mapování mezi ID a kontrolou hotového stavu
-    // ID jsem upravil na "tab-...", aby to odpovídalo tvé spodní liště
     const steps = [
-        { id: 'tab-groups', check: () => state.groups.every(g => g.done) },
-        { id: 'tab-thirds', check: () => state.thirds.length === 8 },
-        { id: 'tab-s32',    check: () => state.playoff.s32 && state.playoff.s32.length === 16 },
-        { id: 'tab-s16',    check: () => state.playoff.s16 && state.playoff.s16.length === 8 },
-        { id: 'tab-s8',     check: () => state.playoff.s8 && state.playoff.s8.length === 4 },
-        { id: 'tab-s4',     check: () => state.playoff.s4 && state.playoff.s4.length === 2 },
-        { id: 'tab-fin',    check: () => state.playoff.winner }
+        { id: 'dot-s1',  check: () => state.groups.every(g => g.done) },
+        { id: 'dot-s2',  check: () => state.thirds.length === 8 },
+        { id: 'dot-s32', check: () => state.playoff.s32 && state.playoff.s32.length === 16 },
+        { id: 'dot-s16', check: () => state.playoff.s16 && state.playoff.s16.length === 8 },
+        { id: 'dot-s8',  check: () => state.playoff.s8 && state.playoff.s8.length === 4 },
+        { id: 'dot-s4',  check: () => state.playoff.s4 && state.playoff.s4.length === 2 },
+        { id: 'dot-fin', check: () => state.playoff.winner }
     ];
 
     steps.forEach(step => {
         const el = document.getElementById(step.id);
         if (!el) return;
 
-        // Resetujeme styly (odstraníme aktivní i hotové třídy)
         el.classList.remove('active', 'completed');
-        el.style.background = ""; // Reset inline stylů, pokud tam jsou
-        el.style.color = "";
 
         if (step.id === activeId) {
-            // PRÁVĚ AKTIVNÍ TAB (Žlutá/Modrá podle tvého CSS)
-            el.classList.add('active'); 
+            el.classList.add('active'); // Žlutá (Právě vyplňuji)
         } else if (step.check()) {
-            // HOTOVÁ FÁZE (Zelená)
-            el.classList.add('completed');
+            el.classList.add('completed'); // Zelená (Mám hotovo)
         }
     });
 }
