@@ -408,6 +408,10 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
 
         h += `
             <div class="matchup" id="m-${id}-${i}">
+                <div style="font-size: 0.7rem; color: var(--accent); font-weight: bold; margin-bottom: 4px; display: flex; justify-content: space-between;">
+                    <span>ZÁPAS ${i+1}</span>
+                    <i class="fas fa-sitemap" style="opacity: 0.3;"></i>
+                </div>
                 <div class="playoff-team ${sel1}" onclick="pk('${id}',${i},0)">${t1}</div>
                 <div class="playoff-team ${sel2}" onclick="pk('${id}',${i},1)">${t2}</div>
             </div>`;
