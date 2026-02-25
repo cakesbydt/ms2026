@@ -739,50 +739,45 @@ function confirmThirds() {
 }
 
   function prepareS32(vybrane3) {
-    // 1. Převedeme pole skupin na pomocný objekt 'g' pro snadný přístup (A-L)
     const g = {};
-    state.groups.forEach(group => {
-        g[group.id] = group.teams;
-    });
+    state.groups.forEach(group => { g[group.id] = group.teams; });
 
-    // Pomocná funkce, která bezpečně vytáhne jméno týmu
-    // (řeší, jestli máš v poli objekt {name: '...'} nebo jen string '...')
     const getT = (groupLetter, rank) => {
         const team = g[groupLetter] ? g[groupLetter][rank] : null;
         if (!team) return "??";
         return typeof team === 'object' ? team.name : team;
     };
 
-    // 2. Sestavení 32 týmů (16 zápasů) přesně podle tvého rozpisu
-    // vybrane3[x] už jsou jména (stringy), ty není třeba čistit
     const s32Teams = [
-        // Zápas 94 (Vítěz 81 vs Vítěz 82)
-        getT('D', 0), vybrane3[4],  getT('G', 0), vybrane3[5],
-        
-        // Zápas 90 (Vítěz 73 vs Vítěz 75)
-        getT('A', 1), getT('B', 1),  getT('F', 0), getT('C', 1),
-        
-        // Zápas 91 (Vítěz 76 vs Vítěz 78)
-        getT('C', 0), getT('F', 1),  getT('E', 1), getT('I', 1),
-        
-        // Zápas 92 (Vítěz 79 vs Vítěz 80)
-        getT('A', 0), vybrane3[2],   getT('L', 0), vybrane3[3],
-        
-        // Zápas 93 (Vítěz 83 vs Vítěz 84)
-        getT('D', 1), getT('G', 1),  getT('H', 0), getT('J', 1),
-        
-        // Zápas 89 (Vítěz 74 vs Vítěz 77)
-        getT('E', 0), vybrane3[0],   getT('I', 0), vybrane3[1],
-        
-        // Zápas 96 (Vítěz 85 vs Vítěz 87)
-        getT('B', 0), vybrane3[6],   getT('K', 0), vybrane3[7],
-        
-        // Zápas 95 (Vítěz 86 vs Vítěz 88)
-        getT('J', 0), getT('H', 1),  getT('K', 1), getT('L', 1)
+        // SEKCE 1 (Levá horní čtvrtina)
+        getT('A', 0), vybrane3[2], // Zápas 79 (1A vs 3 CEFHI)
+        getT('L', 0), vybrane3[3], // Zápas 80 (1L vs 3 EHIJK) -> Vítězi tvoří osmifinále
+
+        getT('E', 0), vybrane3[0], // Zápas 74 (1E vs 3 ABCDF)
+        getT('I', 0), vybrane3[1], // Zápas 77 (1I vs 3 CDFGH) -> Vítězi tvoří osmifinále
+
+        // SEKCE 2 (Levá dolní čtvrtina)
+        getT('C', 0), getT('F', 1), // Zápas 76 (1C vs 2F)
+        getT('E', 1), getT('I', 1), // Zápas 78 (2E vs 2I) -> Vítězi tvoří osmifinále
+
+        getT('D', 0), vybrane3[4], // Zápas 81 (1D vs 3 BEFIJ)
+        getT('G', 0), vybrane3[5], // Zápas 82 (1G vs 3 AEHIJ) -> Vítězi tvoří osmifinále
+
+        // SEKCE 3 (Pravá horní čtvrtina)
+        getT('A', 1), getT('B', 1), // Zápas 73 (2A vs 2B)
+        getT('F', 0), getT('C', 1), // Zápas 75 (1F vs 2C) -> Vítězi tvoří osmifinále
+
+        getT('H', 0), getT('J', 1), // Zápas 84 (1H vs 2J)
+        getT('D', 1), getT('G', 1), // Zápas 83 (2D vs 2G) -> Vítězi tvoří osmifinále
+
+        // SEKCE 4 (Pravá dolní čtvrtina)
+        getT('B', 0), vybrane3[6], // Zápas 85 (1B vs 3 EFGIJ)
+        getT('K', 0), vybrane3[7], // Zápas 87 (1K vs 3 DEIJL) -> Vítězi tvoří osmifinále
+
+        getT('J', 0), getT('H', 1), // Zápas 86 (1J vs 2H)
+        getT('K', 1), getT('L', 1)  // Zápas 88 (2K vs 2L) -> Vítězi tvoří osmifinále
     ];
 
-    // 3. Spuštění generování
-    console.log("Generuji pavouka s týmy:", s32Teams); // Pro kontrolu v konzoli
     genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');
 }
   // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
