@@ -66,7 +66,20 @@
     color: #94a3b8;
 }
 
-        
+        /* Kontejner pro mřížku 3. míst */
+#thirds-actual-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 stejné sloupce */
+    gap: 12px;
+    padding: 10px 0;
+}
+
+        /* Responzivita pro mobily */
+@media (max-width: 600px) {
+    #thirds-actual-grid {
+        grid-template-columns: repeat(2, 1fr); /* Na mobilu 2 sloupce */
+    }
+}
 
         .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
         @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
@@ -98,9 +111,30 @@
 
         /* --- PRAVÝ SLOUPEC FORMULÁŘ (UPRAVENO) --- */
         .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
-        .group-card { background: #0f172a; border: 1px solid var(--border); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; }
+       /* Karta týmu ve 3. místech */
+.group-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 12px 8px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 60px;
+}
+        .group-card:hover {
+    border-color: var(--accent);
+}
         .group-card.filled { border-color: var(--winner); color: var(--winner); }
-        .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
+       .group-card.selected {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: var(--winner);
+    color: var(--winner);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+}
 
         .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
         
@@ -409,7 +443,7 @@ function dE(e, gid) {
     renderTeamList(gid); 
 }
 
-  function confirmAllGroups() {
+ function confirmAllGroups() {
     if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
     
     document.getElementById('phase-groups').classList.add('hidden');
@@ -418,16 +452,23 @@ function dE(e, gid) {
 
     const container = document.getElementById('thirds-grid'); 
     
-    // Sestavení hlavičky s počítadlem
+    // Čistá hlavička s počítadlem a instrukcí
     container.innerHTML = `
-        <div class="thirds-header-info">
-            <div class="thirds-instructions">Vyber 8 nejlepších týmů ze 3. míst pro doplnění pavouka</div>
-            <div id="thirds-counter" style="color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}">
-                ${state.thirds.length} / 8
+        <div style="background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1rem; text-transform: uppercase;">Výběr 3. míst</h3>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: #94a3b8;">Označ přesně 8 týmů, které postoupí dále.</p>
+                </div>
+                <div id="thirds-counter" style="font-size: 1.5rem; font-weight: 800; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}">
+                    ${state.thirds.length} / 8
+                </div>
             </div>
         </div>
-        <div class="groups-grid" id="thirds-actual-grid"></div>
-        <button class="btn btn-primary" onclick="confirmThirds()">Potvrdit výběr a generovat pavouka</button>
+        <div id="thirds-actual-grid"></div>
+        <div style="margin-top: 25px;">
+            <button class="btn btn-primary" onclick="confirmThirds()" style="width: 100%; margin: 0;">Potvrdit výběr a pokračovat</button>
+        </div>
     `; 
     
     const actualGrid = document.getElementById('thirds-actual-grid');
@@ -438,13 +479,14 @@ function dE(e, gid) {
         
         actualGrid.innerHTML += `
             <div class="group-card ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 4px;">Sk. ${g.id}</div>
-                ${teamName}
+                <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: bold;">Skupina ${g.id}</span>
+                <span style="font-size: 0.95rem; font-weight: 600;">${teamName}</span>
             </div>`; 
     });
     
     window.scrollTo(0,0);
 }
+    
   function selectThird(el, teamName) {
     if (state.thirds.includes(teamName)) {
         state.thirds = state.thirds.filter(t => t !== teamName);
