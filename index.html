@@ -279,6 +279,39 @@
 
 .modal-btn:hover { transform: scale(1.05); }
 .hidden { display: none !important; }
+
+/* Kontejner týmu musí mít position relative */
+.team-card {
+    position: relative;
+    cursor: pointer;
+    /* tvůj stávající styl */
+}
+
+/* Styl pro pořadové číslo */
+.selection-order {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #007bff; /* Modrá barva */
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    border: 2px solid white;
+    z-index: 10;
+}
+
+/* Vizuální odlišení vybraného týmu */
+.team-card.selected {
+    border: 2px solid #007bff;
+    background-color: #f0f7ff;
+}
+        
 /* Responzivita pro menší obrazovky */
 @media (max-width: 1000px) {
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -359,6 +392,10 @@
                     <button class="btn btn-primary" style="margin-top:20px;" onclick="confirmThirds()">Generovat pavouka</button>
                 </div>
             </div>
+
+            <div class="third-place-card" data-name="Česko" onclick="selectThird(this, 'Česko')">
+    <div class="rank-badge" style="display:none"></div>
+    </div>
 
             <div id="playoff-container"></div>
             <div id="sec-thirds" class="hidden"></div>
@@ -662,7 +699,7 @@ function confirmAllGroups() {
     window.scrollTo(0,0);
 }
     
-   function selectThird(el, teamName) {
+  function selectThird(el, teamName) {
     if (state.thirds.includes(teamName)) {
         // Odebrání týmu
         state.thirds = state.thirds.filter(t => t !== teamName);
@@ -674,12 +711,25 @@ function confirmAllGroups() {
         state.thirds.push(teamName);
         el.classList.add('selected');
         const badge = el.querySelector('.rank-badge');
-        if(badge) {
-            badge.style.display = 'block';
-            // Zobrazí číslo podle toho, kolikátý tým v pořadí to je
-            badge.innerText = state.thirds.length; 
-        }
+        if(badge) badge.style.display = 'block';
     }
+
+    // TA DŮLEŽITÁ ČÁST: Přepočet všech čísel (badges)
+    // Projdeme všechny karty, které mají třídu 'selected'
+    document.querySelectorAll('.third-place-card.selected').forEach(card => {
+        // Zjistíme jméno týmu z datasetu (musíš ho mít v HTML jako data-name="...")
+        const name = card.getAttribute('data-name'); 
+        const badge = card.querySelector('.rank-badge');
+        
+        if (badge) {
+            // Index v poli + 1 (aby to nebylo od nuly)
+            const realIndex = state.thirds.indexOf(name) + 1;
+            if (realIndex > 0) {
+                badge.innerText = realIndex;
+            }
+        }
+    });
+}
     
     // Překreslení čísel u všech (pokud by uživatel nějaký odebral z prostředka)
     document.querySelectorAll('.third-team-card.selected').forEach(card => {
