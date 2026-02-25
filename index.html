@@ -361,7 +361,8 @@
             </div>
 
             <div id="playoff-container"></div>
-
+            <div id="sec-thirds" class="hidden"></div>
+            
             <div id="final-box" class="hidden section-box" style="border: 2px solid var(--winner); text-align: center;">
                 <div class="section-header">🏆 FINÁLNÍ ODESLÁNÍ</div>
                 <div class="section-content" style="padding: 30px;">
@@ -754,45 +755,49 @@ function confirmAllGroups() {
     window.scrollTo(0, 0);
 }
 
-    function prepareS32(vybrane3) {
-    const g = state.groups;
+   function prepareS32(vybrane3) {
+    // Vytvoříme si pomocný objekt, aby kód zůstal čitelný (převedeme pole na objekt A-L)
+    const g = {};
+    state.groups.forEach(group => {
+        // group.teams jsou už seřazené týmy v dané skupině
+        g[group.id] = group.teams;
+    });
     
-    // Pole seřazené tak, aby budoucí křížení (i*2 a i*2+1) odpovídalo tvému tyrkysovému kolu
+    // Teď už g['A'][0] bude fungovat!
     const s32Teams = [
         // Budoucí ZÁPAS 89 (Vítěz 81 vs Vítěz 82)
-        g['D'][0].name, vybrane3[4], // Zápas 81 (1D vs 3 BEFIJ)
-        g['G'][0].name, vybrane3[5], // Zápas 82 (1G vs 3 AEHIJ)
+        g['D'][0].name, vybrane3[4], // Zápas 81
+        g['G'][0].name, vybrane3[5], // Zápas 82
 
         // Budoucí ZÁPAS 90 (Vítěz 73 vs Vítěz 75)
-        g['A'][1].name, g['B'][1].name, // Zápas 73 (2A vs 2B)
-        g['F'][0].name, g['C'][1].name, // Zápas 75 (1F vs 2C)
+        g['A'][1].name, g['B'][1].name, // Zápas 73
+        g['F'][0].name, g['C'][1].name, // Zápas 75
 
         // Budoucí ZÁPAS 91 (Vítěz 76 vs Vítěz 78)
-        g['C'][0].name, g['F'][1].name, // Zápas 76 (1C vs 2F)
-        g['E'][1].name, g['I'][1].name, // Zápas 78 (2E vs 2I)
+        g['C'][0].name, g['F'][1].name, // Zápas 76
+        g['E'][1].name, g['I'][1].name, // Zápas 78
 
         // Budoucí ZÁPAS 92 (Vítěz 79 vs Vítěz 80)
-        g['A'][0].name, vybrane3[2], // Zápas 79 (1A vs 3 CEFHI)
-        g['L'][0].name, vybrane3[3], // Zápas 80 (1L vs 3 EHIJK)
+        g['A'][0].name, vybrane3[2], // Zápas 79
+        g['L'][0].name, vybrane3[3], // Zápas 80
 
         // Budoucí ZÁPAS 93 (Vítěz 83 vs Vítěz 84)
-        g['D'][1].name, g['G'][1].name, // Zápas 83 (2D vs 2G)
-        g['H'][0].name, g['J'][1].name, // Zápas 84 (1H vs 2J)
+        g['D'][1].name, g['G'][1].name, // Zápas 83
+        g['H'][0].name, g['J'][1].name, // Zápas 84
 
         // Budoucí ZÁPAS 94 (Vítěz 74 vs Vítěz 77)
-        g['E'][0].name, vybrane3[0], // Zápas 74 (1E vs 3 ABCDF)
-        g['I'][0].name, vybrane3[1], // Zápas 77 (1I vs 3 CDFGH)
+        g['E'][0].name, vybrane3[0], // Zápas 74
+        g['I'][0].name, vybrane3[1], // Zápas 77
 
         // Budoucí ZÁPAS 95 (Vítěz 85 vs Vítěz 87)
-        g['B'][0].name, vybrane3[6], // Zápas 85 (1B vs 3 EFGIJ)
-        g['K'][0].name, vybrane3[7], // Zápas 87 (1K vs 3 DEIJL)
+        g['B'][0].name, vybrane3[6], // Zápas 85
+        g['K'][0].name, vybrane3[7], // Zápas 87
 
         // Budoucí ZÁPAS 96 (Vítěz 86 vs Vítěz 88)
-        g['J'][0].name, g['H'][1].name, // Zápas 86 (1J vs 2H)
-        g['K'][1].name, g['L'][1].name  // Zápas 88 (2K vs 2L)
+        g['J'][0].name, g['H'][1].name, // Zápas 86
+        g['K'][1].name, g['L'][1].name  // Zápas 88
     ];
 
-    // Spustíme generování Šestnáctifinále
     genStage('Šestnáctifinále', s32Teams, 16, 's32', 'sec-groups', 'dot-s32');
 }
   // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
