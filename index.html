@@ -62,19 +62,58 @@
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
     /* --- OPRAVA PŘEKRÝVÁNÍ 3. MÍST --- */
-    .thirds-wrapper { padding: 20px; }
+    /* --- ABSOLUTNÍ SROVNÁNÍ 3. MÍST --- */
+.thirds-wrapper {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+        /* Toto ID musí přebít tvůj .groups-grid */
+#thirds-actual-grid {
+    display: grid !important;
+    /* 4 sloupce na PC, které drží tvar */
+    grid-template-columns: repeat(4, 1fr) !important; 
+    gap: 12px !important;
+    width: 100% !important;
+}
+        
     .thirds-grid-fixed { 
         display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
         gap: 12px; margin-bottom: 20px; 
     }
-    .card-third { 
-        background: #0f172a; border: 1px solid var(--border); padding: 15px 10px; 
-        border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; 
-        display: flex; flex-direction: column; gap: 4px;
-    }
+    .card-third {
+    background: #0f172a;
+    border: 1px solid var(--border);
+    padding: 15px 10px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+    /* Karty budou mít stejnou výšku bez ohledu na délku textu */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 70px; 
+}
+        
     .card-third:hover { border-color: var(--accent); }
-    .card-third.selected { background: rgba(34, 197, 94, 0.2) !important; border-color: var(--winner) !important; color: var(--winner) !important; }
+   .card-third.selected {
+    background: rgba(34, 197, 94, 0.1) !important;
+    border-color: var(--winner) !important;
+    color: var(--winner) !important;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
+}
     .card-third small { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
+
+        /* Responzivita: Na mobilu 2 sloupce, aby se to dalo číst */
+@media (max-width: 768px) {
+    #thirds-actual-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
 
     /* --- ZBYTEK PŮVODNÍCH STYLŮ --- */
     .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
@@ -378,45 +417,45 @@ function dE(e, gid) {
 }
 
    function confirmAllGroups() {
-    // 1. Kontrola, jestli uživatel seřadil všechny skupiny
-    const doneCount = state.groups.filter(g => g.done).length;
-    if(doneCount < 12) return alert("Musíš nejdříve seřadit všech 12 skupin!");
+    if(state.groups.filter(g => g.done).length < 12) return alert("Musíš nejdříve seřadit všech 12 skupin!");
     
-    // 2. Přepnutí fází (skrytí skupin, zobrazení 3. míst)
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
     updateStepper('dot-s2');
 
     const container = document.getElementById('thirds-grid'); 
     
-    // 3. Vložení čisté struktury (Hlavička s počítadlem + Mřížka)
+    // Čistá struktura s wrapperem
     container.innerHTML = `
         <div class="thirds-wrapper">
-            <div class="thirds-header-bar" style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 12px 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border);">
-                <span style="font-size: 0.85rem; color: #94a3b8;">Vyber 8 postupujících ze 3. míst</span>
-                <div id="thirds-counter" style="font-weight: 800; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-size: 1.2rem;">
+            <div class="thirds-header-bar" style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 500;">Vyber 8 postupujících ze 3. míst</span>
+                <div id="thirds-counter" style="font-weight: 900; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-size: 1.3rem; letter-spacing: 1px;">
                     ${state.thirds.length} / 8
                 </div>
             </div>
             
-            <div class="thirds-grid-fixed" id="thirds-actual-grid">
+            <div id="thirds-actual-grid">
                 </div>
 
-            <button class="btn btn-primary" onclick="confirmThirds()">Potvrdit a generovat pavouka</button>
+            <div style="margin-top: 10px;">
+                <button class="btn btn-primary" onclick="confirmThirds()" style="width:100%; height: 50px; font-size: 1rem;">
+                    Potvrdit výběr a pokračovat
+                </button>
+            </div>
         </div>
     `; 
     
     const actualGrid = document.getElementById('thirds-actual-grid');
     
-    // 4. Vykreslení samotných karet (týmů na 3. místech)
     state.groups.forEach(g => { 
-        const teamName = g.teams[2]; // Index 2 je vždy 3. tým v poli
+        const teamName = g.teams[2];
         const isSelected = state.thirds.includes(teamName) ? 'selected' : '';
         
         actualGrid.innerHTML += `
             <div class="card-third ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <small>Skupina ${g.id}</small>
-                <strong>${teamName}</strong>
+                <small style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 4px; text-transform: uppercase;">Skupina ${g.id}</small>
+                <strong style="font-size: 0.9rem; line-height: 1.2;">${teamName}</strong>
             </div>`; 
     });
     
