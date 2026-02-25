@@ -424,7 +424,7 @@ function dE(e, gid) {
     renderTeamList(gid); // Překreslíme, aby se opravila čísla 1-4
 }
 
- function confirmAllGroups() {
+function confirmAllGroups() {
     if(state.groups.filter(g => g.done).length < 12) return alert("Musíš nejdříve seřadit všech 12 skupin!");
     
     document.getElementById('phase-groups').classList.add('hidden');
@@ -435,18 +435,17 @@ function dE(e, gid) {
     
     container.innerHTML = `
         <div class="thirds-wrapper">
-            <div style="background: rgba(15, 23, 42, 0.6); padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: #94a3b8; font-size: 0.85rem;">Vyber 8 týmů ze 3. míst</span>
-                <div id="thirds-counter" style="font-weight: 800; font-size: 1.5rem; color: var(--accent);">
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <span style="color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Vyber 8 postupujících ze 3. míst:</span>
+                <div id="thirds-counter" style="font-weight: 800; font-size: 1.3rem; color: var(--accent);">
                     ${state.thirds.length} / 8
                 </div>
             </div>
             
-            <div id="thirds-actual-grid">
-                </div>
+            <div id="thirds-actual-grid"></div>
 
-            <button class="btn btn-primary" onclick="confirmThirds()" style="width: 100%; height: 55px; font-size: 1rem; margin-top: 10px;">
-                POTVRDIT A POKRAČOVAT
+            <button class="btn btn-primary" onclick="confirmThirds()" style="width: 100%; height: 50px; margin-top: 15px; font-size: 0.9rem;">
+                PŘEJÍT NA PAVOUKA
             </button>
         </div>
     `; 
@@ -459,8 +458,8 @@ function dE(e, gid) {
         
         actualGrid.innerHTML += `
             <div class="card-third ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <span style="font-size: 0.65rem; opacity: 0.5; margin-bottom: 5px; text-transform: uppercase;">SKUPINA ${g.id}</span>
-                <span style="font-weight: bold; font-size: 1rem;">${teamName}</span>
+                <span style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 3px; text-transform: uppercase;">Skupina ${g.id}</span>
+                <span style="font-weight: bold; font-size: 0.9rem;">${teamName}</span>
             </div>`; 
     });
     
