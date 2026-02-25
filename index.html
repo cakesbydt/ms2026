@@ -705,53 +705,36 @@ function confirmAllGroups() {
     }
 }
 
- function confirmThirds() {
-    // 1. Validace počtu
+function confirmThirds() {
+    // 1. Validace počtu vybraných týmů
     if(state.thirds.length !== 8) {
         return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
     }
 
-    // 2. Schováme sekci s výběrem 3. míst (uprav ID podle svého HTML)
-    const thirdsDiv = document.getElementById('sec-thirds'); // nebo jak se ten kontejner jmenuje
-    if(thirdsDiv) thirdsDiv.classList.add('hidden');
-
-    // 3. Zobrazíme kontejner pro pavouka (pokud ho máš schovaný)
-    const playoffCont = document.getElementById('playoff-container');
-    if(playoffCont) playoffCont.classList.remove('hidden');
-
-    // 4. TO NEJDŮLEŽITĚJŠÍ: Předáme vybrané týmy a vygenerujeme 1. kolo pavouka
-    prepareS32(state.thirds);
-
-    // 5. Vyjedeme nahoru, aby uživatel viděl začátek pavouka
-    window.scrollTo(0,0);
-}
-
-    // 2. Vizuální zpětná vazba - ozelenění tečky výběru 3. míst
+    // 2. Vizuální zpětná vazba - ozelenění tečky výběru 3. míst (stepper)
     const dotS2 = document.getElementById('dot-s2');
     if(dotS2) {
         dotS2.classList.remove('active');
         dotS2.classList.add('completed');
     }
 
-    // 3. Skrytí aktuální fáze
-    document.getElementById('phase-thirds').classList.add('hidden');
+    // 3. Skrytí aktuální fáze výběru a zobrazení kontejneru pro pavouka
+    const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
+    if(thirdsDiv) thirdsDiv.classList.add('hidden');
 
-    // 4. Sestavení postupujících (24 z prvních dvou míst + 8 ze třetích míst)
-    let q = []; 
-    state.groups.forEach(g => {
-        q.push(g.teams[0]); // 1. místo
-        q.push(g.teams[1]); // 2. místo
-    }); 
-    q.push(...state.thirds); // Přidání vybraných 8 týmů ze 3. míst
+    const playoffCont = document.getElementById('playoff-container');
+    if(playoffCont) playoffCont.classList.remove('hidden');
 
-    // 5. Generování pavouka 1/16 finále (32 týmů -> 16 zápasů)
-    // Parametry: Název, týmy, počet zápasů, ID fáze, ID předchozí fáze (pro tlačítko zpět), ID tečky předchozí fáze
-    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
+    // 4. GENEROVÁNÍ PAVOUKA (Voláme naši připravenou funkci)
+    // Tato funkce interně složí týmy do správných dvojic a zavolá genStage
+    prepareS32(state.thirds);
 
-    // 6. Aktivace nové tečky v stepperu pro pavouka
-    updateStepper('dot-s32');
+    // 5. Aktivace nové tečky v stepperu pro pavouka (pokud máš funkci updateStepper)
+    if (typeof updateStepper === "function") {
+        updateStepper('dot-s32');
+    }
 
-    // 7. Scroll nahoru, ať uživatel vidí začátek pavouka
+    // 6. Scroll nahoru, ať uživatel vidí začátek pavouka
     window.scrollTo(0, 0);
 }
 
