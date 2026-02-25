@@ -77,32 +77,38 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 10px 0;
-    background: #0b0f1a; /* Barva pozadí tvé stránky */
+    padding: 20px 0;
 }
 
 .mini-host-bar {
     display: flex;
-    align-items: center;
-    gap: 15px;           /* ZVĚTŠENO: Mezera mezi vlajkami a textem */
-    padding: 8px 20px;   /* ZVĚTŠENO: Vnitřní prostor lišty */
-    border-radius: 8px;
+    flex-direction: column; /* Naskládá prvky pod sebe */
+    align-items: center;    /* Vycentruje vlajky i text na střed */
+    gap: 10px;              /* Mezera mezi vlajkami a textem */
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px 25px;
+    border-radius: 12px;
 }
 
-.mini-flags img {
-    height: 18px;        /* ZVĚTŠENO: Ze 12px na 18px (všechny vlajky se zvětší naráz) */
-    width: auto;
+        .mini-flags {
+    display: flex;
+    gap: 8px;               /* Mezera mezi vlajkami navzájem */
 }
-
+        
 .mini-flags img {
-    height: 12px; /* Tady je to kouzlo - vlajky jsou teď malinké */
+    height: 20px;           /* Velikost vlajek - můžeš si upravit */
     width: auto;
-    display: block;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .mini-text {
-    font-size: 0.9rem;   /* ZVĚTŠENO: Z 0.7rem na 0.9rem */
-    letter-spacing: 1.5px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
 }
         
 /* Responzivita: Na malých displejích to trochu zmenšíme */
