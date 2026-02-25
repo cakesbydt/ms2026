@@ -80,31 +80,50 @@
     white-space: nowrap !important; /* Zabrání lámání textu do řádků */
 }
 
-        #thirds-counter {
+      #thirds-counter {
     background: var(--accent);
     color: #000;
-    padding: 5px 15px;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 12px;
     font-weight: 900;
-    font-size: 1.2rem;
-    min-width: 60px;
-    text-align: center;
-    transition: 0.3s;
+    font-size: 1.5rem;
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
 }
         
-/* --- FINÁLNÍ OPRAVA: ČISTÁ MŘÍŽKA BEZ LEVÉHO SLOUPCE --- */
+/* --- FINÁLNÍ STYL S LOGEM A VLÁJKAMI --- */
 .thirds-wrapper {
-    display: block !important; /* Zrušíme flex, který to tlačil doleva */
+    display: block !important;
     width: 100% !important;
     padding: 20px;
     box-sizing: border-box;
 }
 
-/* Kontejner mřížky, aby využil celou šířku */
+        .thirds-header-row {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-bottom: 2px solid var(--border) !important;
+    padding-bottom: 20px !important;
+    margin-bottom: 25px !important;
+}
+
+        .host-flags {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.host-flags img {
+    height: 14px;
+    width: auto;
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
 #thirds-actual-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 12px !important;
+    gap: 15px !important;
     width: 100% !important;
 }
         
@@ -113,7 +132,7 @@
         gap: 12px; margin-bottom: 20px; 
     }
         
- .card-third {
+.card-third {
     background: #1e293b;
     border: 1px solid var(--border);
     padding: 15px 5px;
@@ -121,7 +140,7 @@
     text-align: center;
     cursor: pointer;
     transition: 0.2s;
-    min-height: 80px;
+    min-height: 85px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -132,6 +151,7 @@
     background: rgba(34, 197, 94, 0.2) !important;
     border-color: var(--winner) !important;
     color: var(--winner) !important;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.1);
 }
     .card-third small { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
 
@@ -466,7 +486,7 @@ function dE(e, gid) {
 }
 
 function confirmAllGroups() {
-    if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin!");
+    if(state.groups.filter(g => g.done).length < 12) return alert("Musíš nejdříve seřadit všech 12 skupin!");
     
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
@@ -474,19 +494,34 @@ function confirmAllGroups() {
 
     const container = document.getElementById('thirds-grid'); 
     
-    // Čistá struktura: TEXT + POČÍTADLO v jedné řadě, pod tím GRID
     container.innerHTML = `
-        <div class="thirds-wrapper" style="width: 100%; padding: 20px; box-sizing: border-box;">
-            
+        <div class="thirds-wrapper">
             <div class="thirds-header-row">
-                <span class="thirds-title-text">Vyber 8 postupujících týmů ze 3. míst</span>
-                <div id="thirds-counter">${state.thirds.length} / 8</div>
+                <div style="display: flex; align-items: center; gap: 25px;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/2026_FIFA_World_Cup_logo.svg/1200px-2026_FIFA_World_Cup_logo.svg.png" 
+                         alt="FIFA 2026" style="height: 70px; width: auto;">
+                    
+                    <div>
+                        <span style="font-size: 1.3rem; font-weight: 800; color: #fff; display: block; letter-spacing: 0.5px;">
+                            TOP 8 TÝMŮ ZE 3. MÍST
+                        </span>
+                        <div class="host-flags">
+                            <img src="https://flagcdn.com/us.svg" alt="USA">
+                            <img src="https://flagcdn.com/mx.svg" alt="Mexico">
+                            <img src="https://flagcdn.com/ca.svg" alt="Canada">
+                            <span style="font-size: 0.7rem; color: #94a3b8; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px;">FIFA World Cup 2026</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="thirds-counter">
+                    ${state.thirds.length} / 8
+                </div>
             </div>
             
             <div id="thirds-actual-grid">
                 </div>
-
-            </div>
+        </div>
     `; 
     
     const actualGrid = document.getElementById('thirds-actual-grid');
@@ -497,8 +532,8 @@ function confirmAllGroups() {
         
         actualGrid.innerHTML += `
             <div class="card-third ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <span style="font-size: 0.65rem; opacity: 0.5; margin-bottom: 5px; text-transform: uppercase;">Skupina ${g.id}</span>
-                <span style="font-weight: bold; font-size: 1rem;">${teamName}</span>
+                <span style="font-size: 0.65rem; opacity: 0.5; margin-bottom: 5px; text-transform: uppercase; font-weight: bold;">Skupina ${g.id}</span>
+                <span style="font-weight: 800; font-size: 1rem; color: #f1f5f9;">${teamName}</span>
             </div>`; 
     });
     
