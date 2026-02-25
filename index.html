@@ -64,49 +64,61 @@
     /* --- OPRAVA PŘEKRÝVÁNÍ 3. MÍST --- */
     /* --- ABSOLUTNÍ SROVNÁNÍ 3. MÍST --- */
 .thirds-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
     padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-        /* Toto ID musí přebít tvůj .groups-grid */
+/* Fix mřížky - aby karty nebyly přes sebe */
 #thirds-actual-grid {
     display: grid !important;
-    /* 4 sloupce na PC, které drží tvar */
-    grid-template-columns: repeat(4, 1fr) !important; 
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
     gap: 12px !important;
     width: 100% !important;
+    position: relative !important;
 }
         
     .thirds-grid-fixed { 
         display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
         gap: 12px; margin-bottom: 20px; 
     }
-    .card-third {
+        
+   /* Karta týmu */
+.card-third {
     background: #0f172a;
     border: 1px solid var(--border);
-    padding: 15px 10px;
+    padding: 15px 5px;
     border-radius: 10px;
     text-align: center;
     cursor: pointer;
     transition: 0.2s;
-    /* Karty budou mít stejnou výšku bez ohledu na délku textu */
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    min-height: 70px; 
+    min-height: 80px;
 }
         
     .card-third:hover { border-color: var(--accent); }
-   .card-third.selected {
-    background: rgba(34, 197, 94, 0.1) !important;
+  .card-third.selected {
+    background: rgba(34, 197, 94, 0.15) !important;
     border-color: var(--winner) !important;
     color: var(--winner) !important;
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.1);
 }
     .card-third small { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
+
+        /* Info lišta nahoře */
+.thirds-info-bar {
+    background: rgba(15, 23, 42, 0.6);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
         /* Responzivita: Na mobilu 2 sloupce, aby se to dalo číst */
 @media (max-width: 768px) {
@@ -416,7 +428,7 @@ function dE(e, gid) {
     renderTeamList(gid); // Překreslíme, aby se opravila čísla 1-4
 }
 
-   function confirmAllGroups() {
+  function confirmAllGroups() {
     if(state.groups.filter(g => g.done).length < 12) return alert("Musíš nejdříve seřadit všech 12 skupin!");
     
     document.getElementById('phase-groups').classList.add('hidden');
@@ -425,12 +437,13 @@ function dE(e, gid) {
 
     const container = document.getElementById('thirds-grid'); 
     
-    // Čistá struktura s wrapperem
     container.innerHTML = `
         <div class="thirds-wrapper">
-            <div class="thirds-header-bar" style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
-                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 500;">Vyber 8 postupujících ze 3. míst</span>
-                <div id="thirds-counter" style="font-weight: 900; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-size: 1.3rem; letter-spacing: 1px;">
+            <div class="thirds-info-bar">
+                <div style="color: #94a3b8; font-size: 0.85rem;">
+                    Vyber 8 nejlepších týmů ze 3. míst
+                </div>
+                <div id="thirds-counter" style="font-weight: 800; font-size: 1.5rem; color: var(--accent);">
                     ${state.thirds.length} / 8
                 </div>
             </div>
@@ -438,9 +451,9 @@ function dE(e, gid) {
             <div id="thirds-actual-grid">
                 </div>
 
-            <div style="margin-top: 10px;">
-                <button class="btn btn-primary" onclick="confirmThirds()" style="width:100%; height: 50px; font-size: 1rem;">
-                    Potvrdit výběr a pokračovat
+            <div style="width: 100%; margin-top: 10px;">
+                <button class="btn btn-primary" onclick="confirmThirds()" style="width: 100%; height: 55px; font-size: 1rem; margin: 0;">
+                    POTVRDIT VÝBĚR A POKRAČOVAT
                 </button>
             </div>
         </div>
@@ -454,8 +467,8 @@ function dE(e, gid) {
         
         actualGrid.innerHTML += `
             <div class="card-third ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <small style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 4px; text-transform: uppercase;">Skupina ${g.id}</small>
-                <strong style="font-size: 0.9rem; line-height: 1.2;">${teamName}</strong>
+                <span style="font-size: 0.65rem; opacity: 0.5; margin-bottom: 5px; text-transform: uppercase;">SKUPINA ${g.id}</span>
+                <span style="font-weight: bold; font-size: 1rem;">${teamName}</span>
             </div>`; 
     });
     
