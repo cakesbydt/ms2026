@@ -7,263 +7,108 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-      <style>
-:root {
-    /* Hlavní barvy - sjednocené názvy */
-    --bg: #0f172a;
-    --card: rgba(30, 41, 59, 0.7);
-    --accent: #38bdf8;
-    --winner: #22c55e;
-    --lose: #ef4444;
-    --border: rgba(255, 255, 255, 0.1);
-    --text: #f8fafc;
-    --text-muted: #94a3b8;
-    --gold: #fbbf24;
-}
+     <style>
+    :root {
+        --bg: #0b0f1a;           /* Opravdu tmavé pozadí */
+        --card: #161e2e;         /* Pevná barva karet (žádné průhledné experimenty) */
+        --header-bg: #1f2937;    /* Záhlaví karet */
+        --accent: #38bdf8;       /* Tvůj modrý akcent */
+        --text: #f8fafc;         /* Čitelná bílá */
+        --text-muted: #94a3b8;   /* Šedá pro méně důležité věci */
+        --border: #2d3748;       /* Viditelné hranice */
+        --winner: #22c55e;
+        --gold: #facc15;
+    }
 
-body { 
-    background: var(--bg); 
-    background-image: 
-        radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.15) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.1) 0, transparent 50%);
-    color: var(--text); 
-    font-family: 'Inter', sans-serif; 
-    margin: 0; 
-    padding: 0; 
-    min-height: 100vh;
-}
+    body { 
+        background-color: var(--bg); 
+        color: var(--text); 
+        font-family: 'Inter', sans-serif; 
+        margin: 0; 
+        padding: 0; 
+        min-height: 100vh;
+    }
 
-.app-wrapper { 
-    max-width: 1600px; 
-    margin: 0 auto; 
-    padding: 40px 20px; 
-}
+    .app-wrapper { max-width: 1400px; margin: 0 auto; padding: 20px; }
 
-header { 
-    text-align: center; 
-    padding: 20px 0 40px 0; 
-}
+    /* STEPPER - Ten tvůj na obrázku */
+    .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 30px; }
+    .step-dot { 
+        padding: 6px 16px; 
+        border-radius: 20px; 
+        background: #1f2937; 
+        color: var(--text-muted); 
+        font-size: 0.8rem; 
+        border: 1px solid var(--border);
+        font-weight: 600;
+    }
+    .step-dot.active { background: var(--gold) !important; color: #000 !important; border-color: var(--gold); }
+    .step-dot.completed { background: var(--accent) !important; color: #fff !important; border-color: var(--accent); }
 
-/* STEPPER - INDIKÁTOR PRŮBĚHU */
-.step-indicator { 
-    display: flex; 
-    justify-content: center; 
-    gap: 12px; 
-    margin-bottom: 30px; 
-    flex-wrap: wrap; 
-}
+    /* DASHBOARD LAYOUT */
+    .dashboard { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
+    @media (max-width: 1100px) { .dashboard { grid-template-columns: 1fr; } }
 
-.step-dot { 
-    padding: 8px 18px; 
-    border-radius: 30px; 
-    background: rgba(30, 41, 59, 0.8); 
-    font-size: 0.75rem; 
-    color: var(--text-muted); 
-    border: 1px solid var(--border); 
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
+    /* BOXY */
+    .section-box { 
+        background: var(--card); 
+        border: 1px solid var(--border); 
+        border-radius: 12px; 
+        overflow: hidden; 
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        margin-bottom: 20px;
+    }
 
-.step-dot.active { 
-    background: var(--gold) !important; 
-    color: #000 !important; 
-    font-weight: 800; 
-    border-color: var(--gold);
-    box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
-    transform: translateY(-2px);
-}
+    .section-header { 
+        padding: 15px 20px; 
+        background: var(--header-bg); 
+        font-weight: bold; 
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
 
-.step-dot.completed { 
-    background: var(--accent) !important; 
-    color: #fff !important; 
-    border-color: var(--accent);
-    opacity: 0.9;
-}
+    /* ŽEBŘÍČEK */
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    tr.player-row:hover { background: rgba(56, 189, 248, 0.1); cursor: pointer; }
 
-/* LAYOUT DASHBOARDU */
-.dashboard { 
-    display: grid; 
-    grid-template-columns: 480px 1fr; 
-    gap: 30px; 
-    align-items: start; 
-}
+    /* PAVOUK A TÝMY */
+    .playoff-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
+    .matchup { background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid var(--border); }
+    
+    .playoff-team { 
+        padding: 10px; 
+        margin: 5px 0; 
+        background: #1f2937; 
+        border-radius: 6px; 
+        text-align: center; 
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: 0.2s;
+    }
+    .playoff-team:hover { border-color: var(--accent); }
+    .playoff-team.selected { background: var(--accent); color: #000; font-weight: bold; }
 
-@media (max-width: 1200px) { 
-    .dashboard { grid-template-columns: 1fr; } 
-    .app-wrapper { padding: 15px; }
-}
+    /* TLAČÍTKA */
+    .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--accent); color: #000; width: 100%; text-transform: uppercase; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.3); }
+    .btn-back { background: #374151; color: white; font-size: 0.7rem; padding: 5px 10px; }
 
-/* SKLENĚNÉ BOXY */
-.section-box { 
-    background: var(--card); 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--border); 
-    border-radius: 20px; 
-    margin-bottom: 24px; 
-    overflow: hidden; 
-    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4); 
-}
-
-.section-header { 
-    padding: 20px 25px; 
-    background: rgba(15, 23, 42, 0.4); 
-    font-weight: 800; 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px;
-    border-bottom: 1px solid var(--border); 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-}
-
-/* ŽEBŘÍČEK */
-table { width: 100%; border-collapse: collapse; }
-td { 
-    padding: 15px; 
-    border-bottom: 1px solid var(--border); 
-    color: #e2e8f0; 
-}
-tr.player-row:hover { 
-    background: rgba(56, 189, 248, 0.08); 
-    cursor: pointer; 
-}
-
-/* DETAIL TIPU */
-.tip-detail-row { display: none; background: rgba(7, 10, 19, 0.6); }
-.detail-container { padding: 25px; border-left: 4px solid var(--accent); }
-
-.detail-section-title { 
-    color: var(--accent); 
-    font-size: 0.85rem; 
-    font-weight: 800; 
-    text-transform: uppercase; 
-    margin-bottom: 20px; 
-    display: block; 
-    border-bottom: 1px solid var(--border); 
-    padding-bottom: 8px; 
-    letter-spacing: 1px;
-}
-
-/* SKUPINY A TÝMY */
-.groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; }
-
-.group-card { 
-    background: rgba(15, 23, 42, 0.8); 
-    border: 1px solid var(--border); 
-    padding: 15px; 
-    border-radius: 12px; 
-    text-align: center; 
-    cursor: pointer; 
-    font-weight: bold;
-    transition: all 0.2s;
-}
-
-.group-card.filled { border-color: var(--winner); color: var(--winner); box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
-.group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); transform: scale(1.05); }
-
-.team-item { 
-    background: rgba(30, 41, 59, 0.8); 
-    padding: 14px; 
-    margin: 8px 0; 
-    border-radius: 10px; 
-    border: 1px solid var(--border);
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center;
-    cursor: grab; 
-    transition: background 0.2s;
-}
-.team-item:hover { background: rgba(51, 65, 85, 0.8); }
-
-/* PAVOUK A ZÁPASY */
-.playoff-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-
-.matchup {
-    background: rgba(15, 23, 42, 0.4); 
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 18px;
-    transition: all 0.3s ease;
-}
-
-.matchup:hover {
-    border-color: var(--accent);
-    transform: translateY(-3px);
-    background: rgba(15, 23, 42, 0.6);
-}
-
-.playoff-team {
-    padding: 14px;
-    margin: 6px 0;
-    cursor: pointer;
-    border-radius: 10px;
-    background: rgba(36, 49, 71, 0.7);
-    border: 1px solid transparent;
-    display: flex;
-    justify-content: center;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.playoff-team:hover {
-    background: rgba(56, 189, 248, 0.15);
-    border-color: var(--accent);
-}
-
-.playoff-team.selected {
-    background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
-    color: white;
-    font-weight: 800;
-    box-shadow: 0 5px 15px rgba(2, 132, 199, 0.4);
-}
-
-/* TLAČÍTKA */
-.btn { 
-    padding: 15px 25px; 
-    border: none; 
-    border-radius: 12px; 
-    font-weight: 800; 
-    cursor: pointer; 
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.btn-primary { 
-    background: var(--accent); 
-    color: #0f172a; 
-    width: 100%; 
-    margin-top: 25px;
-    box-shadow: 0 4px 14px 0 rgba(56, 189, 248, 0.39);
-}
-
-.btn-primary:hover { 
-    transform: translateY(-2px); 
-    box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
-    filter: brightness(1.1);
-}
-
-.btn-back { 
-    background: rgba(71, 85, 105, 0.5); 
-    color: white; 
-    font-size: 0.7rem; 
-    padding: 8px 16px; 
-    margin-top: 0; 
-    backdrop-filter: blur(5px);
-}
-
-input { 
-    width: 100%; 
-    padding: 16px; 
-    background: rgba(0, 0, 0, 0.3); 
-    color: #fff; 
-    border: 1px solid var(--border); 
-    border-radius: 10px; 
-    box-sizing: border-box; 
-    font-size: 1rem;
-}
+    /* SKUPINY (Šipky a řazení) */
+    .team-item { 
+        background: #1f2937; 
+        padding: 12px; 
+        margin: 5px 0; 
+        border-radius: 8px; 
+        display: flex; 
+        justify-content: space-between; 
+        border: 1px solid var(--border); 
+    }
 </style>
 
 <div class="app-wrapper">
