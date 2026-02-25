@@ -182,53 +182,64 @@ let state = {
         return { ...row, tip, points: pts };
     }).sort((a,b) => b.points - a.points);
 
-    // Pomocná funkce pro barvu tagu v detailu
-    const getStatusClass = (stageId, teamName) => {
-        if (!real[stageId] || real[stageId].length === 0) return ''; // Nevyhodnoceno -> šedá (bez třídy)
-        return real[stageId].includes(teamName) ? 'status-correct' : 'status-wrong'; // Vyhodnoceno -> zelená/červená
-    };
+   // Pomocná funkce: stageCount je počet týmů, které mají v daném kole celkem být (16, 8, 4...)
+const getStatusClass = (stageId, teamName, stageCount) => {
+    if (!real[stageId] || real[stageId].length === 0) return ''; // Nic není vyhodnoceno -> šedá
 
-    body.innerHTML = processed.map((r, i) => `
-        <tr class="player-row" onclick="toggleDetail('det-${r.id}')">
-            <td style="width:10px; color:#94a3b8">${i+1}.</td>
-            <td style="font-weight:bold">${r.name}</td>
-            <td style="text-align:right; font-weight:bold; color:var(--accent)">${r.points} b.</td>
-        </tr>
-        <tr id="det-${r.id}" class="tip-detail-row">
-            <td colspan="3">
-                <div class="detail-container">
-                    <span class="detail-section-title">Skupinová fáze</span>
-                    <div class="det-groups-grid">
-                        ${(r.tip.groups||[]).map((g, idx) => `
-                            <div class="det-group-box">
-                                <b>Sk. ${String.fromCharCode(65+idx)}</b>
-                                ${g.map((t, p) => {
-                                    let c = '';
-                                    if(real.groups && real.groups[idx][p]) {
-                                        c = real.groups[idx][p] === t ? 'status-correct' : 'status-wrong';
-                                    }
-                                    return `<div class="${c}">${p+1}. ${t}</div>`;
-                                }).join('')}
-                            </div>`).join('')}
-                    </div>
-                    <span class="detail-section-title">Play-off pavouk</span>
-                    <div class="det-playoff-stages">
-                        <div class="det-stage-column">
-                            <div class="det-stage-card"><h5>1/16 Finále</h5><div class="det-team-list">${(r.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t)}">${t}</span>`).join('')}</div></div>
-                            <div class="det-stage-card"><h5>1/8 Finále</h5><div class="det-team-list">${(r.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t)}">${t}</span>`).join('')}</div></div>
-                        </div>
-                        <div class="det-stage-column">
-                            <div class="det-stage-card"><h5>Čtvrtfinále</h5><div class="det-team-list">${(r.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t)}">${t}</span>`).join('')}</div></div>
-                            <div class="det-stage-card"><h5>Semifinále</h5><div class="det-team-list">${(r.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t)}">${t}</span>`).join('')}</div></div>
-                        </div>
-                        <div class="det-stage-column">
-                            <div class="det-stage-card" style="border-color:gold"><h5>🥇 Vítěz</h5><div class="det-team-tag ${real.winner ? (real.winner===r.tip.winner?'status-correct':'status-wrong') : ''}">${r.tip.winner}</div></div>
-                            <div class="det-stage-card" style="border-color:#cd7f32"><h5>🥉 3. Místo</h5><div class="det-team-tag ${real.bronze ? (real.bronze===r.tip.bronze?'status-correct':'status-wrong') : ''}">${r.tip.bronze}</div></div>
-                        </div>
-                    </div>
+    // Pokud tým v oficiálních výsledcích JE -> zelená
+    if (real[stageId].includes(teamName)) return 'status-correct';
+
+    // Tým zčervená JEN pokud:
+    // 1. Kolo je již kompletně vyhodnocené (všechna místa jsou zaplněna)
+    // 2. NEBO pokud už tento tým vypadl (není v aktuálním kole, ačkoliv kolo už má nějaké výsledky)
+    // Pro jednoduchost: Pokud už je v adminu zadán plný počet postupujících pro dané kolo, zbytek zčervená.
+    if (real[stageId].length >= stageCount) return 'status-wrong';
+
+    return ''; // Jinak zůstává šedý (čeká se na zbytek výsledků v adminu)
+};
+
+body.innerHTML = processed.map((r, i) => `
+    <div class="det-playoff-stages">
+        <div class="det-stage-column">
+            <div class="det-stage-card">
+                <h5>1/16 Finále</h5>
+                <div class="det-team-list">
+                    ${(r.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}
                 </div>
-            </td>
-        </tr>`).join('');
+            </div>
+            <div class="det-stage-card">
+                <h5>1/8 Finále</h5>
+                <div class="det-team-list">
+                    ${(r.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}
+                </div>
+            </div>
+        </div>
+        <div class="det-stage-column">
+            <div class="det-stage-card">
+                <h5>Čtvrtfinále</h5>
+                <div class="det-team-list">
+                    ${(r.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}
+                </div>
+            </div>
+            <div class="det-stage-card">
+                <h5>Semifinále</h5>
+                <div class="det-team-list">
+                    ${(r.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}
+                </div>
+            </div>
+        </div>
+        <div class="det-stage-column">
+            <div class="det-stage-card" style="border-color:gold">
+                <h5>🥇 Vítěz</h5>
+                <div class="det-team-tag ${real.winner ? (real.winner===r.tip.winner?'status-correct':'status-wrong') : ''}">${r.tip.winner}</div>
+            </div>
+            <div class="det-stage-card" style="border-color:#cd7f32">
+                <h5>🥉 3. Místo</h5>
+                <div class="det-team-tag ${real.bronze ? (real.bronze===r.tip.bronze?'status-correct':'status-wrong') : ''}">${r.tip.bronze}</div>
+            </div>
+        </div>
+    </div>
+    `);
 }
 
     function toggleDetail(id) {
