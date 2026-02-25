@@ -88,17 +88,18 @@
     color: #d97706; /* Bronzová */
 }
 
-    .fa-trophy, .fa-medal {
+/* --- ZÁKLADNÍ PRVKY A IKONY --- */
+.fa-trophy, .fa-medal {
     filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3));
     vertical-align: middle;
 }
 
-/* Ikony v žebříčku */
 .rank-icon {
     margin-right: 8px;
     font-size: 1.1rem;
 }
 
+/* --- HLAVIČKA (HOST BAR) --- */
 .site-header {
     width: 100%;
     display: flex;
@@ -108,21 +109,21 @@
 
 .mini-host-bar {
     display: flex;
-    flex-direction: column; /* Naskládá prvky pod sebe */
-    align-items: center;    /* Vycentruje vlajky i text na střed */
-    gap: 10px;              /* Mezera mezi vlajkami a textem */
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     background: rgba(255, 255, 255, 0.03);
     padding: 15px 25px;
     border-radius: 12px;
 }
 
-        .mini-flags {
+.mini-flags {
     display: flex;
-    gap: 8px;               /* Mezera mezi vlajkami navzájem */
+    gap: 8px;
 }
-        
+
 .mini-flags img {
-    height: 20px;           /* Velikost vlajek - můžeš si upravit */
+    height: 20px;
     width: auto;
     border-radius: 2px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -136,18 +137,12 @@
     text-transform: uppercase;
     text-align: center;
 }
-        
-/* Responzivita: Na malých displejích to trochu zmenšíme */
-@media (max-width: 600px) {
-    .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
-    .host-info-bar { padding: 8px 15px; gap: 10px; }
-}
-        /* --- OPRAVA HLAVIČKY A MŘÍŽKY --- */
+
+/* --- MŘÍŽKA TÝMŮ A POČÍTADLO --- */
 .thirds-header-row {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 20px !important; /* Mezera mezi textem a počítadlem */
+    justify-content: space-between !important; /* Upraveno pro lepší rozložení */
     width: 100% !important;
     padding: 10px 0 20px 0 !important;
     border-bottom: 1px solid var(--border) !important;
@@ -158,10 +153,9 @@
     font-size: 1.1rem !important;
     font-weight: 600 !important;
     color: var(--text) !important;
-    white-space: nowrap !important; /* Zabrání lámání textu do řádků */
 }
 
-        #thirds-counter {
+#thirds-counter {
     background: var(--accent);
     color: #000;
     padding: 5px 15px;
@@ -170,31 +164,24 @@
     font-size: 1.2rem;
     min-width: 60px;
     text-align: center;
-    transition: 0.3s;
 }
-        
-/* --- FINÁLNÍ OPRAVA: ČISTÁ MŘÍŽKA BEZ LEVÉHO SLOUPCE --- */
+
 .thirds-wrapper {
-    display: block !important; /* Zrušíme flex, který to tlačil doleva */
     width: 100% !important;
-    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
     box-sizing: border-box;
 }
 
-/* Kontejner mřížky, aby využil celou šířku */
 #thirds-actual-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
     gap: 12px !important;
     width: 100% !important;
 }
-        
-    .thirds-grid-fixed { 
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-        gap: 12px; margin-bottom: 20px; 
-    }
-        
- .card-third {
+
+.card-third {
     background: #1e293b;
     border: 1px solid var(--border);
     padding: 15px 5px;
@@ -206,39 +193,17 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    align-items: center;
 }
-        
-    .card-third:hover { border-color: var(--accent); }
+
 .card-third.selected {
     background: rgba(34, 197, 94, 0.2) !important;
     border-color: var(--winner) !important;
     color: var(--winner) !important;
 }
-    .card-third small { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
 
-        /* Info lišta nahoře */
-.thirds-info-bar {
-    background: rgba(15, 23, 42, 0.6);
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-        /* Styl pro počítadlo v hlavičce */
-.counter-badge {
-    background: var(--accent);
-    color: #000;
-    padding: 2px 10px;
-    border-radius: 6px;
-    font-weight: 900;
-    margin-left: 10px;
-}
-
-
-        .modal-overlay {
+/* --- MODÁLNÍ OKNO (CUSTOM ALERT) --- */
+.modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.85);
@@ -247,24 +212,20 @@
 }
 
 .modal-content {
-    background: #1e293b; /* Tmavé pozadí jako v žebříčku */
+    background: #1e293b;
     padding: 30px;
     border-radius: 15px;
-    border: 1px solid rgba(251, 191, 36, 0.3); /* Zlatý nádech */
+    border: 1px solid rgba(251, 191, 36, 0.3);
     text-align: center;
     max-width: 400px;
     width: 90%;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 
 .modal-icon {
     font-size: 3rem;
-    color: #fbbf24; /* Zlatá */
+    color: #fbbf24;
     margin-bottom: 15px;
 }
-
-.modal-content h2 { color: white; margin-bottom: 10px; }
-.modal-content p { color: #94a3b8; margin-bottom: 25px; }
 
 .modal-btn {
     background: #fbbf24;
@@ -274,79 +235,77 @@
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.2s;
 }
 
-.modal-btn:hover { transform: scale(1.05); }
-.hidden { display: none !important; }
-/* Responzivita pro menší obrazovky */
+/* --- RESPONZIVITA (MOBILNÍ VERZE) --- */
 @media (max-width: 1000px) {
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
-@media (max-width: 600px) {
-    #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
-}
 
-        /* Doplnění tvé stávající responzivity pro mobil (max-width: 600px) */
 @media (max-width: 600px) {
-    /* 1. Horní lišta (už tam máš, jen sjednocujeme) */
+    /* Centrování obsahu na střed */
+    .thirds-wrapper, .section-box {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        padding: 10px !important;
+    }
+
+    #thirds-actual-grid { 
+        grid-template-columns: repeat(2, 1fr) !important; 
+        width: 100% !important;
+    }
+
+    /* Hlavička a texty */
+    .mini-host-bar { padding: 10px 15px; width: 90%; }
     .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
-    .host-info-bar { padding: 8px 15px; gap: 10px; }
+    .thirds-title-text { font-size: 0.9rem !important; white-space: normal !important; text-align: center; }
 
-    /* 2. Žebříček - aby se jména neřezala a lépe se klikalo */
+    /* Žebříček */
     .player-row td {
         padding: 12px 8px !important;
         font-size: 0.85rem !important;
     }
-    
-    /* 3. Detail hráče (po rozkliknutí v žebříčku) */
-    .det-groups-grid { 
-        grid-template-columns: repeat(2, 1fr) !important; /* Skupiny 2 vedle sebe */
-        gap: 10px !important;
-    }
 
-    .det-playoff-stages {
-        flex-direction: column !important; /* Sloupce pavouka (1/8, 1/4...) pod sebe */
-        gap: 15px !important;
-    }
-
-    .det-stage-column {
-        width: 100% !important;
-    }
-
-    /* 4. Samotné tipování pavouka */
-    .section-box {
-        padding: 15px 5px !important;
-        margin-bottom: 20px !important;
-        overflow-x: auto; /* Umožní scrollovat do stran, pokud je zápas široký */
-    }
-
+    /* Pavouk a zápasy - vycentrování */
     .matchup {
         width: 100% !important;
-        min-width: 280px; /* Aby se texty v zápase nemačkaly */
+        max-width: 300px !important;
         margin: 0 auto 15px auto !important;
     }
 
     .playoff-team {
-        padding: 12px !important; /* Větší plocha pro prst */
+        padding: 12px !important;
         font-size: 0.9rem !important;
+        text-align: center;
     }
 
-    /* 5. Finální box a zadávání jména */
-    #final-box {
-        padding: 20px 15px !important;
+    /* Detail hráče */
+    .det-groups-grid { 
+        grid-template-columns: repeat(2, 1fr) !important; 
+        width: 100%;
+    }
+    
+    .det-playoff-stages {
+        flex-direction: column !important;
+        align-items: center !important;
+        width: 100%;
     }
 
+    .det-stage-column {
+        width: 100% !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Input pro jméno */
     #user-name {
         width: 100% !important;
-        box-sizing: border-box; /* Aby input nevyčníval z boxu */
-        font-size: 16px !important; /* Prevence automatického přibližování na iPhone */
-    }
-
-    /* 6. Vlastní grafické potvrzení (Modal) */
-    .modal-content {
-        width: 90% !important;
-        padding: 20px !important;
+        max-width: 280px;
+        font-size: 16px !important; /* Zamezí zoomování na iPhone */
+        margin: 10px auto !important;
+        display: block;
     }
 }
 
