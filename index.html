@@ -777,14 +777,12 @@ function confirmThirds() {
       
           // SEKCE 8 (W96 v R16)
         getT('J', 0), getT('H', 1), // Z86 (1J vs 2H)    Z95
-        getT('K', 1), getT('L', 1)  // Z88 (2K vs 2L)
+        getT('K', 1), getT('L', 1),  // Z88 (2K vs 2L)
 
 
         // SEKCE 7 (W95 v R16)
         getT('B', 0), vybrane3[6], // Z85 (1B vs 3EFGIJ)    Z96        Z100
         getT('K', 0), vybrane3[7], // Z87 (1K vs 3DEIJL)
-
-      
     ];
 
     genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');
