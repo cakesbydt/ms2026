@@ -287,6 +287,69 @@
     #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 
+        /* Doplnění tvé stávající responzivity pro mobil (max-width: 600px) */
+@media (max-width: 600px) {
+    /* 1. Horní lišta (už tam máš, jen sjednocujeme) */
+    .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
+    .host-info-bar { padding: 8px 15px; gap: 10px; }
+
+    /* 2. Žebříček - aby se jména neřezala a lépe se klikalo */
+    .player-row td {
+        padding: 12px 8px !important;
+        font-size: 0.85rem !important;
+    }
+    
+    /* 3. Detail hráče (po rozkliknutí v žebříčku) */
+    .det-groups-grid { 
+        grid-template-columns: repeat(2, 1fr) !important; /* Skupiny 2 vedle sebe */
+        gap: 10px !important;
+    }
+
+    .det-playoff-stages {
+        flex-direction: column !important; /* Sloupce pavouka (1/8, 1/4...) pod sebe */
+        gap: 15px !important;
+    }
+
+    .det-stage-column {
+        width: 100% !important;
+    }
+
+    /* 4. Samotné tipování pavouka */
+    .section-box {
+        padding: 15px 5px !important;
+        margin-bottom: 20px !important;
+        overflow-x: auto; /* Umožní scrollovat do stran, pokud je zápas široký */
+    }
+
+    .matchup {
+        width: 100% !important;
+        min-width: 280px; /* Aby se texty v zápase nemačkaly */
+        margin: 0 auto 15px auto !important;
+    }
+
+    .playoff-team {
+        padding: 12px !important; /* Větší plocha pro prst */
+        font-size: 0.9rem !important;
+    }
+
+    /* 5. Finální box a zadávání jména */
+    #final-box {
+        padding: 20px 15px !important;
+    }
+
+    #user-name {
+        width: 100% !important;
+        box-sizing: border-box; /* Aby input nevyčníval z boxu */
+        font-size: 16px !important; /* Prevence automatického přibližování na iPhone */
+    }
+
+    /* 6. Vlastní grafické potvrzení (Modal) */
+    .modal-content {
+        width: 90% !important;
+        padding: 20px !important;
+    }
+}
+
     /* --- ZBYTEK PŮVODNÍCH STYLŮ --- */
     .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
     
