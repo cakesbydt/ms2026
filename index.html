@@ -8,14 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <header>
+    <div class="main-header-logo">
         <div class="host-info-bar">
             <img src="https://flagcdn.com/us.svg" alt="USA">
             <img src="https://flagcdn.com/mx.svg" alt="Mexico">
             <img src="https://flagcdn.com/ca.svg" alt="Canada">
-            <span style="font-size: 0.8rem; color: #94a3b8; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
+            <span class="host-text">
                 United States | Mexico | Canada 2026
             </span>
         </div>
+    </div>
 </header>
     
     <style>
@@ -73,20 +75,40 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-        /* --- LOGO A HEADER --- */
+  /* Kontejner pro vycentrování celého bloku */
+.main-header-logo {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 20px 0;
+}
 
 .host-info-bar {
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 5px 15px;
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 15px; /* Větší mezera mezi vlajkami a textem */
+    background: rgba(255, 255, 255, 0.07);
+    padding: 12px 25px; /* Větší vnitřní prostor */
+    border-radius: 50px; /* Kulatější vzhled */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Jemný stín pod lištou */
 }
 
-.host-info-bar img { height: 14px; border-radius: 2px; }
-.host-text { font-size: 0.75rem; color: #94a3b8; font-weight: bold; letter-spacing: 1px; }
+/* Větší vlajky */
+.host-info-bar img { 
+    height: 22px; /* Zvětšeno ze 14px */
+    width: auto;
+    border-radius: 3px; 
+}
+
+/* Větší a výraznější text */
+.host-text { 
+    font-size: 1.1rem !important; /* Zvětšeno z 0.75rem */
+    color: #fff; /* Čistě bílá pro lepší čitelnost */
+    font-weight: 800; 
+    letter-spacing: 2px; /* Výraznější rozestupy písmen */
+    text-transform: uppercase;
+}
 
         /* --- OPRAVA HLAVIČKY A MŘÍŽKY --- */
 .thirds-header-row {
