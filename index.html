@@ -391,25 +391,36 @@ function dE(e, gid) {
     renderTeamList(gid); 
 }
 
-    function confirmAllGroups() {
+   function confirmAllGroups() {
     if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
+    
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
     updateStepper('dot-s2');
-    
+
     const grid = document.getElementById('thirds-grid'); 
-    // Přidáme kontejner pro počítadlo a samotný grid
+    
+    // Vytvoření struktury s počítadlem
     grid.innerHTML = `
-        <div id="thirds-counter" style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--accent); font-size:1.1rem;">
-            Vybráno: 0 / 8
+        <div id="thirds-counter" style="text-align:center; margin-bottom:15px; font-weight:bold; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-size:1.1rem; background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2);">
+            Vybráno: ${state.thirds.length} / 8
         </div>
         <div class="groups-grid" id="thirds-actual-grid"></div>
     `; 
     
     const actualGrid = document.getElementById('thirds-actual-grid');
+    
     state.groups.forEach(g => { 
-        actualGrid.innerHTML += `<div class="group-card" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]}</div>`; 
+        const teamName = g.teams[2];
+        // Tady je ta klíčová změna: Kontrola, jestli už je tým vybraný
+        const isSelected = state.thirds.includes(teamName) ? 'selected' : '';
+        
+        actualGrid.innerHTML += `
+            <div class="group-card ${isSelected}" onclick="selectThird(this, '${teamName}')">
+                ${teamName}
+            </div>`; 
     });
+    
     window.scrollTo(0,0);
 }
    function selectThird(el, teamName) {
