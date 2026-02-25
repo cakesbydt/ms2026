@@ -170,54 +170,66 @@ let state = {
     }
 
     function renderLeaderboard(data, real) {
-        const body = document.getElementById('public-body');
-        const processed = data.map(row => {
-            const tip = typeof row.tip_data === 'string' ? JSON.parse(row.tip_data) : row.tip_data;
-            let pts = 0;
-            if(real.groups) real.groups.forEach((rg, i) => { if(tip.groups?.[i]) rg.forEach((t, p) => { if(t && tip.groups[i][p] === t) pts += 2; }); });
-            const check = (st, p) => { if(real[st] && tip[st]) tip[st].forEach(t => { if(real[st].includes(t)) pts += p; }); };
-            check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
-            if(real.winner && tip.winner === real.winner) pts += 15;
-            if(real.bronze && tip.bronze === real.bronze) pts += 10;
-            return { ...row, tip, points: pts };
-        }).sort((a,b) => b.points - a.points);
+    const body = document.getElementById('public-body');
+    const processed = data.map(row => {
+        const tip = typeof row.tip_data === 'string' ? JSON.parse(row.tip_data) : row.tip_data;
+        let pts = 0;
+        if(real.groups) real.groups.forEach((rg, i) => { if(tip.groups?.[i]) rg.forEach((t, p) => { if(t && tip.groups[i][p] === t) pts += 2; }); });
+        const check = (st, p) => { if(real[st] && tip[st]) tip[st].forEach(t => { if(real[st].includes(t)) pts += p; }); };
+        check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
+        if(real.winner && tip.winner === real.winner) pts += 15;
+        if(real.bronze && tip.bronze === real.bronze) pts += 10;
+        return { ...row, tip, points: pts };
+    }).sort((a,b) => b.points - a.points);
 
-        body.innerHTML = processed.map((r, i) => `
-            <tr class="player-row" onclick="toggleDetail('det-${r.id}')">
-                <td style="width:10px; color:#94a3b8">${i+1}.</td>
-                <td style="font-weight:bold">${r.name}</td>
-                <td style="text-align:right; font-weight:bold; color:var(--accent)">${r.points} b.</td>
-            </tr>
-            <tr id="det-${r.id}" class="tip-detail-row">
-                <td colspan="3">
-                    <div class="detail-container">
-                        <span class="detail-section-title">Skupinová fáze</span>
-                        <div class="det-groups-grid">
-                            ${(r.tip.groups||[]).map((g, idx) => `
-                                <div class="det-group-box">
-                                    <b>Sk. ${String.fromCharCode(65+idx)}</b>
-                                    ${g.map((t, p) => `<div class="${real.groups ? (real.groups[idx][p]===t?'status-correct':'status-wrong') : ''}">${p+1}. ${t}</div>`).join('')}
-                                </div>`).join('')}
+    // Pomocná funkce pro barvu tagu v detailu
+    const getStatusClass = (stageId, teamName) => {
+        if (!real[stageId] || real[stageId].length === 0) return ''; // Nevyhodnoceno -> šedá (bez třídy)
+        return real[stageId].includes(teamName) ? 'status-correct' : 'status-wrong'; // Vyhodnoceno -> zelená/červená
+    };
+
+    body.innerHTML = processed.map((r, i) => `
+        <tr class="player-row" onclick="toggleDetail('det-${r.id}')">
+            <td style="width:10px; color:#94a3b8">${i+1}.</td>
+            <td style="font-weight:bold">${r.name}</td>
+            <td style="text-align:right; font-weight:bold; color:var(--accent)">${r.points} b.</td>
+        </tr>
+        <tr id="det-${r.id}" class="tip-detail-row">
+            <td colspan="3">
+                <div class="detail-container">
+                    <span class="detail-section-title">Skupinová fáze</span>
+                    <div class="det-groups-grid">
+                        ${(r.tip.groups||[]).map((g, idx) => `
+                            <div class="det-group-box">
+                                <b>Sk. ${String.fromCharCode(65+idx)}</b>
+                                ${g.map((t, p) => {
+                                    let c = '';
+                                    if(real.groups && real.groups[idx][p]) {
+                                        c = real.groups[idx][p] === t ? 'status-correct' : 'status-wrong';
+                                    }
+                                    return `<div class="${c}">${p+1}. ${t}</div>`;
+                                }).join('')}
+                            </div>`).join('')}
+                    </div>
+                    <span class="detail-section-title">Play-off pavouk</span>
+                    <div class="det-playoff-stages">
+                        <div class="det-stage-column">
+                            <div class="det-stage-card"><h5>1/16 Finále</h5><div class="det-team-list">${(r.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t)}">${t}</span>`).join('')}</div></div>
+                            <div class="det-stage-card"><h5>1/8 Finále</h5><div class="det-team-list">${(r.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t)}">${t}</span>`).join('')}</div></div>
                         </div>
-                        <span class="detail-section-title">Play-off pavouk</span>
-                        <div class="det-playoff-stages">
-                            <div class="det-stage-column">
-                                <div class="det-stage-card"><h5>1/16 Finále</h5><div class="det-team-list">${(r.tip.s32||[]).map(t => `<span class="det-team-tag ${real.s32?.includes(t)?'status-correct':'status-wrong'}">${t}</span>`).join('')}</div></div>
-                                <div class="det-stage-card"><h5>1/8 Finále</h5><div class="det-team-list">${(r.tip.s16||[]).map(t => `<span class="det-team-tag ${real.s16?.includes(t)?'status-correct':'status-wrong'}">${t}</span>`).join('')}</div></div>
-                            </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card"><h5>Čtvrtfinále</h5><div class="det-team-list">${(r.tip.s8||[]).map(t => `<span class="det-team-tag ${real.s8?.includes(t)?'status-correct':'status-wrong'}">${t}</span>`).join('')}</div></div>
-                                <div class="det-stage-card"><h5>Semifinále</h5><div class="det-team-list">${(r.tip.s4||[]).map(t => `<span class="det-team-tag ${real.s4?.includes(t)?'status-correct':'status-wrong'}">${t}</span>`).join('')}</div></div>
-                            </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card" style="border-color:gold"><h5>🥇 Vítěz</h5><div class="det-team-tag ${real.winner===r.tip.winner?'status-correct':'status-wrong'}">${r.tip.winner}</div></div>
-                                <div class="det-stage-card" style="border-color:#cd7f32"><h5>🥉 3. Místo</h5><div class="det-team-tag ${real.bronze===r.tip.bronze?'status-correct':'status-wrong'}">${r.tip.bronze}</div></div>
-                            </div>
+                        <div class="det-stage-column">
+                            <div class="det-stage-card"><h5>Čtvrtfinále</h5><div class="det-team-list">${(r.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t)}">${t}</span>`).join('')}</div></div>
+                            <div class="det-stage-card"><h5>Semifinále</h5><div class="det-team-list">${(r.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t)}">${t}</span>`).join('')}</div></div>
+                        </div>
+                        <div class="det-stage-column">
+                            <div class="det-stage-card" style="border-color:gold"><h5>🥇 Vítěz</h5><div class="det-team-tag ${real.winner ? (real.winner===r.tip.winner?'status-correct':'status-wrong') : ''}">${r.tip.winner}</div></div>
+                            <div class="det-stage-card" style="border-color:#cd7f32"><h5>🥉 3. Místo</h5><div class="det-team-tag ${real.bronze ? (real.bronze===r.tip.bronze?'status-correct':'status-wrong') : ''}">${r.tip.bronze}</div></div>
                         </div>
                     </div>
-                </td>
-            </tr>`).join('');
-    }
+                </div>
+            </td>
+        </tr>`).join('');
+}
 
     function toggleDetail(id) {
         const el = document.getElementById(id);
