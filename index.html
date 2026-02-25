@@ -43,6 +43,13 @@
     border-color: var(--winner);
 }
 
+        #thirds-counter {
+    background: rgba(56, 189, 248, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
         .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
         @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
 
@@ -385,25 +392,43 @@ function dE(e, gid) {
 }
 
     function confirmAllGroups() {
-        if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
-        document.getElementById('phase-groups').classList.add('hidden');
-        document.getElementById('phase-thirds').classList.remove('hidden');
-        updateStepper('dot-s2');
-        const grid = document.getElementById('thirds-grid'); grid.innerHTML = '';
-        state.groups.forEach(g => { grid.innerHTML += `<div class="group-card" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]}</div>`; });
-        window.scrollTo(0,0);
+    if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
+    document.getElementById('phase-groups').classList.add('hidden');
+    document.getElementById('phase-thirds').classList.remove('hidden');
+    updateStepper('dot-s2');
+    
+    const grid = document.getElementById('thirds-grid'); 
+    // Přidáme kontejner pro počítadlo a samotný grid
+    grid.innerHTML = `
+        <div id="thirds-counter" style="text-align:center; margin-bottom:15px; font-weight:bold; color:var(--accent); font-size:1.1rem;">
+            Vybráno: 0 / 8
+        </div>
+        <div class="groups-grid" id="thirds-actual-grid"></div>
+    `; 
+    
+    const actualGrid = document.getElementById('thirds-actual-grid');
+    state.groups.forEach(g => { 
+        actualGrid.innerHTML += `<div class="group-card" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]}</div>`; 
+    });
+    window.scrollTo(0,0);
+}
+   function selectThird(el, teamName) {
+    if (state.thirds.includes(teamName)) {
+        state.thirds = state.thirds.filter(t => t !== teamName);
+        el.classList.remove('selected');
+    } else if (state.thirds.length < 8) {
+        state.thirds.push(teamName);
+        el.classList.add('selected');
     }
-
-    // OPRAVENÝ VÝBĚR 3. MÍST
-    function selectThird(el, teamName) {
-        if (state.thirds.includes(teamName)) {
-            state.thirds = state.thirds.filter(t => t !== teamName);
-            el.classList.remove('selected');
-        } else if (state.thirds.length < 8) {
-            state.thirds.push(teamName);
-            el.classList.add('selected');
-        }
+    
+    // AKTUALIZACE POČÍTADLA
+    const counter = document.getElementById('thirds-counter');
+    if(counter) {
+        counter.innerText = `Vybráno: ${state.thirds.length} / 8`;
+        // Pokud je 8, změníme barvu na vítěznou zelenou
+        counter.style.color = state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)';
     }
+}
 
     function confirmThirds() {
         if(state.thirds.length !== 8) return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
