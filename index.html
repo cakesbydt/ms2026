@@ -279,16 +279,75 @@ let state = {
         document.getElementById(dotId).classList.add('active');
     }
 
-    function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; renderTeamList(id); }
-    function renderTeamList(gid) {
-        const g = state.groups.find(x => x.id === gid);
-        const cont = document.getElementById('team-list-container');
-        cont.innerHTML = `<div id="L-${gid}">${g.teams.map((t, i) => `<div class="team-item" draggable="true" ondragstart="dS(event)" ondragover="dO(event)" ondragend="dE(event,'${gid}')"><span>${t}</span><b>${i+1}.</b></div>`).join('')}</div>`;
-        g.done = true; document.getElementById(`dot-${gid}`).classList.add('filled');
+   function editGroup(id) { 
+    document.getElementById('group-editor').classList.remove('hidden'); 
+    document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; 
+    renderTeamList(id); 
+    // Scrollne na editor, aby to bylo na mobilu hned vidět
+    document.getElementById('group-editor').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderTeamList(gid) {
+    const g = state.groups.find(x => x.id === gid);
+    const cont = document.getElementById('team-list-container');
+    
+    // Generujeme seznam s ID pro každé kolo a ovládacími prvky
+    cont.innerHTML = `<div id="L-${gid}" style="display:flex; flex-direction:column; gap:8px;">
+        ${g.teams.map((t, i) => `
+            <div class="team-item" draggable="true" 
+                 ondragstart="dS(event)" ondragover="dO(event)" ondragend="dE(event,'${gid}')"
+                 style="display:flex; justify-content:space-between; align-items:center;">
+                
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="color:var(--accent); font-weight:bold; min-width:20px;">${i+1}.</span>
+                    <span>${t}</span>
+                </div>
+
+                <div class="team-controls" style="display:flex; gap:5px;">
+                    <button class="arrow-btn" onclick="moveTeam('${gid}', ${i}, -1)" style="padding: 5px 10px; background:#243147; border:1px solid var(--border); color:var(--accent); border-radius:4px;">
+                        <i class="fas fa-chevron-up"></i>
+                    </button>
+                    <button class="arrow-btn" onclick="moveTeam('${gid}', ${i}, 1)" style="padding: 5px 10px; background:#243147; border:1px solid var(--border); color:var(--accent); border-radius:4px;">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('')}
+    </div>`;
+    
+    g.done = true; 
+    document.getElementById(`dot-${gid}`).classList.add('filled');
+}
+
+// Tahle funkce zajistí posun šipkami
+function moveTeam(gid, index, direction) {
+    const g = state.groups.find(x => x.id === gid);
+    const newIndex = index + direction;
+    
+    // Kontrola, jestli nevyskakujeme z pole (0-3)
+    if (newIndex >= 0 && newIndex < g.teams.length) {
+        const temp = g.teams[index];
+        g.teams[index] = g.teams[newIndex];
+        g.teams[newIndex] = temp;
+        renderTeamList(gid); // Znovu vykreslíme se změněným pořadím
     }
-    let dEl = null; function dS(e) { dEl = e.currentTarget; }
-    function dO(e) { e.preventDefault(); const l = dEl.parentNode; const s = [...l.querySelectorAll('.team-item')]; let n = s.find(x => e.clientY <= x.getBoundingClientRect().top + x.getBoundingClientRect().height/2); l.insertBefore(dEl, n); }
-    function dE(e, gid) { const n = [...document.querySelectorAll(`#L-${gid} span`)].map(x => x.innerText); state.groups.find(x => x.id === gid).teams = n; renderTeamList(gid); }
+}
+    let dEl = null; 
+function dS(e) { dEl = e.currentTarget; dEl.style.opacity = '0.4'; }
+function dO(e) { 
+    e.preventDefault(); 
+    const l = dEl.parentNode; 
+    const s = [...l.querySelectorAll('.team-item')]; 
+    let n = s.find(x => e.clientY <= x.getBoundingClientRect().top + x.getBoundingClientRect().height/2); 
+    l.insertBefore(dEl, n); 
+}
+function dE(e, gid) { 
+    dEl.style.opacity = '1';
+    // Najdeme všechny spany s názvy týmů (jsou to vždy ty druhé v pořadí v každém itemu)
+    const n = [...document.querySelectorAll(`#L-${gid} .team-item span:nth-of-type(2)`)].map(x => x.innerText); 
+    state.groups.find(x => x.id === gid).teams = n; 
+    renderTeamList(gid); // Překreslíme, aby se opravila čísla 1-4
+}
 
     function confirmAllGroups() {
         if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
