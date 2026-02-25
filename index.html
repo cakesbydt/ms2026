@@ -79,40 +79,38 @@
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 25px 0 15px 0; /* Přiměřený prostor nahoře */
+    padding: 15px 0; /* Malý odstup od horního okraje */
 }
 
 .host-info-bar {
     display: flex;
     align-items: center;
-    gap: 15px;
-    background: rgba(30, 41, 59, 0.7); /* Ladí s tvými kartami */
-    padding: 10px 25px;
-    border-radius: 50px;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    gap: 12px;
+    background: #1e293b; /* Tmavé barvy tvého adminu */
+    padding: 6px 16px;   /* Úzké vertikální odsazení */
+    border-radius: 8px;  /* Méně kulaté, spíše moderní hranatější vzhled */
+    border: 1px solid #334155;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .flag-group {
     display: flex;
-    gap: 8px;
-    align-items: center;
+    gap: 6px; /* Vlajky těsně u sebe */
 }
 
 .flag-group img { 
-    height: 8px; /* Decentní velikost vlajek */
+    height: 15px; /* Menší, ale stále ostré vlajky */
     width: auto;
-    border-radius: 2px;
+    border-radius: 1px;
 }
 
 .host-text { 
-    font-size: 0.95rem !important; /* Čitelná, ale ne obří velikost */
-    color: var(--text);
-    font-weight: 700; 
-    letter-spacing: 1.5px;
+    font-size: 0.8rem !important; /* Menší, čistý text */
+    color: #94a3b8; /* Méně svítivá barva, aby tolik nerušila */
+    font-weight: 600; 
+    letter-spacing: 1px;
     text-transform: uppercase;
 }
-
 /* Responzivita: Na malých displejích to trochu zmenšíme */
 @media (max-width: 600px) {
     .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
