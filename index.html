@@ -237,6 +237,48 @@
     margin-left: 10px;
 }
 
+
+        .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #1e293b; /* Tmavé pozadí jako v žebříčku */
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid rgba(251, 191, 36, 0.3); /* Zlatý nádech */
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.modal-icon {
+    font-size: 3rem;
+    color: #fbbf24; /* Zlatá */
+    margin-bottom: 15px;
+}
+
+.modal-content h2 { color: white; margin-bottom: 10px; }
+.modal-content p { color: #94a3b8; margin-bottom: 25px; }
+
+.modal-btn {
+    background: #fbbf24;
+    color: #1e293b;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.modal-btn:hover { transform: scale(1.05); }
+.hidden { display: none !important; }
 /* Responzivita pro menší obrazovky */
 @media (max-width: 1000px) {
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
@@ -866,19 +908,28 @@ async function saveToSupabase() {
         winner: state.playoff.winner 
     };
 
-    try {
+   try {
         await supabaseClient.from('tipy').insert([{ name, tip_data: data }]);
         
-        // --- TADY JE TO POTVRZENÍ ---
-        alert("Děkujeme, " + name + "! Tvůj tip byl úspěšně uložen do databáze.");
+        // Místo alert() zavoláme naše okno
+        showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze.");
         
-        location.reload(); // Obnoví stránku a ukáže žebříček
     } catch (error) {
-        console.error(error);
-        alert("Chyba při ukládání dat!");
+        showCustomAlert("Chyba", "Něco se nepovedlo při ukládání.");
     }
 }
+    // Pomocné funkce pro ovládání okna
+function showCustomAlert(title, message) {
+    document.getElementById('modal-title').innerText = title;
+    document.getElementById('modal-message').innerText = message;
+    document.getElementById('custom-alert').classList.remove('hidden');
+}
 
+function closeModalAndReload() {
+    document.getElementById('custom-alert').classList.add('hidden');
+    location.reload(); // Provede reload až po kliknutí na OK
+}
+    
 function updateStepper(activeId) {
     const steps = [
         { id: 'dot-s1',  check: () => state.groups.every(g => g.done) },
@@ -914,5 +965,15 @@ function getTeamsForStage(id, fallbackTeams) {
 
     window.onload = init;
 </script>
+
+<div id="custom-alert" class="modal-overlay hidden">
+    <div class="modal-content">
+        <i class="fas fa-check-circle modal-icon"></i>
+        <h2 id="modal-title">Skvělá práce!</h2>
+        <p id="modal-message"></p>
+        <button onclick="closeModalAndReload()" class="modal-btn">OK</button>
+    </div>
+</div>
+    
 </body>
 </html>
