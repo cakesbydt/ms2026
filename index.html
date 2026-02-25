@@ -390,26 +390,44 @@ let state = {
         return '';
     };
 
-    body.innerHTML = processed.map((r, i) => {
-        // Logika pro ikony prvních tří míst
-        let rankContent = `${i + 1}.`; // Výchozí stav (číslo)
-        let rowStyle = "";
+    // --- PŘIDÁNO: Proměnné pro hlídání shody bodů ---
+    let currentRank = 0;
+    let lastPoints = -1;
+    let displayedRank = 0;
 
-        if (i === 0) {
-            rankContent = '<i class="fas fa-trophy" style="color: #fbbf24; font-size: 1.1rem;" title="Mistr"></i>';
+    body.innerHTML = processed.map((r, i) => {
+        // --- LOGIKA PRO SHODU BODŮ ---
+        if (r.points !== lastPoints) {
+            currentRank = i + 1;
+            displayedRank = currentRank;
+        }
+        lastPoints = r.points;
+
+        // Logika pro ikony a barvy dle zobrazeného pořadí
+        let rankIcon = ""; 
+        let rowStyle = "";
+        let nameColor = "inherit";
+
+        if (displayedRank === 1) {
+            rankIcon = '<i class="fas fa-trophy" style="color: #fbbf24; margin-left: 5px; font-size: 0.9rem;"></i>';
             rowStyle = "background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent);";
-        } else if (i === 1) {
-            rankContent = '<i class="fas fa-medal" style="color: #cbd5e1; font-size: 1.1rem;" title="2. místo"></i>';
+            nameColor = "#fbbf24";
+        } else if (displayedRank === 2) {
+            rankIcon = '<i class="fas fa-medal" style="color: #cbd5e1; margin-left: 5px; font-size: 0.9rem;"></i>';
             rowStyle = "background: linear-gradient(90deg, rgba(203, 213, 225, 0.07), transparent);";
-        } else if (i === 2) {
-            rankContent = '<i class="fas fa-medal" style="color: #cd7f32; font-size: 1.1rem;" title="3. místo"></i>';
+            nameColor = "#cbd5e1";
+        } else if (displayedRank === 3) {
+            rankIcon = '<i class="fas fa-medal" style="color: #cd7f32; margin-left: 5px; font-size: 0.9rem;"></i>';
             rowStyle = "background: linear-gradient(90deg, rgba(205, 127, 50, 0.07), transparent);";
+            nameColor = "#cd7f32";
         }
 
         return `
             <tr class="player-row" onclick="toggleDetail('det-${r.id}')" style="${rowStyle}">
-                <td style="width:30px; text-align:center;">${rankContent}</td>
-                <td style="font-weight:bold; color: ${i === 0 ? '#fbbf24' : 'inherit'}">${r.name}</td>
+                <td style="width:50px; color:#94a3b8; font-size: 0.85rem; white-space: nowrap; padding-left: 10px;">
+                    ${displayedRank}.${rankIcon}
+                </td>
+                <td style="font-weight:bold; color: ${nameColor}">${r.name}</td>
                 <td style="text-align:right; font-weight:bold; color:var(--accent)">${r.points} b.</td>
             </tr>
             <tr id="det-${r.id}" class="tip-detail-row">
