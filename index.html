@@ -9,9 +9,7 @@
 
 <header>
     <div class="main-header-logo">
-        <img src="logo-ms2026.png" 
-             class="main-logo-img" alt="FIFA World Cup 2026">
-        
+        <img src="logo-ms2026.png" class="main-logo-img" alt="FIFA World Cup 2026">
         <div class="host-info-bar">
             <img src="https://flagcdn.com/us.svg" alt="USA">
             <img src="https://flagcdn.com/mx.svg" alt="Mexico">
@@ -20,12 +18,6 @@
                 United States | Mexico | Canada 2026
             </span>
         </div>
-    </div>
-
-    <div class="step-indicator">
-        <div id="dot-s1" class="step-dot active">Skupiny</div>
-        <div id="dot-s2" class="step-dot">3. místa</div>
-        <div id="dot-s32" class="step-dot">Pavouk</div>
     </div>
 </header>
     
@@ -99,6 +91,20 @@
     width: auto;
     filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
 }
+
+/* Aktivní tab - ta, na které právě pracuješ */
+.phase-tab.active {
+    background: var(--accent) !important; /* Tvoje modrá/žlutá */
+    color: #000 !important;
+    font-weight: bold;
+}
+
+/* Hotový tab - to, co už je vyplněné */
+.phase-tab.completed {
+    background: var(--winner) !important; /* Zelená */
+    color: #000 !important;
+}
+        
 
 .host-info-bar {
     display: flex;
@@ -791,26 +797,33 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     }
 
 function updateStepper(activeId) {
+    // Definujeme mapování mezi ID a kontrolou hotového stavu
+    // ID jsem upravil na "tab-...", aby to odpovídalo tvé spodní liště
     const steps = [
-        { id: 'dot-s1',  check: () => state.groups.every(g => g.done) },
-        { id: 'dot-s2',  check: () => state.thirds.length === 8 },
-        { id: 'dot-s32', check: () => state.playoff.s32 && state.playoff.s32.length === 16 },
-        { id: 'dot-s16', check: () => state.playoff.s16 && state.playoff.s16.length === 8 },
-        { id: 'dot-s8',  check: () => state.playoff.s8 && state.playoff.s8.length === 4 },
-        { id: 'dot-s4',  check: () => state.playoff.s4 && state.playoff.s4.length === 2 },
-        { id: 'dot-fin', check: () => state.playoff.winner }
+        { id: 'tab-groups', check: () => state.groups.every(g => g.done) },
+        { id: 'tab-thirds', check: () => state.thirds.length === 8 },
+        { id: 'tab-s32',    check: () => state.playoff.s32 && state.playoff.s32.length === 16 },
+        { id: 'tab-s16',    check: () => state.playoff.s16 && state.playoff.s16.length === 8 },
+        { id: 'tab-s8',     check: () => state.playoff.s8 && state.playoff.s8.length === 4 },
+        { id: 'tab-s4',     check: () => state.playoff.s4 && state.playoff.s4.length === 2 },
+        { id: 'tab-fin',    check: () => state.playoff.winner }
     ];
 
     steps.forEach(step => {
         const el = document.getElementById(step.id);
         if (!el) return;
 
+        // Resetujeme styly (odstraníme aktivní i hotové třídy)
         el.classList.remove('active', 'completed');
+        el.style.background = ""; // Reset inline stylů, pokud tam jsou
+        el.style.color = "";
 
         if (step.id === activeId) {
-            el.classList.add('active'); // Žlutá (Právě vyplňuji)
+            // PRÁVĚ AKTIVNÍ TAB (Žlutá/Modrá podle tvého CSS)
+            el.classList.add('active'); 
         } else if (step.check()) {
-            el.classList.add('completed'); // Zelená (Mám hotovo)
+            // HOTOVÁ FÁZE (Zelená)
+            el.classList.add('completed');
         }
     });
 }
