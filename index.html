@@ -742,7 +742,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         m.querySelectorAll('.playoff-team')[ti].classList.add('selected');
     }
 
-  function cfS(sid, count) {
+ function cfS(sid, count) {
     const wins = [...document.querySelectorAll(`#sec-${sid} .selected`)].map(e => e.innerText);
     const loss = [...document.querySelectorAll(`#sec-${sid} .matchup`)].map(m => { 
         const t = m.querySelectorAll('.playoff-team'); 
@@ -777,40 +777,28 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         const finalists = state.playoff['s4'];
         genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
     } else if(sid==='s2') {
-        // --- FINÁLE: ODESLÁNÍ DO ŽEBŘÍČKU ---
+        // --- KONEC PAVOUKA: Teď jen zobrazíme formulář pro jméno ---
 
-        // 1. Získání jména
-        const playerName = prompt("Zadej své jméno pro uložení tipu:");
-        if (!playerName || playerName.trim() === "") {
-            return alert("Jméno je povinné pro odeslání do žebříčku!");
-        }
-
-        // 2. Příprava dat
-        state.name = playerName;
+        // 1. Uložíme finální výsledky do state
         state.playoff.winner = wins[0]; 
         const bronzeEl = document.querySelector('#sec-s3 .selected');
         state.playoff.bronze = bronzeEl ? bronzeEl.innerText : "Nezvoleno"; 
 
-        // 3. Volání tvé funkce pro odeslání (ZDE SE DATA POSÍLAJÍ)
-        if (typeof saveTip === 'function') {
-            saveTip(); 
-        }
-
-        // 4. Zobrazení finálního boxu
+        // 2. Schováme celého pavouka
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
-        const winDisp = document.getElementById('winner-display');
-        if(winDisp) winDisp.innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
         
+        // 3. Zobrazíme tvůj finální box, kde uživatel zadá jméno
         const finalBox = document.getElementById('final-box');
-        if(finalBox) finalBox.classList.remove('hidden'); 
-
-        // 5. FINÁLNÍ POTVRZENÍ (vyskočí až po odeslání)
-        alert("Hotovo! Tvůj tip byl odeslán do žebříčku. Hodně štěstí!");
+        if(finalBox) {
+            finalBox.classList.remove('hidden');
+            // Do nápisu vložíme vítěze, aby to vypadalo hezky
+            const winDisp = document.getElementById('winner-display');
+            if(winDisp) winDisp.innerText = "TVŮJ VÍTĚZ: " + wins[0];
+        }
     }
 
     window.scrollTo(0,0);
 }
-
     function checkAdmin() {
     const now = new Date().getTime();
     const adminLoginTime = localStorage.getItem('adminLoginTime');
@@ -862,13 +850,34 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         location.reload();
     }
 
-    async function saveToSupabase() {
-        const name = document.getElementById('user-name').value;
-        if(!name) return alert("Zadej své jméno!");
-        const data = { groups: state.groups.map(g => g.teams), s32: state.playoff.s32, s16: state.playoff.s16, s8: state.playoff.s8, s4: state.playoff.s4, bronze: state.playoff.bronze, winner: state.playoff.winner };
+   // A tvoji funkci saveToSupabase upravíme, aby vyhodila ten alert před reloadem:
+async function saveToSupabase() {
+    const name = document.getElementById('user-name').value;
+    if(!name) return alert("Zadej své jméno!");
+
+    // Sestavení dat přesně podle tvého formátu
+    const data = { 
+        groups: state.groups.map(g => g.teams), 
+        s32: state.playoff.s32, 
+        s16: state.playoff.s16, 
+        s8: state.playoff.s8, 
+        s4: state.playoff.s4, 
+        bronze: state.playoff.bronze, 
+        winner: state.playoff.winner 
+    };
+
+    try {
         await supabaseClient.from('tipy').insert([{ name, tip_data: data }]);
-        location.reload();
+        
+        // --- TADY JE TO POTVRZENÍ ---
+        alert("Děkujeme, " + name + "! Tvůj tip byl úspěšně uložen do databáze.");
+        
+        location.reload(); // Obnoví stránku a ukáže žebříček
+    } catch (error) {
+        console.error(error);
+        alert("Chyba při ukládání dat!");
     }
+}
 
 function updateStepper(activeId) {
     const steps = [
