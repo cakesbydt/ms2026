@@ -292,7 +292,7 @@ let state = {
     }
 
     function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; renderTeamList(id); }
-   unction renderTeamList(gid) {
+   function renderTeamList(gid) {
     const g = state.groups.find(x => x.id === gid);
     const cont = document.getElementById('team-list-container');
     
