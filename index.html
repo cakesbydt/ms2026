@@ -60,21 +60,22 @@
     .group-card { background: #0f172a; border: 1px solid var(--border); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; }
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
-/* --- ČISTÁ MŘÍŽKA PRO 3. MÍSTA --- */
+
+        
+/* --- FINÁLNÍ OPRAVA: ČISTÁ MŘÍŽKA BEZ LEVÉHO SLOUPCE --- */
 .thirds-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 15px !important;
+    display: block !important; /* Zrušíme flex, který to tlačil doleva */
+    width: 100% !important;
     padding: 20px;
-    width: 100%;
     box-sizing: border-box;
 }
 
 #thirds-actual-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important; /* 4 týmy vedle sebe */
-    gap: 10px !important;
+    gap: 15px !important;
     width: 100% !important;
+    margin-top: 20px;
 }
         
     .thirds-grid-fixed { 
@@ -83,22 +84,22 @@
     }
         
  .card-third {
-    background: #0f172a;
+    background: #1e293b;
     border: 1px solid var(--border);
-    padding: 12px 5px;
-    border-radius: 10px;
+    padding: 15px 5px;
+    border-radius: 12px;
     text-align: center;
     cursor: pointer;
     transition: 0.2s;
+    min-height: 80px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 70px;
 }
         
     .card-third:hover { border-color: var(--accent); }
- .card-third.selected {
-    background: rgba(34, 197, 94, 0.15) !important;
+.card-third.selected {
+    background: rgba(34, 197, 94, 0.2) !important;
     border-color: var(--winner) !important;
     color: var(--winner) !important;
 }
@@ -113,6 +114,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+        /* Styl pro počítadlo v hlavičce */
+.counter-badge {
+    background: var(--accent);
+    color: #000;
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-weight: 900;
+    margin-left: 10px;
 }
 
 /* Responzivita pro menší obrazovky */
@@ -425,7 +436,7 @@ function dE(e, gid) {
 }
 
 function confirmAllGroups() {
-    if(state.groups.filter(g => g.done).length < 12) return alert("Musíš nejdříve seřadit všech 12 skupin!");
+    if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin!");
     
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
@@ -433,20 +444,18 @@ function confirmAllGroups() {
 
     const container = document.getElementById('thirds-grid'); 
     
+    // Čistá struktura: Jen titulek s počítadlem a mřížka
     container.innerHTML = `
         <div class="thirds-wrapper">
-            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px 15px; border-radius: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                <span style="color: #94a3b8; font-size: 0.8rem; font-weight: 500;">Vyber 8 postupujících ze 3. míst:</span>
-                <div id="thirds-counter" style="font-weight: 800; font-size: 1.3rem; color: var(--accent);">
-                    ${state.thirds.length} / 8
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">
+                    Výběr 8 postupujících ze 3. míst 
+                    <span id="thirds-counter" class="counter-badge">${state.thirds.length} / 8</span>
+                </h3>
             </div>
             
-            <div id="thirds-actual-grid"></div>
-
-            <button class="btn btn-primary" onclick="confirmThirds()" style="width: 100%; height: 50px; margin-top: 15px; font-size: 0.9rem;">
-                PŘEJÍT NA PAVOUKA
-            </button>
+            <div id="thirds-actual-grid">
+                </div>
         </div>
     `; 
     
@@ -458,30 +467,29 @@ function confirmAllGroups() {
         
         actualGrid.innerHTML += `
             <div class="card-third ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <span style="font-size: 0.6rem; opacity: 0.5; margin-bottom: 3px; text-transform: uppercase;">Skupina ${g.id}</span>
-                <span style="font-weight: bold; font-size: 0.9rem;">${teamName}</span>
+                <small style="font-size: 0.65rem; opacity: 0.5; text-transform: uppercase;">Skupina ${g.id}</small>
+                <strong style="font-size: 1rem;">${teamName}</strong>
             </div>`; 
     });
     
     window.scrollTo(0,0);
 }
+
+    
     function selectThird(el, teamName) {
     if (state.thirds.includes(teamName)) {
-        // Pokud už v seznamu je, vymažeme ho (odškrtnutí)
         state.thirds = state.thirds.filter(t => t !== teamName);
         el.classList.remove('selected');
     } else if (state.thirds.length < 8) {
-        // Pokud tam není a ještě máme místo (limit 8), přidáme ho
         state.thirds.push(teamName);
         el.classList.add('selected');
     }
     
-    // Okamžitá aktualizace čísla v počítadle
+    // Aktualizace počítadla v titulku
     const counter = document.getElementById('thirds-counter');
     if(counter) {
         counter.innerText = `${state.thirds.length} / 8`;
-        // Pokud je vybráno přesně 8, změníme barvu na vítěznou zelenou
-        counter.style.color = state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)';
+        counter.style.background = state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)';
     }
 }
 
