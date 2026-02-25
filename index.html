@@ -396,14 +396,26 @@ function dE(e, gid) {
     }
 
     function confirmThirds() {
-        if(state.thirds.length !== 8) return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
-        document.getElementById('phase-thirds').classList.add('hidden');
-        document.getElementById('dot-s3').classList.add('active');
-        let q = []; state.groups.forEach(g => q.push(g.teams[0], g.teams[1])); q.push(...state.thirds);
-        genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
-        window.scrollTo(0,0);
-        updateStepper('dot-s3');
-    }
+    if(state.thirds.length !== 8) return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
+
+    // Skryjeme sekci výběru 3. míst
+    document.getElementById('phase-thirds').classList.add('hidden');
+
+    // Sestavíme pole pro 1/16 finále (24 týmů ze skupin + 8 týmů ze 3. míst)
+    let q = []; 
+    state.groups.forEach(g => q.push(g.teams[0], g.teams[1])); 
+    q.push(...state.thirds);
+
+    // DŮLEŽITÉ: Zavoláme genStage pro s32 a řekneme mu, 
+    // že se vracíme na 'phase-thirds' a tečku 'dot-s2'
+    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
+
+    // Posuneme nahoru
+    window.scrollTo(0,0);
+
+    // Aktualizujeme stepper na první kolo pavouka (žlutá pro 1/16)
+    updateStepper('dot-s32');
+}
 
   // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
 function genStage(title, teams, count, id, prevPhase, prevDot) {
