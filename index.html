@@ -300,6 +300,8 @@ let state = {
         document.getElementById(prevId).classList.remove('hidden');
         document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
         document.getElementById(dotId).classList.add('active');
+        // Místo ručního odebírání active tříd stačí:
+updateStepper(dotId);
     }
 
    function editGroup(id) { 
@@ -381,6 +383,7 @@ function dE(e, gid) {
         const grid = document.getElementById('thirds-grid'); grid.innerHTML = '';
         state.groups.forEach(g => { grid.innerHTML += `<div class="group-card" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]}</div>`; });
         window.scrollTo(0,0);
+        updateStepper('dot-s2');
     }
 
     function selectThird(el, team) {
@@ -396,6 +399,7 @@ function dE(e, gid) {
         let q = []; state.groups.forEach(g => q.push(g.teams[0], g.teams[1])); q.push(...state.thirds);
         genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
         window.scrollTo(0,0);
+        updateStepper('dot-s3');
     }
 
    // 3. KOMPLETNĚ PŘEPSANÁ genStage (vyměň ji celou)
@@ -445,6 +449,10 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     // Zobrazení správného kola a skrytí ostatních
     document.querySelectorAll('#playoff-container .section-box, main > .section-box').forEach(div => div.classList.add('hidden'));
     stageDiv.classList.remove('hidden');
+    // Pokud jsme v jakékoliv fázi pavouka, svítí žlutě "Pavouk"
+if (id.startsWith('s')) {
+    updateStepper(id === 's2' || id === 's3' ? 'dot-s4' : 'dot-s3');
+}
 }
 
     function pk(sid, mi, ti) {
@@ -560,6 +568,30 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         location.reload();
     }
 
+function updateStepper(activeId) {
+    // Definujeme logické bloky a jejich závislosti ve stavu
+    const steps = [
+        { id: 'dot-s1', check: () => state.groups.every(g => g.done) },
+        { id: 'dot-s2', check: () => state.thirds.length === 8 },
+        { id: 'dot-s3', check: () => state.playoff.s4 && state.playoff.s4.length > 0 },
+        { id: 'dot-s4', check: () => state.playoff.winner }
+    ];
+
+    steps.forEach(step => {
+        const el = document.getElementById(step.id);
+        if (!el) return;
+
+        // Reset tříd
+        el.classList.remove('active', 'completed');
+
+        if (step.id === activeId) {
+            el.classList.add('active'); // Žlutá
+        } else if (step.check()) {
+            el.classList.add('completed'); // Zelená
+        }
+    });
+}
+    
     // 2. Tuhle funkci vlož do scriptu - zajistí, že se data neztratí
 function getTeamsForStage(id, fallbackTeams) {
     if (fallbackTeams && fallbackTeams.length > 0) {
