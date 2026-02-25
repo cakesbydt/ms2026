@@ -70,18 +70,6 @@
         .hidden { display: none !important; }
         input { width: 100%; padding: 14px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
         .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
-/* Styl pro šipky (mobilní ovládání) */
-.team-controls { display: flex; gap: 8px; align-items: center; }
-.arrow-btn { 
-    background: #2d3748; color: var(--accent); border: 1px solid var(--border); 
-    border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem;
-}
-.arrow-btn:hover { background: var(--accent); color: #000; }
-
-/* Efekt při tažení na PC */
-.team-item.dragging { opacity: 0.4; border: 2px dashed var(--accent); background: #000; }
-.team-item { transition: transform 0.1s ease; touch-action: none; } /* touch-action zabrání nechtěnému skrolu při dragu */
-        
     </style>
 </head>
 <body>
@@ -292,80 +280,12 @@ let state = {
     }
 
     function editGroup(id) { document.getElementById('group-editor').classList.remove('hidden'); document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; renderTeamList(id); }
-   function renderTeamList(gid) {
-    const g = state.groups.find(x => x.id === gid);
-    const cont = document.getElementById('team-list-container');
-    
-    let html = `<div id="L-${gid}" style="display:flex; flex-direction:column; gap:8px;">`;
-    
-    g.teams.forEach((t, i) => {
-        html += `
-            <div class="team-item" draggable="true" 
-                 ondragstart="dS(event)" ondragover="dO(event)" ondragend="dE(event,'${gid}')"
-                 data-index="${i}">
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <span style="color:var(--accent); font-weight:800; width:20px;">${i+1}.</span>
-                    <span>${t}</span>
-                </div>
-                <div class="team-controls">
-                    <button class="arrow-btn" onclick="moveTeam('${gid}', ${i}, -1)"><i class="fas fa-chevron-up"></i></button>
-                    <button class="arrow-btn" onclick="moveTeam('${gid}', ${i}, 1)"><i class="fas fa-chevron-down"></i></button>
-                </div>
-            </div>`;
-    });
-    
-    cont.innerHTML = html + `</div>`;
-    g.done = true; 
-    document.getElementById(`dot-${gid}`).classList.add('filled');
-}
-
-// Funkce pro posun šipkami (perfektní pro mobil)
-function moveTeam(gid, index, direction) {
-    const g = state.groups.find(x => x.id === gid);
-    const newIndex = index + direction;
-    
-    if (newIndex >= 0 && newIndex < g.teams.length) {
-        // Prohození prvků v poli
-        const temp = g.teams[index];
-        g.teams[index] = g.teams[newIndex];
-        g.teams[newIndex] = temp;
-        renderTeamList(gid);
+    function renderTeamList(gid) {
+        const g = state.groups.find(x => x.id === gid);
+        const cont = document.getElementById('team-list-container');
+        cont.innerHTML = `<div id="L-${gid}">${g.teams.map((t, i) => `<div class="team-item" draggable="true" ondragstart="dS(event)" ondragover="dO(event)" ondragend="dE(event,'${gid}')"><span>${t}</span><b>${i+1}.</b></div>`).join('')}</div>`;
+        g.done = true; document.getElementById(`dot-${gid}`).classList.add('filled');
     }
-}
-
-// Vylepšený Drag & Drop pro PC
-let dEl = null;
-
-function dS(e) { 
-    dEl = e.currentTarget; 
-    dEl.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-}
-
-function dO(e) { 
-    e.preventDefault(); 
-    const container = dEl.parentNode;
-    const draggingOver = e.target.closest('.team-item');
-    
-    if (draggingOver && draggingOver !== dEl) {
-        const rect = draggingOver.getBoundingClientRect();
-        const midpoint = rect.top + rect.height / 2;
-        
-        if (e.clientY < midpoint) {
-            container.insertBefore(dEl, draggingOver);
-        } else {
-            container.insertBefore(dEl, draggingOver.nextSibling);
-        }
-    }
-}
-
-function dE(e, gid) { 
-    dEl.classList.remove('dragging');
-    // Uložíme nové pořadí z DOMu do state
-    const teamElements = [...document.querySelectorAll(`#L-${gid} .team-item span:nth-child(2)`)];
-    state.groups.find(x => x.id === gid).teams = teamElements.map(el => el.innerText);
-    renderTeamList(gid); // Překreslíme, aby se opravila čísla 1-4
-}
     let dEl = null; function dS(e) { dEl = e.currentTarget; }
     function dO(e) { e.preventDefault(); const l = dEl.parentNode; const s = [...l.querySelectorAll('.team-item')]; let n = s.find(x => e.clientY <= x.getBoundingClientRect().top + x.getBoundingClientRect().height/2); l.insertBefore(dEl, n); }
     function dE(e, gid) { const n = [...document.querySelectorAll(`#L-${gid} span`)].map(x => x.innerText); state.groups.find(x => x.id === gid).teams = n; renderTeamList(gid); }
