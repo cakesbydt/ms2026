@@ -742,7 +742,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         m.querySelectorAll('.playoff-team')[ti].classList.add('selected');
     }
 
-   function cfS(sid, count) {
+  function cfS(sid, count) {
     const wins = [...document.querySelectorAll(`#sec-${sid} .selected`)].map(e => e.innerText);
     const loss = [...document.querySelectorAll(`#sec-${sid} .matchup`)].map(m => { 
         const t = m.querySelectorAll('.playoff-team'); 
@@ -757,7 +757,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     const order = ['s32', 's16', 's8', 's4', 's3', 's2'];
     let idx = order.indexOf(sid);
     for(let i = idx + 1; i < order.length; i++) {
-        delete state.history[order[i]];
+        if(state.history) delete state.history[order[i]]; // Pojistka pro state.history
         const nextDiv = document.getElementById(`sec-${order[i]}`);
         if(nextDiv) nextDiv.remove();
     }
@@ -771,29 +771,34 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
     } else if(sid==='s4') {
         // PO SEMIFINÁLE: Jdeme na 3. místo
-        document.getElementById('dot-s4').classList.add('active'); 
+        const dot4 = document.getElementById('dot-s4');
+        if(dot4) dot4.classList.add('active'); 
         genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s3'); 
     } else if(sid==='s3') {
         // PO 3. MÍSTĚ: Jdeme na Finále
-        // Vytáhneme vítěze ze semifinále (s4), kteří čekají na finále
         const finalists = state.playoff['s4'];
         genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
-    } } else if(sid==='s2') {
+    } else if(sid==='s2') {
         // KONEC: Zobrazení vítěze
         state.playoff.winner = wins[0]; 
-        state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; 
+        const bronzeEl = document.querySelector('#sec-s3 .selected');
+        state.playoff.bronze = bronzeEl ? bronzeEl.innerText : "Nezvoleno"; 
         
         // Zobrazení finálního boxu
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
-        document.getElementById('winner-display').innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
-        document.getElementById('final-box').classList.remove('hidden'); 
+        const winDisp = document.getElementById('winner-display');
+        if(winDisp) winDisp.innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
+        
+        const finalBox = document.getElementById('final-box');
+        if(finalBox) finalBox.classList.remove('hidden'); 
 
-        // --- PŘIDÁNO: Potvrzovací hláška ---
+        // Uložení a upozornění
         alert("Gratulujeme! Tvůj tip na vítěze " + wins[0] + " byl úspěšně zaznamenán.");
         
-        // Pokud máš funkci na odeslání do databáze (např. saveTip), zavolej ji zde:
-        // saveTip(); 
+        // Zde odkomentuj saveTip(), až budeš připraven ukládat do DB
+        // if(typeof saveTip === 'function') saveTip(); 
     }
+
     window.scrollTo(0,0);
 }
 
