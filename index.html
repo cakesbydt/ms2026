@@ -6,36 +6,52 @@
     <title>MS 2026 - Master Wizard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-    :root { 
-        --bg: #0b0f1a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; 
-        --winner: #22c55e; --lose: #ef4444; --border: #334155; 
-    }
-
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-    .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
     
-    <header>
-    <div class="main-header-logo">
-        <img src="logo-ms2026.png" 
-             class="main-logo-img" alt="FIFA World Cup 2026">
-        
-        <div class="host-info-bar">
-            <img src="https://flagcdn.com/us.svg" alt="USA">
-            <img src="https://flagcdn.com/mx.svg" alt="Mexico">
-            <img src="https://flagcdn.com/ca.svg" alt="Canada">
-            <span style="font-size: 0.8rem; color: #94a3b8; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
-                United States | Mexico | Canada 2026
-            </span>
-        </div>
-    </div>
+    <style>
+        :root { 
+            --bg: #0b0f1a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; 
+            --winner: #22c55e; --lose: #ef4444; --border: #334155; 
+        }
 
-    <div class="step-indicator">
-        <div id="dot-s1" class="step-dot active">Skupiny</div>
-        <div id="dot-s2" class="step-dot">3. místa</div>
-        <div id="dot-s32" class="step-dot">Pavouk</div>
-    </div>
-</header>
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        
+        /* CSS pro header, který jsi potřeboval */
+        .main-header-logo { display: flex; flex-direction: column; align-items: center; padding: 20px 0; }
+        .main-logo-img { height: 100px; width: auto; margin-bottom: 15px; }
+        .host-info-bar { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; }
+        .host-info-bar img { height: 14px; }
+        
+        .step-indicator { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .step-dot { padding: 5px 15px; background: #243147; border-radius: 20px; font-size: 0.8rem; }
+        .step-dot.active { background: var(--accent); color: #000; font-weight: bold; }
+    </style> </head>
+
+<body> <div class="app-wrapper">
+        <header>
+            <div class="main-header-logo">
+                <img src="logo-ms2026.png" class="main-logo-img" alt="FIFA World Cup 2026">
+                
+                <div class="host-info-bar">
+                    <img src="https://flagcdn.com/us.svg" alt="USA">
+                    <img src="https://flagcdn.com/mx.svg" alt="Mexico">
+                    <img src="https://flagcdn.com/ca.svg" alt="Canada">
+                    <span style="font-size: 0.8rem; color: #94a3b8; font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">
+                        United States | Mexico | Canada 2026
+                    </span>
+                </div>
+            </div>
+
+            <div class="step-indicator">
+                <div id="dot-s1" class="step-dot active">Skupiny</div>
+                <div id="dot-s2" class="step-dot">3. místa</div>
+                <div id="dot-s32" class="step-dot">Pavouk</div>
+            </div>
+        </header>
+
+        </div>
+</body>
+</html>
         
     .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
     
