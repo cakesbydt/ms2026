@@ -6,97 +6,94 @@
     <title>MS 2026 - Master Wizard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-   <style>
-    :root { 
-        --bg: #0b0f1a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; 
-        --winner: #22c55e; --lose: #ef4444; --border: #334155; 
-    }
+    <style>
+        :root { 
+            --bg: #0b0f1a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; 
+            --winner: #22c55e; --lose: #ef4444; --border: #334155; 
+        }
 
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-    .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
-    
-    header { text-align: center; padding: 15px 0; }
-    
-    /* STEPPER */
-    .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-    .step-dot { 
-        padding: 6px 14px; 
-        border-radius: 20px; 
-        background: #243147; 
-        font-size: 0.8rem; 
-        color: #94a3b8; 
-        border: 1px solid var(--border); 
-        transition: 0.3s;
-    }
-    .step-dot.active { background: #facc15 !important; color: #000 !important; font-weight: bold; border-color: #facc15; }
-    .step-dot.completed { background: var(--winner) !important; color: #000 !important; border-color: var(--winner); }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+        .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
+        
+        header { text-align: center; padding: 15px 0; }
+        .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+        /* Základní - nevyplněno (šedá) */
+.step-dot { 
+    padding: 6px 14px; 
+    border-radius: 20px; 
+    background: #243147; 
+    font-size: 0.8rem; 
+    color: #94a3b8; 
+    border: 1px solid var(--border); 
+    transition: 0.3s;
+}
 
-    .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
-    @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
+/* Právě aktivní (žlutá) */
+.step-dot.active { 
+    background: #facc15 !important; 
+    color: #000 !important; 
+    font-weight: bold; 
+    border-color: #facc15;
+}
 
-    .section-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
-    .section-header { padding: 15px 20px; background: #243147; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+/* Kompletně hotovo (zelená) */
+.step-dot.completed { 
+    background: var(--winner) !important; 
+    color: #000 !important; 
+    border-color: var(--winner);
+}
 
-    /* ŽEBŘÍČEK */
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: 12px; border-bottom: 1px solid var(--border); }
-    tr.player-row:hover { background: rgba(56, 189, 248, 0.1); cursor: pointer; }
+        .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
+        @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
 
-    /* DETAIL TIPU */
-    .tip-detail-row { display: none; background: #070a13; }
-    .detail-container { padding: 20px; border-left: 4px solid var(--accent); }
-    .detail-section-title { color: var(--accent); font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: block; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-    .det-groups-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
-    .det-group-box { background: #161e2e; padding: 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #2d3748; }
-    .det-playoff-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-    .det-stage-column { display: flex; flex-direction: column; gap: 15px; }
-    .det-stage-card { background: #161e2e; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
-    
-    .status-correct { border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
-    .status-wrong { border-color: var(--lose) !important; color: var(--lose) !important; }
+        .section-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; }
+        .section-header { padding: 15px 20px; background: #243147; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 
-    /* --- SEKCE 3. MÍSTA (OPRAVENO) --- */
-    .thirds-content-wrapper { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-    
-    .thirds-header-info {
-        display: flex; justify-content: space-between; align-items: center;
-        background: rgba(56, 189, 248, 0.05); padding: 15px 20px;
-        border-radius: 12px; border: 1px dashed var(--border);
-    }
-    
-    #thirds-actual-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 12px;
-        width: 100%;
-    }
+        /* ŽEBŘÍČEK */
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        tr.player-row:hover { background: rgba(56, 189, 248, 0.1); cursor: pointer; }
 
-    .group-card {
-        background: #1e293b; border: 1px solid #334155; padding: 15px 10px;
-        border-radius: 10px; text-align: center; cursor: pointer;
-        transition: 0.2s; display: flex; flex-direction: column; gap: 4px;
-    }
-    .group-card:hover { border-color: var(--accent); background: #243147; }
-    .group-card.filled { border-color: var(--winner); color: var(--winner); }
-    .group-card.selected { 
-        background: rgba(34, 197, 94, 0.1); border-color: var(--winner); 
-        color: var(--winner); box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); 
-    }
+        /* --- LEVÝ SLOUPEC DETAIL (ZACHOVÁNO) --- */
+        .tip-detail-row { display: none; background: #070a13; }
+        .detail-container { padding: 20px; border-left: 4px solid var(--accent); }
+        .detail-section-title { color: var(--accent); font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: block; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        .det-groups-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+        .det-group-box { background: #161e2e; padding: 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #2d3748; }
+        .det-group-box b { color: var(--accent); display: block; margin-bottom: 5px; font-size: 0.7rem; }
+        .det-playoff-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .det-stage-column { display: flex; flex-direction: column; gap: 15px; }
+        .det-stage-card { background: #161e2e; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
+        .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .det-team-list { display: flex; flex-direction: column; gap: 4px; }
+        .det-team-tag { font-size: 0.75rem; padding: 3px 8px; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid transparent; }
+        
+        .status-correct { border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
+        .status-wrong { border-color: var(--lose) !important; color: var(--lose) !important; }
 
-    /* OSTATNÍ FORMULÁŘE */
-    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; padding: 20px; }
-    .playoff-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
-    .matchup { background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 6px; }
-    .playoff-team { padding: 10px; background: #0f172a; border-radius: 6px; border: 1px solid #334155; cursor: pointer; text-align: center; font-size: 0.85rem; }
-    .playoff-team.selected { background: rgba(34, 197, 94, 0.2) !important; border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
+        /* --- PRAVÝ SLOUPEC FORMULÁŘ (UPRAVENO) --- */
+        .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
+        .group-card { background: #0f172a; border: 1px solid var(--border); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; }
+        .group-card.filled { border-color: var(--winner); color: var(--winner); }
+        .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-    .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .btn-primary { background: var(--accent); color: #000; width: 100%; text-transform: uppercase; }
-    .btn-back { background: #475569; color: white; font-size: 0.75rem; padding: 6px 12px; }
-    
-    .hidden { display: none !important; }
-    .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
-</style>
+        .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
+        
+        .playoff-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
+        .matchup { background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 6px; }
+        .playoff-team { padding: 10px; background: #0f172a; border-radius: 6px; border: 1px solid #334155; cursor: pointer; text-align: center; font-size: 0.85rem; transition: 0.2s; }
+        .playoff-team:hover { border-color: var(--accent); }
+        .playoff-team.selected { background: rgba(34, 197, 94, 0.2) !important; border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--accent); color: #000; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-back { background: #475569; color: white; font-size: 0.75rem; padding: 6px 12px; margin-top: 0; }
+        
+        .hidden { display: none !important; }
+        input { width: 100%; padding: 14px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
+        .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
+    </style>
 </head>
 <body>
 
@@ -176,12 +173,13 @@
     const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
     const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
 
-    let state = { 
-        groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), 
-        thirds: [], 
-        playoff: {},
-        history: {} 
-    };
+    // 1. Uprav si začátek state (přidáme s3, s2 atd. pro historii)
+let state = { 
+    groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), 
+    thirds: [], 
+    playoff: {},
+    history: {} // Sem si budeme ukládat týmy pro každé kolo, aby při návratu nezmizely
+};
     let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
 
     async function init() {
@@ -214,9 +212,11 @@
         return { ...row, tip, points: pts };
     }).sort((a,b) => b.points - a.points);
 
+    // Pomocná funkce pro individuální barvení týmů
     const getStatusClass = (stageId, teamName, stageCount) => {
         if (!real[stageId] || real[stageId].length === 0) return ''; 
         if (real[stageId].includes(teamName)) return 'status-correct';
+        // Zčervená jen když je v adminu dané kolo už kompletně vyplněné
         if (real[stageId].length >= stageCount) return 'status-wrong';
         return '';
     };
@@ -298,35 +298,20 @@
         el.style.display = isVisible ? 'none' : 'table-row';
     }
 
-    // OPRAVENÁ FUNKCE GO BACK
-    function goBack(currentDivId, prevPhaseId, prevDotId) {
-        // Skryjeme aktuální sekci
-        if(currentDivId) {
-            const cur = document.getElementById(currentDivId);
-            if(cur) cur.classList.add('hidden');
-        } else {
-            document.querySelectorAll('.section-box').forEach(s => s.classList.add('hidden'));
-        }
-
-        // Pokud se vracíme na výběr 3. míst, resetujeme je
-        if (prevPhaseId === 'phase-thirds') {
-            state.thirds = [];
-            document.querySelectorAll('#thirds-grid .group-card').forEach(el => el.classList.remove('selected'));
-        }
-
-        // Zobrazíme předchozí sekci
-        const prev = document.getElementById(prevPhaseId);
-        if(prev) prev.classList.remove('hidden');
-
-        // Aktualizujeme stepper
-        updateStepper(prevDotId);
-        window.scrollTo(0,0);
+    function goBack(currId, prevId, dotId) {
+        document.getElementById(currId).classList.add('hidden');
+        document.getElementById(prevId).classList.remove('hidden');
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+        document.getElementById(dotId).classList.add('active');
+        // Místo ručního odebírání active tříd stačí:
+updateStepper(dotId);
     }
 
    function editGroup(id) { 
     document.getElementById('group-editor').classList.remove('hidden'); 
     document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; 
     renderTeamList(id); 
+    // Scrollne na editor, aby to bylo na mobilu hned vidět
     document.getElementById('group-editor').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -334,6 +319,7 @@ function renderTeamList(gid) {
     const g = state.groups.find(x => x.id === gid);
     const cont = document.getElementById('team-list-container');
     
+    // Generujeme seznam s ID pro každé kolo a ovládacími prvky
     cont.innerHTML = `<div id="L-${gid}" style="display:flex; flex-direction:column; gap:8px;">
         ${g.teams.map((t, i) => `
             <div class="team-item" draggable="true" 
@@ -361,14 +347,17 @@ function renderTeamList(gid) {
     document.getElementById(`dot-${gid}`).classList.add('filled');
 }
 
+// Tahle funkce zajistí posun šipkami
 function moveTeam(gid, index, direction) {
     const g = state.groups.find(x => x.id === gid);
     const newIndex = index + direction;
+    
+    // Kontrola, jestli nevyskakujeme z pole (0-3)
     if (newIndex >= 0 && newIndex < g.teams.length) {
         const temp = g.teams[index];
         g.teams[index] = g.teams[newIndex];
         g.teams[newIndex] = temp;
-        renderTeamList(gid);
+        renderTeamList(gid); // Znovu vykreslíme se změněným pořadím
     }
 }
     let dEl = null; 
@@ -382,94 +371,77 @@ function dO(e) {
 }
 function dE(e, gid) { 
     dEl.style.opacity = '1';
+    // Najdeme všechny spany s názvy týmů (jsou to vždy ty druhé v pořadí v každém itemu)
     const n = [...document.querySelectorAll(`#L-${gid} .team-item span:nth-of-type(2)`)].map(x => x.innerText); 
     state.groups.find(x => x.id === gid).teams = n; 
-    renderTeamList(gid); 
+    renderTeamList(gid); // Překreslíme, aby se opravila čísla 1-4
 }
 
-function confirmAllGroups() {
-    if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
-    
-    document.getElementById('phase-groups').classList.add('hidden');
-    const phaseThirds = document.getElementById('phase-thirds');
-    phaseThirds.classList.remove('hidden');
-    updateStepper('dot-s2');
-
-    // Vyčistíme a vytvoříme strukturu, která se nebude překrývat
-    phaseThirds.innerHTML = `
-        <div class="section-box">
-            <div class="section-header">
-                <span>Výběr týmů ze 3. míst</span>
-                <button class="btn btn-back" onclick="location.reload()">ZPĚT</button>
-            </div>
-            
-            <div class="thirds-content-wrapper">
-                <div class="thirds-header-info">
-                    <div style="font-size: 0.85rem; color: #94a3b8;">Vyber přesně 8 týmů, které postoupí do pavouka</div>
-                    <div id="thirds-counter" style="color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-weight:bold; font-size:1.2rem;">
-                        ${state.thirds.length} / 8
-                    </div>
-                </div>
-
-                <div id="thirds-actual-grid">
-                    </div>
-
-                <button class="btn btn-primary" onclick="confirmThirds()">
-                    Potvrdit a generovat pavouka
-                </button>
-            </div>
-        </div>
-    `;
-
-    const grid = document.getElementById('thirds-actual-grid');
-    state.groups.forEach(g => {
-        const teamName = g.teams[2];
-        const isSelected = state.thirds.includes(teamName) ? 'selected' : '';
-        grid.innerHTML += `
-            <div class="group-card ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <span style="font-size:0.6rem; opacity:0.5;">SKUPINA ${g.id}</span>
-                <span style="font-weight:bold;">${teamName}</span>
-            </div>`;
-    });
-    window.scrollTo(0,0);
-}
-    
-  function selectThird(el, teamName) {
-    if (state.thirds.includes(teamName)) {
-        state.thirds = state.thirds.filter(t => t !== teamName);
-        el.classList.remove('selected');
-    } else if (state.thirds.length < 8) {
-        state.thirds.push(teamName);
-        el.classList.add('selected');
-    }
-    
-    // Okamžitá aktualizace počítadla bez překreslování celého gridu
-    const counter = document.getElementById('thirds-counter');
-    if(counter) {
-        counter.innerText = `${state.thirds.length} / 8`;
-        counter.style.color = state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)';
-    }
-}
-    function confirmThirds() {
-        if(state.thirds.length !== 8) return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
-        document.getElementById('phase-thirds').classList.add('hidden');
-        let q = []; 
-        state.groups.forEach(g => q.push(g.teams[0], g.teams[1])); 
-        q.push(...state.thirds);
-        genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
+    function confirmAllGroups() {
+        if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
+        document.getElementById('phase-groups').classList.add('hidden');
+        document.getElementById('phase-thirds').classList.remove('hidden');
+        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
+        document.getElementById('dot-s2').classList.add('active');
+        const grid = document.getElementById('thirds-grid'); grid.innerHTML = '';
+        state.groups.forEach(g => { grid.innerHTML += `<div class="group-card" onclick="selectThird(this, '${g.teams[2]}')">${g.teams[2]}</div>`; });
         window.scrollTo(0,0);
-        updateStepper('dot-s32');
+        updateStepper('dot-s2');
     }
 
+    function selectThird(el, team) {
+        if(el.classList.contains('selected')) { el.classList.remove('selected'); state.thirds = state.thirds.filter(t => t !== team); }
+        else if(state.thirds.length < 8) { el.classList.add('selected'); state.thirds.push(team); }
+        document.getElementById('stat-thirds').innerText = `${state.thirds.length}/8`;
+    }
+
+    function confirmThirds() {
+    if(state.thirds.length !== 8) return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
+
+    // Skryjeme sekci výběru 3. míst
+    document.getElementById('phase-thirds').classList.add('hidden');
+
+    // Sestavíme pole pro 1/16 finále (24 týmů ze skupin + 8 týmů ze 3. míst)
+    let q = []; 
+    state.groups.forEach(g => q.push(g.teams[0], g.teams[1])); 
+    q.push(...state.thirds);
+
+    // DŮLEŽITÉ: Zavoláme genStage pro s32 a řekneme mu, 
+    // že se vracíme na 'phase-thirds' a tečku 'dot-s2'
+    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
+
+    // Posuneme nahoru
+    window.scrollTo(0,0);
+
+    // Aktualizujeme stepper na první kolo pavouka (žlutá pro 1/16)
+    updateStepper('dot-s32');
+}
+
+  // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
 function genStage(title, teams, count, id, prevPhase, prevDot) {
     const cont = document.getElementById('playoff-container');
-    const dotMap = { 's32': 'dot-s32', 's16': 'dot-s16', 's8': 'dot-s8', 's4': 'dot-s4', 's3': 'dot-fin', 's2': 'dot-fin' };
     
-    if (dotMap[id]) updateStepper(dotMap[id]);
+    // --- MAPOVÁNÍ STEPPERU ---
+    const dotMap = {
+        's32': 'dot-s32',
+        's16': 'dot-s16',
+        's8':  'dot-s8',
+        's4':  'dot-s4',
+        's3':  'dot-fin',
+        's2':  'dot-fin'
+    };
+    
+    // Pokud ID existuje v mapě, aktualizujeme barvy v záhlaví (žlutá pro aktivní)
+    if (dotMap[id]) {
+        updateStepper(dotMap[id]);
+    }
+    // -------------------------
 
+    // Uložíme nebo načteme týmy z historie
     const currentTeams = getTeamsForStage(id, teams);
     const prevWins = state.playoff[id] || [];
 
+    // Vytvoříme unikátní DIV pro toto kolo, pokud ještě neexistuje
     let stageDiv = document.getElementById(`sec-${id}`);
     if (!stageDiv) {
         stageDiv = document.createElement('div');
@@ -505,6 +477,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     
     stageDiv.innerHTML = h + `</div><button class="btn btn-primary" style="margin-top:20px;" onclick="cfS('${id}', ${count})">Potvrdit kolo</button></div>`;
     
+    // Zobrazení správného kola a skrytí ostatních
     document.querySelectorAll('#playoff-container .section-box, main > .section-box').forEach(div => div.classList.add('hidden'));
     stageDiv.classList.remove('hidden');
 }
@@ -526,6 +499,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     
     state.playoff[sid] = wins;
 
+    // Reset budoucích kol při změně výsledku
     const order = ['s32', 's16', 's8', 's4', 's3', 's2'];
     let idx = order.indexOf(sid);
     for(let i = idx + 1; i < order.length; i++) {
@@ -534,20 +508,27 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         if(nextDiv) nextDiv.remove();
     }
 
+    // Logika postupu
     if(sid==='s32') {
-        genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s32');
+        genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
     } else if(sid==='s16') {
-        genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s16');
+        genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s3');
     } else if(sid==='s8') {
-        genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s8');
+        genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
     } else if(sid==='s4') {
-        genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s4'); 
+        // PO SEMIFINÁLE: Jdeme na 3. místo
+        document.getElementById('dot-s4').classList.add('active'); 
+        genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s3'); 
     } else if(sid==='s3') {
+        // PO 3. MÍSTĚ: Jdeme na Finále
+        // Vytáhneme vítěze ze semifinále (s4), kteří čekají na finále
         const finalists = state.playoff['s4'];
-        genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-fin');
+        genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
     } else if(sid==='s2') {
+        // KONEC: Zobrazení vítěze
         state.playoff.winner = wins[0]; 
         state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; 
+        
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
         document.getElementById('winner-display').innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
         document.getElementById('final-box').classList.remove('hidden'); 
@@ -559,10 +540,14 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     const now = new Date().getTime();
     const adminLoginTime = localStorage.getItem('adminLoginTime');
     const tenMinutes = 10 * 60 * 1000;
+
+    // Pokud je uživatel už přihlášený a neuběhlo 10 minut, jen přepneme panel
     if (adminLoginTime && (now - adminLoginTime < tenMinutes)) {
         toggleAdminPanel();
         return;
     }
+
+    // Pokud není přihlášen nebo vypršel čas, chce to heslo
     if (prompt("Heslo:") === "Matysek.2019") {
         localStorage.setItem('adminLoginTime', now);
         toggleAdminPanel();
@@ -573,7 +558,9 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     function toggleAdminPanel() {
     const panel = document.getElementById('admin-panel');
     panel.classList.toggle('hidden');
-    if (!panel.classList.contains('hidden')) genAdminForm();
+    if (!panel.classList.contains('hidden')) {
+        genAdminForm();
+    }
 }
     function genAdminForm() {
         const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
@@ -622,17 +609,22 @@ function updateStepper(activeId) {
     steps.forEach(step => {
         const el = document.getElementById(step.id);
         if (!el) return;
+
         el.classList.remove('active', 'completed');
+
         if (step.id === activeId) {
-            el.classList.add('active'); 
+            el.classList.add('active'); // Žlutá (Právě vyplňuji)
         } else if (step.check()) {
-            el.classList.add('completed');
+            el.classList.add('completed'); // Zelená (Mám hotovo)
         }
     });
 }
     
+    // 2. Tuhle funkci vlož do scriptu - zajistí, že se data neztratí
 function getTeamsForStage(id, fallbackTeams) {
-    if (fallbackTeams && fallbackTeams.length > 0) state.history[id] = fallbackTeams;
+    if (fallbackTeams && fallbackTeams.length > 0) {
+        state.history[id] = fallbackTeams;
+    }
     return state.history[id] || [];
 }
 
