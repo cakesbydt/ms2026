@@ -75,45 +75,49 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
- .main-header-logo {
+.main-header-container {
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 40px 0; /* Více místa kolem banneru */
+    padding: 25px 0 15px 0; /* Přiměřený prostor nahoře */
 }
 
 .host-info-bar {
     display: flex;
     align-items: center;
-    gap: 30px; /* Větší mezera mezi vlajkami a textem */
-    background: rgba(255, 255, 255, 0.08);
-    padding: 20px 50px; /* Masivní padding pro velký vzhled */
-    border-radius: 100px;
-    border: 2px solid rgba(255, 255, 255, 0.2); /* Silnější ohraničení */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* Výrazný stín pro hloubku */
+    gap: 15px;
+    background: rgba(30, 41, 59, 0.7); /* Ladí s tvými kartami */
+    padding: 10px 25px;
+    border-radius: 50px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .flag-group {
     display: flex;
-    gap: 15px;
+    gap: 8px;
+    align-items: center;
 }
 
 .flag-group img { 
-    height: 40px; /* Pořádně velké vlajky */
+    height: 18px; /* Decentní velikost vlajek */
     width: auto;
-    border-radius: 4px;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+    border-radius: 2px;
 }
 
 .host-text { 
-    font-size: 2rem !important; /* Masivní velikost písma */
-    color: #fff;
-    font-weight: 900; /* Nejtěžší váha písma */
-    letter-spacing: 4px; /* Široké rozestupy pro "cinematic" vzhled */
+    font-size: 0.95rem !important; /* Čitelná, ale ne obří velikost */
+    color: var(--text);
+    font-weight: 700; 
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    text-shadow: 2px 4px 10px rgba(0,0,0,0.6);
 }
 
+/* Responzivita: Na malých displejích to trochu zmenšíme */
+@media (max-width: 600px) {
+    .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
+    .host-info-bar { padding: 8px 15px; gap: 10px; }
+}
         /* --- OPRAVA HLAVIČKY A MŘÍŽKY --- */
 .thirds-header-row {
     display: flex !important;
