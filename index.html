@@ -778,14 +778,21 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         // Vytáhneme vítěze ze semifinále (s4), kteří čekají na finále
         const finalists = state.playoff['s4'];
         genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
-    } else if(sid==='s2') {
+    } } else if(sid==='s2') {
         // KONEC: Zobrazení vítěze
         state.playoff.winner = wins[0]; 
         state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; 
         
+        // Zobrazení finálního boxu
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
         document.getElementById('winner-display').innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
         document.getElementById('final-box').classList.remove('hidden'); 
+
+        // --- PŘIDÁNO: Potvrzovací hláška ---
+        alert("Gratulujeme! Tvůj tip na vítěze " + wins[0] + " byl úspěšně zaznamenán.");
+        
+        // Pokud máš funkci na odeslání do databáze (např. saveTip), zavolej ji zde:
+        // saveTip(); 
     }
     window.scrollTo(0,0);
 }
