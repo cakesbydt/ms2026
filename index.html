@@ -100,12 +100,15 @@
 <div class="app-wrapper">
     <header>
         <h1>🏆 MS 2026 TIPOVAČKA</h1>
-        <div class="step-indicator">
-            <span class="step-dot active" id="dot-s1">Skupiny</span>
-            <span class="step-dot" id="dot-s2">3. místa</span>
-            <span class="step-dot" id="dot-s3">Pavouk</span>
-            <span class="step-dot" id="dot-s4">Finále</span>
-        </div>
+       <div class="step-indicator">
+    <span class="step-dot active" id="dot-s1">Skupiny</span>
+    <span class="step-dot" id="dot-s2">Postupy z 3. místa</span>
+    <span class="step-dot" id="dot-s32">1/16</span>
+    <span class="step-dot" id="dot-s16">1/8</span>
+    <span class="step-dot" id="dot-s8">Čtvrtfinále</span>
+    <span class="step-dot" id="dot-s4">Semifinále</span>
+    <span class="step-dot" id="dot-fin">Finále</span>
+</div>
     </header>
 
     <div id="admin-panel" class="hidden section-box" style="border-color: var(--lose);">
@@ -402,10 +405,26 @@ function dE(e, gid) {
         updateStepper('dot-s3');
     }
 
-   // 3. KOMPLETNĚ PŘEPSANÁ genStage (vyměň ji celou)
+// 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
 function genStage(title, teams, count, id, prevPhase, prevDot) {
     const cont = document.getElementById('playoff-container');
     
+    // --- MAPOVÁNÍ STEPPERU ---
+    const dotMap = {
+        's32': 'dot-s32',
+        's16': 'dot-s16',
+        's8':  'dot-s8',
+        's4':  'dot-s4',
+        's3':  'dot-fin',
+        's2':  'dot-fin'
+    };
+    
+    // Pokud ID existuje v mapě, aktualizujeme barvy v záhlaví (žlutá pro aktivní)
+    if (dotMap[id]) {
+        updateStepper(dotMap[id]);
+    }
+    // -------------------------
+
     // Uložíme nebo načteme týmy z historie
     const currentTeams = getTeamsForStage(id, teams);
     const prevWins = state.playoff[id] || [];
@@ -443,6 +462,13 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
                 <div class="playoff-team ${sel2}" onclick="pk('${id}',${i},1)">${t2}</div>
             </div>`;
     }
+    
+    stageDiv.innerHTML = h + `</div><button class="btn btn-primary" style="margin-top:20px;" onclick="cfS('${id}', ${count})">Potvrdit kolo</button></div>`;
+    
+    // Zobrazení správného kola a skrytí ostatních
+    document.querySelectorAll('#playoff-container .section-box, main > .section-box').forEach(div => div.classList.add('hidden'));
+    stageDiv.classList.remove('hidden');
+}
     
     stageDiv.innerHTML = h + `</div><button class="btn btn-primary" style="margin-top:20px;" onclick="cfS('${id}', ${count})">Potvrdit kolo</button></div>`;
     
@@ -569,29 +595,29 @@ if (id.startsWith('s')) {
     }
 
 function updateStepper(activeId) {
-    // Definujeme logické bloky a jejich závislosti ve stavu
     const steps = [
-        { id: 'dot-s1', check: () => state.groups.every(g => g.done) },
-        { id: 'dot-s2', check: () => state.thirds.length === 8 },
-        { id: 'dot-s3', check: () => state.playoff.s4 && state.playoff.s4.length > 0 },
-        { id: 'dot-s4', check: () => state.playoff.winner }
+        { id: 'dot-s1',  check: () => state.groups.every(g => g.done) },
+        { id: 'dot-s2',  check: () => state.thirds.length === 8 },
+        { id: 'dot-s32', check: () => state.playoff.s32 && state.playoff.s32.length === 16 },
+        { id: 'dot-s16', check: () => state.playoff.s16 && state.playoff.s16.length === 8 },
+        { id: 'dot-s8',  check: () => state.playoff.s8 && state.playoff.s8.length === 4 },
+        { id: 'dot-s4',  check: () => state.playoff.s4 && state.playoff.s4.length === 2 },
+        { id: 'dot-fin', check: () => state.playoff.winner }
     ];
 
     steps.forEach(step => {
         const el = document.getElementById(step.id);
         if (!el) return;
 
-        // Reset tříd
         el.classList.remove('active', 'completed');
 
         if (step.id === activeId) {
-            el.classList.add('active'); // Žlutá
+            el.classList.add('active'); // Žlutá (Právě vyplňuji)
         } else if (step.check()) {
-            el.classList.add('completed'); // Zelená
+            el.classList.add('completed'); // Zelená (Mám hotovo)
         }
     });
 }
-    
     // 2. Tuhle funkci vlož do scriptu - zajistí, že se data neztratí
 function getTeamsForStage(id, fallbackTeams) {
     if (fallbackTeams && fallbackTeams.length > 0) {
