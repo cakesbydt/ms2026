@@ -142,7 +142,7 @@
 .thirds-header-row {
     display: flex !important;
     align-items: center !important;
-    justify-content: space-between !important; /* Upraveno pro lepší rozložení */
+    justify-content: space-between !important;
     width: 100% !important;
     padding: 10px 0 20px 0 !important;
     border-bottom: 1px solid var(--border) !important;
@@ -169,7 +169,7 @@
 .thirds-wrapper {
     width: 100% !important;
     max-width: 1200px;
-    margin: 0 auto;
+    margin: 0 auto !important; /* Vycentrování kontejneru */
     padding: 10px;
     box-sizing: border-box;
 }
@@ -237,19 +237,68 @@
     cursor: pointer;
 }
 
-/* --- RESPONZIVITA (MOBILNÍ VERZE) --- */
+/* --- RESPONZIVITA A KOMPLETNÍ CENTROVÁNÍ --- */
 @media (max-width: 1000px) {
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
 @media (max-width: 600px) {
-    /* Centrování obsahu na střed */
-    .thirds-wrapper, .section-box {
+    /* Vynucené centrování pro všechny hlavní kontejnery */
+    .thirds-wrapper, 
+    .section-box, 
+    .container,
+    #final-box {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        padding: 10px !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
+
+    /* Mřížka karet na mobilu */
+    #thirds-actual-grid { 
+        grid-template-columns: repeat(2, 1fr) !important; 
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* Zápasy v pavouku - tohle je klíč k vycentrování */
+    .matchup {
+        width: 100% !important;
+        max-width: 300px !important;
+        margin: 0 auto 15px auto !important; /* STŘED */
+        display: block !important;
+    }
+
+    .playoff-team {
+        width: 100% !important;
+        justify-content: center !important;
+        text-align: center !important;
+    }
+
+    /* Ostatní mobilní úpravy */
+    .mini-host-bar { width: 90%; margin: 0 auto; }
+    .host-text { font-size: 0.75rem !important; }
+    .player-row td { padding: 12px 8px !important; font-size: 0.85rem !important; }
+
+    /* Detail hráče */
+    .det-groups-grid { grid-template-columns: repeat(2, 1fr) !important; width: 100%; }
+    .det-playoff-stages { flex-direction: column !important; align-items: center !important; }
+    .det-stage-column { width: 100% !important; align-items: center !important; }
+
+    /* Input pro jméno */
+    #user-name {
+        width: 100% !important;
+        max-width: 280px;
+        margin: 15px auto !important;
+        display: block;
+        font-size: 16px !important;
+    }
+}
 
     #thirds-actual-grid { 
         grid-template-columns: repeat(2, 1fr) !important; 
