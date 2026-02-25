@@ -7,16 +7,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<header>
-    <div class="main-header-logo">
-        <div class="host-info-bar">
+<header class="site-header">
+    <div class="mini-host-bar">
+        <div class="mini-flags">
             <img src="https://flagcdn.com/us.svg" alt="USA">
             <img src="https://flagcdn.com/mx.svg" alt="Mexico">
             <img src="https://flagcdn.com/ca.svg" alt="Canada">
-            <span class="host-text">
-                United States | Mexico | Canada 2026
-            </span>
         </div>
+        <span class="mini-text">UNITED STATES | MEXICO | CANADA 2026</span>
     </div>
 </header>
     
@@ -75,41 +73,42 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-.main-header-container {
+.site-header {
+    width: 100%;
     display: flex;
     justify-content: center;
-    width: 100%;
-    padding: 15px 0; /* Malý odstup od horního okraje */
+    padding: 10px 0;
+    background: #0b0f1a; /* Barva pozadí tvé stránky */
 }
 
-.host-info-bar {
+.mini-host-bar {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #1e293b; /* Tmavé barvy tvého adminu */
-    padding: 6px 16px;   /* Úzké vertikální odsazení */
-    border-radius: 8px;  /* Méně kulaté, spíše moderní hranatější vzhled */
-    border: 1px solid #334155;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 15px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.flag-group {
+.mini-flags {
     display: flex;
-    gap: 6px; /* Vlajky těsně u sebe */
+    gap: 5px;
 }
 
-.flag-group img { 
-    height: 15px; /* Menší, ale stále ostré vlajky */
+.mini-flags img {
+    height: 12px; /* Tady je to kouzlo - vlajky jsou teď malinké */
     width: auto;
-    border-radius: 1px;
+    display: block;
 }
 
-.host-text { 
-    font-size: 0.8rem !important; /* Menší, čistý text */
-    color: #94a3b8; /* Méně svítivá barva, aby tolik nerušila */
-    font-weight: 600; 
+.mini-text {
+    font-size: 0.7rem; /* Malé, čisté písmo */
+    color: #94a3b8;
+    font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
+    white-space: nowrap;
 }
 /* Responzivita: Na malých displejích to trochu zmenšíme */
 @media (max-width: 600px) {
