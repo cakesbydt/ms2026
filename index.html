@@ -762,7 +762,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         if(nextDiv) nextDiv.remove();
     }
 
-    // --- Logika postupu mezi koly ---
+    // Logika postupu mezi koly
     if(sid==='s32') {
         genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
     } else if(sid==='s16') {
@@ -770,48 +770,42 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     } else if(sid==='s8') {
         genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
     } else if(sid==='s4') {
-        // PO SEMIFINÁLE: Jdeme na 3. místo
         const dot4 = document.getElementById('dot-s4');
         if(dot4) dot4.classList.add('active'); 
         genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s3'); 
     } else if(sid==='s3') {
-        // PO 3. MÍSTĚ: Jdeme na Finále
         const finalists = state.playoff['s4'];
         genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
     } else if(sid==='s2') {
-        // --- KONEC: Finále potvrzeno ---
+        // --- FINÁLE: ODESLÁNÍ DO ŽEBŘÍČKU ---
 
-        // 1. Nejprve se zeptáme na jméno (předtím než všechno zmizí)
-        const playerName = prompt("Všechny tipy jsou hotové! Zadej své jméno pro uložení do žebříčku:");
-
-        // Kontrola, zda uživatel jméno skutečně zadal
+        // 1. Získání jména
+        const playerName = prompt("Zadej své jméno pro uložení tipu:");
         if (!playerName || playerName.trim() === "") {
-            return alert("Bez jména nemůžeme tvůj tip uložit. Klikni znovu na vítěze a zadej jméno.");
+            return alert("Jméno je povinné pro odeslání do žebříčku!");
         }
 
-        // 2. Uložíme data do state
-        state.name = playerName; // Přidáme jméno do objektu pro Supabase
+        // 2. Příprava dat
+        state.name = playerName;
         state.playoff.winner = wins[0]; 
         const bronzeEl = document.querySelector('#sec-s3 .selected');
         state.playoff.bronze = bronzeEl ? bronzeEl.innerText : "Nezvoleno"; 
-        
-        // 3. Zobrazení finálního boxu (schováme pavouka, ukážeme vítěze)
+
+        // 3. Volání tvé funkce pro odeslání (ZDE SE DATA POSÍLAJÍ)
+        if (typeof saveTip === 'function') {
+            saveTip(); 
+        }
+
+        // 4. Zobrazení finálního boxu
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
-        
         const winDisp = document.getElementById('winner-display');
         if(winDisp) winDisp.innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
         
         const finalBox = document.getElementById('final-box');
         if(finalBox) finalBox.classList.remove('hidden'); 
 
-        // 4. Volání funkce pro zápis do Supabase (saveTip) a finální hláška
-        if (typeof saveTip === 'function') {
-            saveTip(); // Zde se děje to kouzlo odeslání
-            alert("Děkujeme, " + playerName + "! Tvůj tip byl úspěšně zaznamenán a odeslán do databáze.");
-        } else {
-            // Jen pro testování, pokud saveTip ještě nemáš připravený
-            alert("Gratulujeme, " + playerName + "! Tvůj pavouk je kompletní (nyní dopoj funkci saveTip).");
-        }
+        // 5. FINÁLNÍ POTVRZENÍ (vyskočí až po odeslání)
+        alert("Hotovo! Tvůj tip byl odeslán do žebříčku. Hodně štěstí!");
     }
 
     window.scrollTo(0,0);
