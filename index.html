@@ -749,33 +749,33 @@ function confirmThirds() {
     };
 
     const s32Teams = [
-        // SEKCE 1 (Levá horní čtvrtina)
-        getT('A', 0), vybrane3[2], // Zápas 79 (1A vs 3 CEFHI)
-        getT('L', 0), vybrane3[3], // Zápas 80 (1L vs 3 EHIJK) -> Vítězi tvoří osmifinále
+        // --- PRVNÍ ČTVRTFINÁLE (W97) ---
+        getT('B', 0), vybrane3[6], // Z85
+        getT('K', 0), vybrane3[7], // Z87 -> tvoří Z89 (W85 vs W87)
+        getT('D', 0), vybrane3[4], // Z81
+        getT('G', 0), vybrane3[5], // Z82 -> tvoří Z90 (W81 vs W82)
+        // Vítězové Z89 a Z90 tvoří čtvrtfinále W97
 
-        getT('E', 0), vybrane3[0], // Zápas 74 (1E vs 3 ABCDF)
-        getT('I', 0), vybrane3[1], // Zápas 77 (1I vs 3 CDFGH) -> Vítězi tvoří osmifinále
+        // --- DRUHÉ ČTVRTFINÁLE (W98) ---
+        getT('A', 0), vybrane3[2], // Z79
+        getT('L', 0), vybrane3[3], // Z80 -> tvoří Z91 (W79 vs W80)
+        getT('A', 1), getT('B', 1), // Z73
+        getT('F', 0), getT('C', 1), // Z75 -> tvoří Z92 (W73 vs W75)
+        // Vítězové Z91 a Z92 tvoří čtvrtfinále W98
 
-        // SEKCE 2 (Levá dolní čtvrtina)
-        getT('C', 0), getT('F', 1), // Zápas 76 (1C vs 2F)
-        getT('E', 1), getT('I', 1), // Zápas 78 (2E vs 2I) -> Vítězi tvoří osmifinále
+        // --- TŘETÍ ČTVRTFINÁLE (W99) ---
+        getT('C', 0), getT('F', 1), // Z76
+        getT('E', 1), getT('I', 1), // Z78 -> tvoří Z96 (W76 vs W78)
+        getT('E', 0), vybrane3[0], // Z74
+        getT('I', 0), vybrane3[1], // Z77 -> tvoří Z95 (W74 vs W77)
+        // Vítězové Z96 a Z95 tvoří čtvrtfinále W99
 
-        getT('D', 0), vybrane3[4], // Zápas 81 (1D vs 3 BEFIJ)
-        getT('G', 0), vybrane3[5], // Zápas 82 (1G vs 3 AEHIJ) -> Vítězi tvoří osmifinále
-
-        // SEKCE 3 (Pravá horní čtvrtina)
-        getT('A', 1), getT('B', 1), // Zápas 73 (2A vs 2B)
-        getT('F', 0), getT('C', 1), // Zápas 75 (1F vs 2C) -> Vítězi tvoří osmifinále
-
-        getT('H', 0), getT('J', 1), // Zápas 84 (1H vs 2J)
-        getT('D', 1), getT('G', 1), // Zápas 83 (2D vs 2G) -> Vítězi tvoří osmifinále
-
-        // SEKCE 4 (Pravá dolní čtvrtina)
-        getT('B', 0), vybrane3[6], // Zápas 85 (1B vs 3 EFGIJ)
-        getT('K', 0), vybrane3[7], // Zápas 87 (1K vs 3 DEIJL) -> Vítězi tvoří osmifinále
-
-        getT('J', 0), getT('H', 1), // Zápas 86 (1J vs 2H)
-        getT('K', 1), getT('L', 1)  // Zápas 88 (2K vs 2L) -> Vítězi tvoří osmifinále
+        // --- ČTVRTÉ ČTVRTFINÁLE (W100) ---
+        getT('H', 0), getT('J', 1), // Z84
+        getT('D', 1), getT('G', 1), // Z83 -> tvoří Z93 (W83 vs W84)
+        getT('J', 0), getT('H', 1), // Z86
+        getT('K', 1), getT('L', 1)  // Z88 -> tvoří Z94 (W86 vs W88)
+        // Vítězové Z93 a Z94 tvoří čtvrtfinále W100
     ];
 
     genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');
