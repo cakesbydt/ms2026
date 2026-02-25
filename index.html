@@ -84,16 +84,14 @@
 .mini-host-bar {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 5px 15px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 15px;           /* ZVĚTŠENO: Mezera mezi vlajkami a textem */
+    padding: 8px 20px;   /* ZVĚTŠENO: Vnitřní prostor lišty */
+    border-radius: 8px;
 }
 
-.mini-flags {
-    display: flex;
-    gap: 5px;
+.mini-flags img {
+    height: 18px;        /* ZVĚTŠENO: Ze 12px na 18px (všechny vlajky se zvětší naráz) */
+    width: auto;
 }
 
 .mini-flags img {
@@ -103,13 +101,10 @@
 }
 
 .mini-text {
-    font-size: 0.7rem; /* Malé, čisté písmo */
-    color: #94a3b8;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    white-space: nowrap;
+    font-size: 0.9rem;   /* ZVĚTŠENO: Z 0.7rem na 0.9rem */
+    letter-spacing: 1.5px;
 }
+        
 /* Responzivita: Na malých displejích to trochu zmenšíme */
 @media (max-width: 600px) {
     .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
