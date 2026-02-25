@@ -73,6 +73,32 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
+   /* Styl pro první tři řádky */
+#leaderboard tbody tr:nth-child(1) {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
+    color: #fbbf24; /* Zlatá */
+    font-weight: bold;
+}
+#leaderboard tbody tr:nth-child(2) {
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.15), transparent) !important;
+    color: #cbd5e1; /* Stříbrná */
+}
+#leaderboard tbody tr:nth-child(3) {
+    background: linear-gradient(90deg, rgba(180, 83, 9, 0.15), transparent) !important;
+    color: #d97706; /* Bronzová */
+}
+
+    .fa-trophy, .fa-medal {
+    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3));
+    vertical-align: middle;
+}
+
+/* Ikony v žebříčku */
+.rank-icon {
+    margin-right: 8px;
+    font-size: 1.1rem;
+}
+
 .site-header {
     width: 100%;
     display: flex;
@@ -365,10 +391,25 @@ let state = {
     };
 
     body.innerHTML = processed.map((r, i) => {
+        // Logika pro ikony prvních tří míst
+        let rankContent = `${i + 1}.`; // Výchozí stav (číslo)
+        let rowStyle = "";
+
+        if (i === 0) {
+            rankContent = '<i class="fas fa-trophy" style="color: #fbbf24; font-size: 1.1rem;" title="Mistr"></i>';
+            rowStyle = "background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent);";
+        } else if (i === 1) {
+            rankContent = '<i class="fas fa-medal" style="color: #cbd5e1; font-size: 1.1rem;" title="2. místo"></i>';
+            rowStyle = "background: linear-gradient(90deg, rgba(203, 213, 225, 0.07), transparent);";
+        } else if (i === 2) {
+            rankContent = '<i class="fas fa-medal" style="color: #cd7f32; font-size: 1.1rem;" title="3. místo"></i>';
+            rowStyle = "background: linear-gradient(90deg, rgba(205, 127, 50, 0.07), transparent);";
+        }
+
         return `
-            <tr class="player-row" onclick="toggleDetail('det-${r.id}')">
-                <td style="width:10px; color:#94a3b8">${i+1}.</td>
-                <td style="font-weight:bold">${r.name}</td>
+            <tr class="player-row" onclick="toggleDetail('det-${r.id}')" style="${rowStyle}">
+                <td style="width:30px; text-align:center;">${rankContent}</td>
+                <td style="font-weight:bold; color: ${i === 0 ? '#fbbf24' : 'inherit'}">${r.name}</td>
                 <td style="text-align:right; font-weight:bold; color:var(--accent)">${r.points} b.</td>
             </tr>
             <tr id="det-${r.id}" class="tip-detail-row">
