@@ -6,153 +6,97 @@
     <title>MS 2026 - Master Wizard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        :root { 
-            --bg: #0b0f1a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; 
-            --winner: #22c55e; --lose: #ef4444; --border: #334155; 
-        }
-
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
-        .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
-        
-        header { text-align: center; padding: 15px 0; }
-        .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
-        /* Základní - nevyplněno (šedá) */
-.step-dot { 
-    padding: 6px 14px; 
-    border-radius: 20px; 
-    background: #243147; 
-    font-size: 0.8rem; 
-    color: #94a3b8; 
-    border: 1px solid var(--border); 
-    transition: 0.3s;
-}
-
-/* Právě aktivní (žlutá) */
-.step-dot.active { 
-    background: #facc15 !important; 
-    color: #000 !important; 
-    font-weight: bold; 
-    border-color: #facc15;
-}
-
-/* Kompletně hotovo (zelená) */
-.step-dot.completed { 
-    background: var(--winner) !important; 
-    color: #000 !important; 
-    border-color: var(--winner);
-}
-
-/* Styl pro kontejner s počítadlem */
-.thirds-header-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(56, 189, 248, 0.05);
-    padding: 15px 25px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    border: 1px dashed var(--border);
-}
-        
-       #thirds-counter {
-    font-size: 1.2rem;
-    font-weight: 800;
-    letter-spacing: 1px;
-}
-
-        .thirds-instructions {
-    font-size: 0.85rem;
-    color: #94a3b8;
-}
-
-        /* Kontejner pro mřížku 3. míst */
-#thirds-actual-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 stejné sloupce */
-    gap: 12px;
-    padding: 10px 0;
-}
-
-        /* Responzivita pro mobily */
-@media (max-width: 600px) {
-    #thirds-actual-grid {
-        grid-template-columns: repeat(2, 1fr); /* Na mobilu 2 sloupce */
+   <style>
+    :root { 
+        --bg: #0b0f1a; --card: #1e293b; --accent: #38bdf8; --text: #f1f5f9; 
+        --winner: #22c55e; --lose: #ef4444; --border: #334155; 
     }
-}
 
-        .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
-        @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+    .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
+    
+    header { text-align: center; padding: 15px 0; }
+    
+    /* STEPPER */
+    .step-indicator { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .step-dot { 
+        padding: 6px 14px; 
+        border-radius: 20px; 
+        background: #243147; 
+        font-size: 0.8rem; 
+        color: #94a3b8; 
+        border: 1px solid var(--border); 
+        transition: 0.3s;
+    }
+    .step-dot.active { background: #facc15 !important; color: #000 !important; font-weight: bold; border-color: #facc15; }
+    .step-dot.completed { background: var(--winner) !important; color: #000 !important; border-color: var(--winner); }
 
-        .section-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; }
-        .section-header { padding: 15px 20px; background: #243147; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
+    @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
 
-        /* ŽEBŘÍČEK */
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 12px; border-bottom: 1px solid var(--border); }
-        tr.player-row:hover { background: rgba(56, 189, 248, 0.1); cursor: pointer; }
+    .section-box { background: var(--card); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 20px; overflow: hidden; display: flex; flex-direction: column; }
+    .section-header { padding: 15px 20px; background: #243147; font-weight: bold; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
 
-        /* --- LEVÝ SLOUPEC DETAIL (ZACHOVÁNO) --- */
-        .tip-detail-row { display: none; background: #070a13; }
-        .detail-container { padding: 20px; border-left: 4px solid var(--accent); }
-        .detail-section-title { color: var(--accent); font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: block; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
-        .det-groups-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
-        .det-group-box { background: #161e2e; padding: 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #2d3748; }
-        .det-group-box b { color: var(--accent); display: block; margin-bottom: 5px; font-size: 0.7rem; }
-        .det-playoff-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .det-stage-column { display: flex; flex-direction: column; gap: 15px; }
-        .det-stage-card { background: #161e2e; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
-        .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
-        .det-team-list { display: flex; flex-direction: column; gap: 4px; }
-        .det-team-tag { font-size: 0.75rem; padding: 3px 8px; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid transparent; }
-        
-        .status-correct { border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
-        .status-wrong { border-color: var(--lose) !important; color: var(--lose) !important; }
+    /* ŽEBŘÍČEK */
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 12px; border-bottom: 1px solid var(--border); }
+    tr.player-row:hover { background: rgba(56, 189, 248, 0.1); cursor: pointer; }
 
-        /* --- PRAVÝ SLOUPEC FORMULÁŘ (UPRAVENO) --- */
-        .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
-       /* Karta týmu ve 3. místech */
-.group-card {
-    background: #1e293b;
-    border: 1px solid #334155;
-    padding: 12px 8px;
-    border-radius: 10px;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.2s;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 60px;
-}
-        .group-card:hover {
-    border-color: var(--accent);
-}
-        .group-card.filled { border-color: var(--winner); color: var(--winner); }
-       .group-card.selected {
-    background: rgba(34, 197, 94, 0.1);
-    border-color: var(--winner);
-    color: var(--winner);
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
-}
+    /* DETAIL TIPU */
+    .tip-detail-row { display: none; background: #070a13; }
+    .detail-container { padding: 20px; border-left: 4px solid var(--accent); }
+    .detail-section-title { color: var(--accent); font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: block; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+    .det-groups-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 25px; }
+    .det-group-box { background: #161e2e; padding: 10px; border-radius: 8px; font-size: 0.75rem; border: 1px solid #2d3748; }
+    .det-playoff-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .det-stage-column { display: flex; flex-direction: column; gap: 15px; }
+    .det-stage-card { background: #161e2e; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
+    
+    .status-correct { border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
+    .status-wrong { border-color: var(--lose) !important; color: var(--lose) !important; }
 
-        .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
-        
-        .playoff-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; }
-        .matchup { background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 6px; }
-        .playoff-team { padding: 10px; background: #0f172a; border-radius: 6px; border: 1px solid #334155; cursor: pointer; text-align: center; font-size: 0.85rem; transition: 0.2s; }
-        .playoff-team:hover { border-color: var(--accent); }
-        .playoff-team.selected { background: rgba(34, 197, 94, 0.2) !important; border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
+    /* --- SEKCE 3. MÍSTA (OPRAVENO) --- */
+    .thirds-content-wrapper { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+    
+    .thirds-header-info {
+        display: flex; justify-content: space-between; align-items: center;
+        background: rgba(56, 189, 248, 0.05); padding: 15px 20px;
+        border-radius: 12px; border: 1px dashed var(--border);
+    }
+    
+    #thirds-actual-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 12px;
+        width: 100%;
+    }
 
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn-primary { background: var(--accent); color: #000; width: 100%; text-transform: uppercase; letter-spacing: 1px; }
-        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-back { background: #475569; color: white; font-size: 0.75rem; padding: 6px 12px; margin-top: 0; }
-        
-        .hidden { display: none !important; }
-        input { width: 100%; padding: 14px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
-        .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
-    </style>
+    .group-card {
+        background: #1e293b; border: 1px solid #334155; padding: 15px 10px;
+        border-radius: 10px; text-align: center; cursor: pointer;
+        transition: 0.2s; display: flex; flex-direction: column; gap: 4px;
+    }
+    .group-card:hover { border-color: var(--accent); background: #243147; }
+    .group-card.filled { border-color: var(--winner); color: var(--winner); }
+    .group-card.selected { 
+        background: rgba(34, 197, 94, 0.1); border-color: var(--winner); 
+        color: var(--winner); box-shadow: 0 0 10px rgba(34, 197, 94, 0.2); 
+    }
+
+    /* OSTATNÍ FORMULÁŘE */
+    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; padding: 20px; }
+    .playoff-form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; padding: 20px; }
+    .matchup { background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 12px; border: 1px solid #334155; display: flex; flex-direction: column; gap: 6px; }
+    .playoff-team { padding: 10px; background: #0f172a; border-radius: 6px; border: 1px solid #334155; cursor: pointer; text-align: center; font-size: 0.85rem; }
+    .playoff-team.selected { background: rgba(34, 197, 94, 0.2) !important; border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
+
+    .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-primary { background: var(--accent); color: #000; width: 100%; text-transform: uppercase; }
+    .btn-back { background: #475569; color: white; font-size: 0.75rem; padding: 6px 12px; }
+    
+    .hidden { display: none !important; }
+    .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
+</style>
 </head>
 <body>
 
@@ -443,47 +387,50 @@ function dE(e, gid) {
     renderTeamList(gid); 
 }
 
- function confirmAllGroups() {
+function confirmAllGroups() {
     if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
     
     document.getElementById('phase-groups').classList.add('hidden');
-    document.getElementById('phase-thirds').classList.remove('hidden');
+    const phaseThirds = document.getElementById('phase-thirds');
+    phaseThirds.classList.remove('hidden');
     updateStepper('dot-s2');
 
-    const container = document.getElementById('thirds-grid'); 
-    
-    // Čistá hlavička s počítadlem a instrukcí
-    container.innerHTML = `
-        <div style="background: rgba(15, 23, 42, 0.5); padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <h3 style="margin: 0; font-size: 1rem; text-transform: uppercase;">Výběr 3. míst</h3>
-                    <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: #94a3b8;">Označ přesně 8 týmů, které postoupí dále.</p>
+    // Vyčistíme a vytvoříme strukturu, která se nebude překrývat
+    phaseThirds.innerHTML = `
+        <div class="section-box">
+            <div class="section-header">
+                <span>Výběr týmů ze 3. míst</span>
+                <button class="btn btn-back" onclick="location.reload()">ZPĚT</button>
+            </div>
+            
+            <div class="thirds-content-wrapper">
+                <div class="thirds-header-info">
+                    <div style="font-size: 0.85rem; color: #94a3b8;">Vyber přesně 8 týmů, které postoupí do pavouka</div>
+                    <div id="thirds-counter" style="color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-weight:bold; font-size:1.2rem;">
+                        ${state.thirds.length} / 8
+                    </div>
                 </div>
-                <div id="thirds-counter" style="font-size: 1.5rem; font-weight: 800; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}">
-                    ${state.thirds.length} / 8
-                </div>
+
+                <div id="thirds-actual-grid">
+                    </div>
+
+                <button class="btn btn-primary" onclick="confirmThirds()">
+                    Potvrdit a generovat pavouka
+                </button>
             </div>
         </div>
-        <div id="thirds-actual-grid"></div>
-        <div style="margin-top: 25px;">
-            <button class="btn btn-primary" onclick="confirmThirds()" style="width: 100%; margin: 0;">Potvrdit výběr a pokračovat</button>
-        </div>
-    `; 
-    
-    const actualGrid = document.getElementById('thirds-actual-grid');
-    
-    state.groups.forEach(g => { 
+    `;
+
+    const grid = document.getElementById('thirds-actual-grid');
+    state.groups.forEach(g => {
         const teamName = g.teams[2];
         const isSelected = state.thirds.includes(teamName) ? 'selected' : '';
-        
-        actualGrid.innerHTML += `
+        grid.innerHTML += `
             <div class="group-card ${isSelected}" onclick="selectThird(this, '${teamName}')">
-                <span style="font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: bold;">Skupina ${g.id}</span>
-                <span style="font-size: 0.95rem; font-weight: 600;">${teamName}</span>
-            </div>`; 
+                <span style="font-size:0.6rem; opacity:0.5;">SKUPINA ${g.id}</span>
+                <span style="font-weight:bold;">${teamName}</span>
+            </div>`;
     });
-    
     window.scrollTo(0,0);
 }
     
