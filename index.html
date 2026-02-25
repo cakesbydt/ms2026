@@ -43,12 +43,30 @@
     border-color: var(--winner);
 }
 
-        #thirds-counter {
-    background: rgba(56, 189, 248, 0.1);
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(56, 189, 248, 0.2);
+/* Styl pro kontejner s počítadlem */
+.thirds-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(56, 189, 248, 0.05);
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px dashed var(--border);
 }
+        
+       #thirds-counter {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+        .thirds-instructions {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+        
 
         .dashboard { display: grid; grid-template-columns: 480px 1fr; gap: 25px; align-items: start; }
         @media (max-width: 1200px) { .dashboard { grid-template-columns: 1fr; } }
@@ -391,39 +409,43 @@ function dE(e, gid) {
     renderTeamList(gid); 
 }
 
-   function confirmAllGroups() {
+  function confirmAllGroups() {
     if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin kliknutím na písmena!");
     
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
     updateStepper('dot-s2');
 
-    const grid = document.getElementById('thirds-grid'); 
+    const container = document.getElementById('thirds-grid'); 
     
-    // Vytvoření struktury s počítadlem
-    grid.innerHTML = `
-        <div id="thirds-counter" style="text-align:center; margin-bottom:15px; font-weight:bold; color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}; font-size:1.1rem; background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.2);">
-            Vybráno: ${state.thirds.length} / 8
+    // Sestavení hlavičky s počítadlem
+    container.innerHTML = `
+        <div class="thirds-header-info">
+            <div class="thirds-instructions">Vyber 8 nejlepších týmů ze 3. míst pro doplnění pavouka</div>
+            <div id="thirds-counter" style="color:${state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)'}">
+                ${state.thirds.length} / 8
+            </div>
         </div>
         <div class="groups-grid" id="thirds-actual-grid"></div>
+        <button class="btn btn-primary" onclick="confirmThirds()">Potvrdit výběr a generovat pavouka</button>
     `; 
     
     const actualGrid = document.getElementById('thirds-actual-grid');
     
     state.groups.forEach(g => { 
         const teamName = g.teams[2];
-        // Tady je ta klíčová změna: Kontrola, jestli už je tým vybraný
         const isSelected = state.thirds.includes(teamName) ? 'selected' : '';
         
         actualGrid.innerHTML += `
             <div class="group-card ${isSelected}" onclick="selectThird(this, '${teamName}')">
+                <div style="font-size: 0.7rem; color: #64748b; margin-bottom: 4px;">Sk. ${g.id}</div>
                 ${teamName}
             </div>`; 
     });
     
     window.scrollTo(0,0);
 }
-   function selectThird(el, teamName) {
+  function selectThird(el, teamName) {
     if (state.thirds.includes(teamName)) {
         state.thirds = state.thirds.filter(t => t !== teamName);
         el.classList.remove('selected');
@@ -432,15 +454,13 @@ function dE(e, gid) {
         el.classList.add('selected');
     }
     
-    // AKTUALIZACE POČÍTADLA
+    // Okamžitá aktualizace počítadla bez překreslování celého gridu
     const counter = document.getElementById('thirds-counter');
     if(counter) {
-        counter.innerText = `Vybráno: ${state.thirds.length} / 8`;
-        // Pokud je 8, změníme barvu na vítěznou zelenou
+        counter.innerText = `${state.thirds.length} / 8`;
         counter.style.color = state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)';
     }
 }
-
     function confirmThirds() {
         if(state.thirds.length !== 8) return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
         document.getElementById('phase-thirds').classList.add('hidden');
