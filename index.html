@@ -75,39 +75,43 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-  /* Kontejner pro vycentrování celého bloku */
-.main-header-logo {
+ .main-header-logo {
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 20px 0;
+    padding: 40px 0; /* Více místa kolem banneru */
 }
 
 .host-info-bar {
     display: flex;
     align-items: center;
-    gap: 15px; /* Větší mezera mezi vlajkami a textem */
-    background: rgba(255, 255, 255, 0.07);
-    padding: 12px 25px; /* Větší vnitřní prostor */
-    border-radius: 50px; /* Kulatější vzhled */
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Jemný stín pod lištou */
+    gap: 30px; /* Větší mezera mezi vlajkami a textem */
+    background: rgba(255, 255, 255, 0.08);
+    padding: 20px 50px; /* Masivní padding pro velký vzhled */
+    border-radius: 100px;
+    border: 2px solid rgba(255, 255, 255, 0.2); /* Silnější ohraničení */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); /* Výrazný stín pro hloubku */
 }
 
-/* Větší vlajky */
-.host-info-bar img { 
-    height: 22px; /* Zvětšeno ze 14px */
+.flag-group {
+    display: flex;
+    gap: 15px;
+}
+
+.flag-group img { 
+    height: 40px; /* Pořádně velké vlajky */
     width: auto;
-    border-radius: 3px; 
+    border-radius: 4px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
 }
 
-/* Větší a výraznější text */
 .host-text { 
-    font-size: 1.1rem !important; /* Zvětšeno z 0.75rem */
-    color: #fff; /* Čistě bílá pro lepší čitelnost */
-    font-weight: 800; 
-    letter-spacing: 2px; /* Výraznější rozestupy písmen */
+    font-size: 2rem !important; /* Masivní velikost písma */
+    color: #fff;
+    font-weight: 900; /* Nejtěžší váha písma */
+    letter-spacing: 4px; /* Široké rozestupy pro "cinematic" vzhled */
     text-transform: uppercase;
+    text-shadow: 2px 4px 10px rgba(0,0,0,0.6);
 }
 
         /* --- OPRAVA HLAVIČKY A MŘÍŽKY --- */
