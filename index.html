@@ -757,12 +757,12 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     const order = ['s32', 's16', 's8', 's4', 's3', 's2'];
     let idx = order.indexOf(sid);
     for(let i = idx + 1; i < order.length; i++) {
-        if(state.history) delete state.history[order[i]]; // Pojistka pro state.history
+        if(state.history) delete state.history[order[i]]; 
         const nextDiv = document.getElementById(`sec-${order[i]}`);
         if(nextDiv) nextDiv.remove();
     }
 
-    // Logika postupu
+    // --- Logika postupu mezi koly ---
     if(sid==='s32') {
         genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
     } else if(sid==='s16') {
@@ -779,24 +779,39 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         const finalists = state.playoff['s4'];
         genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
     } else if(sid==='s2') {
-        // KONEC: Zobrazení vítěze
+        // --- KONEC: Finále potvrzeno ---
+
+        // 1. Nejprve se zeptáme na jméno (předtím než všechno zmizí)
+        const playerName = prompt("Všechny tipy jsou hotové! Zadej své jméno pro uložení do žebříčku:");
+
+        // Kontrola, zda uživatel jméno skutečně zadal
+        if (!playerName || playerName.trim() === "") {
+            return alert("Bez jména nemůžeme tvůj tip uložit. Klikni znovu na vítěze a zadej jméno.");
+        }
+
+        // 2. Uložíme data do state
+        state.name = playerName; // Přidáme jméno do objektu pro Supabase
         state.playoff.winner = wins[0]; 
         const bronzeEl = document.querySelector('#sec-s3 .selected');
         state.playoff.bronze = bronzeEl ? bronzeEl.innerText : "Nezvoleno"; 
         
-        // Zobrazení finálního boxu
+        // 3. Zobrazení finálního boxu (schováme pavouka, ukážeme vítěze)
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
+        
         const winDisp = document.getElementById('winner-display');
         if(winDisp) winDisp.innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
         
         const finalBox = document.getElementById('final-box');
         if(finalBox) finalBox.classList.remove('hidden'); 
 
-        // Uložení a upozornění
-        alert("Gratulujeme! Tvůj tip na vítěze " + wins[0] + " byl úspěšně zaznamenán.");
-        
-        // Zde odkomentuj saveTip(), až budeš připraven ukládat do DB
-        // if(typeof saveTip === 'function') saveTip(); 
+        // 4. Volání funkce pro zápis do Supabase (saveTip) a finální hláška
+        if (typeof saveTip === 'function') {
+            saveTip(); // Zde se děje to kouzlo odeslání
+            alert("Děkujeme, " + playerName + "! Tvůj tip byl úspěšně zaznamenán a odeslán do databáze.");
+        } else {
+            // Jen pro testování, pokud saveTip ještě nemáš připravený
+            alert("Gratulujeme, " + playerName + "! Tvůj pavouk je kompletní (nyní dopoj funkci saveTip).");
+        }
     }
 
     window.scrollTo(0,0);
