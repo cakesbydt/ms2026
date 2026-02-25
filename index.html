@@ -750,37 +750,41 @@ function confirmThirds() {
 
     // POŘADÍ PODLE OFICIÁLNÍHO PAVOUKA FIFA
     const s32Teams = [
-        // SEKCE 1 (W89 v R16)
-        getT('A', 0), vybrane3[2], // Z79 (1A vs 3CEFHI)
-        getT('L', 0), vybrane3[3], // Z80 (1L vs 3EHIJK)
-
-        // SEKCE 2 (W90 v R16)
-        getT('E', 0), vybrane3[0], // Z74 (1E vs 3ABCDF)
+         // SEKCE 3 (W90 v R16)
+        getT('E', 0), vybrane3[0], // Z74 (1E vs 3ABCDF)   Z89
         getT('I', 0), vybrane3[1], // Z77 (1I vs 3CDFGH)
 
-        // SEKCE 3 (W91 v R16)
-        getT('C', 0), getT('F', 1), // Z76 (1C vs 2F)
-        getT('E', 1), getT('I', 1), // Z78 (2E vs 2I)
-
-        // SEKCE 4 (W92 v R16)
-        getT('D', 0), vybrane3[4], // Z81 (1D vs 3BEFIJ)
-        getT('G', 0), vybrane3[5], // Z82 (1G vs 3AEHIJ)
-
-        // SEKCE 5 (W93 v R16)
-        getT('A', 1), getT('B', 1), // Z73 (2A vs 2B)
+          // SEKCE 5 (W93 v R16)
+        getT('A', 1), getT('B', 1), // Z73 (2A vs 2B)    Z90            Z97
         getT('F', 0), getT('C', 1), // Z75 (1F vs 2C)
 
-        // SEKCE 6 (W94 v R16)
-        getT('H', 0), getT('J', 1), // Z84 (1H vs 2J)
+            // SEKCE 6 (W94 v R16)
+        getT('H', 0), getT('J', 1), // Z84 (1H vs 2J)    Z93
         getT('D', 1), getT('G', 1), // Z83 (2D vs 2G)
 
+          // SEKCE 4 (W92 v R16)
+        getT('D', 0), vybrane3[4], // Z81 (1D vs 3BEFIJ)   Z94          Z98
+        getT('G', 0), vybrane3[5], // Z82 (1G vs 3AEHIJ)
+
+          // SEKCE 2 (W91 v R16)
+        getT('C', 0), getT('F', 1), // Z76 (1C vs 2F)    Z91
+        getT('E', 1), getT('I', 1), // Z78 (2E vs 2I)
+        
+        // SEKCE 1 (W89 v R16)
+        getT('A', 0), vybrane3[2], // Z79 (1A vs 3CEFHI)   Z92          Z99
+        getT('L', 0), vybrane3[3], // Z80 (1L vs 3EHIJK)
+
+      
+          // SEKCE 8 (W96 v R16)
+        getT('J', 0), getT('H', 1), // Z86 (1J vs 2H)    Z95
+        getT('K', 1), getT('L', 1)  // Z88 (2K vs 2L)
+
+
         // SEKCE 7 (W95 v R16)
-        getT('B', 0), vybrane3[6], // Z85 (1B vs 3EFGIJ)
+        getT('B', 0), vybrane3[6], // Z85 (1B vs 3EFGIJ)    Z96        Z100
         getT('K', 0), vybrane3[7], // Z87 (1K vs 3DEIJL)
 
-        // SEKCE 8 (W96 v R16)
-        getT('J', 0), getT('H', 1), // Z86 (1J vs 2H)
-        getT('K', 1), getT('L', 1)  // Z88 (2K vs 2L)
+      
     ];
 
     genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');
