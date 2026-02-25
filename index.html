@@ -453,7 +453,7 @@ let state = {
         document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
         document.getElementById(dotId).classList.add('active');
         // Místo ručního odebírání active tříd stačí:
-updateStepper(dotId);
+updateStepper(tabId);
     }
 
    function editGroup(id) { 
@@ -531,7 +531,7 @@ function confirmAllGroups() {
     
     document.getElementById('phase-groups').classList.add('hidden');
     document.getElementById('phase-thirds').classList.remove('hidden');
-    updateStepper('dot-s2');
+    updateStepper('tab-s2');
 
     const container = document.getElementById('thirds-grid'); 
     
@@ -609,10 +609,10 @@ function confirmAllGroups() {
 
     // 5. Generování pavouka 1/16 finále (32 týmů -> 16 zápasů)
     // Parametry: Název, týmy, počet zápasů, ID fáze, ID předchozí fáze (pro tlačítko zpět), ID tečky předchozí fáze
-    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'dot-s2');
+    genStage('1/16 Finále', q, 16, 's32', 'phase-thirds', 'tab-s2');
 
     // 6. Aktivace nové tečky v stepperu pro pavouka
-    updateStepper('dot-s32');
+    updateStepper('tab-s32');
 
     // 7. Scroll nahoru, ať uživatel vidí začátek pavouka
     window.scrollTo(0, 0);
@@ -624,17 +624,17 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     
     // --- MAPOVÁNÍ STEPPERU ---
     const dotMap = {
-        's32': 'dot-s32',
-        's16': 'dot-s16',
-        's8':  'dot-s8',
-        's4':  'dot-s4',
-        's3':  'dot-fin',
-        's2':  'dot-fin'
+        's32': 'tab-s32',
+        's16': 'tab-s16',
+        's8':  'tab-s8',
+        's4':  'tab-s4',
+        's3':  'tab-fin',
+        's2':  'tab-fin'
     };
     
     // Pokud ID existuje v mapě, aktualizujeme barvy v záhlaví (žlutá pro aktivní)
-    if (dotMap[id]) {
-        updateStepper(dotMap[id]);
+    if (tabMap[id]) {
+        updateStepper(tabMap[id]);
     }
     // -------------------------
 
