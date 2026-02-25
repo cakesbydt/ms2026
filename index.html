@@ -426,8 +426,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         m.querySelectorAll('.playoff-team')[ti].classList.add('selected');
     }
 
-    // 4. OPRAVENÁ cfS (aby při změně vítěze promazala historii budoucích kol)
-function cfS(sid, count) {
+   function cfS(sid, count) {
     const wins = [...document.querySelectorAll(`#sec-${sid} .selected`)].map(e => e.innerText);
     const loss = [...document.querySelectorAll(`#sec-${sid} .matchup`)].map(m => { 
         const t = m.querySelectorAll('.playoff-team'); 
@@ -438,26 +437,36 @@ function cfS(sid, count) {
     
     state.playoff[sid] = wins;
 
-    // Pokud změníme vítěze v s32, musíme smazat historii pro s16, s8 atd., protože se změní složení
+    // Reset budoucích kol při změně výsledku
     const order = ['s32', 's16', 's8', 's4', 's3', 's2'];
     let idx = order.indexOf(sid);
     for(let i = idx + 1; i < order.length; i++) {
         delete state.history[order[i]];
         const nextDiv = document.getElementById(`sec-${order[i]}`);
-        if(nextDiv) nextDiv.remove(); // Odstraníme staré verze budoucích kol
+        if(nextDiv) nextDiv.remove();
     }
 
-    if(sid==='s32') genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
-    else if(sid==='s16') genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s3');
-    else if(sid==='s8') genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
-    else if(sid==='s4') { 
+    // Logika postupu
+    if(sid==='s32') {
+        genStage('1/8 Finále', wins, 8, 's16', 'sec-s32', 'dot-s3');
+    } else if(sid==='s16') {
+        genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s3');
+    } else if(sid==='s8') {
+        genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s3');
+    } else if(sid==='s4') {
+        // PO SEMIFINÁLE: Jdeme na 3. místo
         document.getElementById('dot-s4').classList.add('active'); 
         genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s3'); 
-        genStage('Finále', wins, 1, 's2', 'sec-s3', 'dot-s4'); 
-    }
-    else if(sid==='s2') { 
+    } else if(sid==='s3') {
+        // PO 3. MÍSTĚ: Jdeme na Finále
+        // Vytáhneme vítěze ze semifinále (s4), kteří čekají na finále
+        const finalists = state.playoff['s4'];
+        genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s4');
+    } else if(sid==='s2') {
+        // KONEC: Zobrazení vítěze
         state.playoff.winner = wins[0]; 
         state.playoff.bronze = document.querySelector('#sec-s3 .selected').innerText; 
+        
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
         document.getElementById('winner-display').innerText = "TVŮJ VÍTĚZ: " + wins[0]; 
         document.getElementById('final-box').classList.remove('hidden'); 
