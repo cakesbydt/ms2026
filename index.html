@@ -553,15 +553,18 @@
 </div>
     </header>
 
-    <div id="auth-section" class="auth-container">
+  <div id="auth-section" class="auth-container">
     <h3>Přihlášení / Registrace</h3>
-    <input type="email" id="auth-email" placeholder="Tvůj email" class="auth-input">
-    <input type="password" id="auth-password" placeholder="Heslo (min. 6 znaků)" class="auth-input">
     
-    <div class="auth-buttons">
-        <button onclick="loginUser()" class="btn-login">Přihlásit</button>
-        <button onclick="registerUser()" class="btn-register">Vytvořit účet</button>
-    </div>
+    <form onsubmit="return false;"> 
+        <input type="email" id="auth-email" placeholder="Tvůj email" class="auth-input" autocomplete="username">
+        <input type="password" id="auth-password" placeholder="Heslo (min. 6 znaků)" class="auth-input" autocomplete="current-password">
+        
+        <div class="auth-buttons">
+            <button type="button" id="btn-login" class="btn-login">Přihlásit</button>
+            <button type="button" id="btn-register" class="btn-register">Vytvořit účet</button>
+        </div>
+    </form>
 </div>
 
 <div id="logged-in-section" class="auth-container hidden">
