@@ -121,11 +121,29 @@
     gap: 8px;               /* Mezera mezi vlajkami navzájem */
 }
         
+/* ZÁKLADNÍ STYL (pro mobilní zařízení) */
 .mini-flags img {
-    height: 70px;           /* Velikost vlajek - můžeš si upravit */
+    height: 70px; /* Tvá původní velikost pro mobil */
     width: auto;
     border-radius: 2px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: height 0.3s ease; /* Plynulý přechod při změně velikosti okna */
+}
+
+/* STYL PRO PC (obrazovky širší než 768px) */
+@media (min-width: 768px) {
+    .mini-flags img {
+        height: 120px; /* Zvětšená velikost pro počítače - uprav si dle potřeby */
+        border-radius: 4px; /* Na PC můžeš i trochu víc zaoblit rohy */
+    }
+}
+        @media (min-width: 768px) {
+    .rank-badge {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+        top: -10px; /* Posunout víc do rohu, aby to sedělo k větší vlajce */
+    }
 }
 
 .mini-text {
