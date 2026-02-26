@@ -744,43 +744,54 @@ function confirmAllGroups() {
 }
     
 function selectThird(el, teamName) {
-    // 1. Najdeme samotnou kartu (pokud el není přímo karta, najdeme nejbližší div s třídou card-third)
-    const card = el.closest('.card-third');
-    
-    // 2. Logika pole (přidat/odebrat)
-    if (state.thirds.includes(teamName)) {
+    // 1. Zjistíme, jestli už tým je v poli
+    const isAlreadySelected = state.thirds.includes(teamName);
+
+    if (isAlreadySelected) {
+        // ODEBRAT
         state.thirds = state.thirds.filter(t => t !== teamName);
-        if (card) card.classList.remove('selected');
+        el.classList.remove('selected'); 
     } else {
+        // PŘIDAT
         if (state.thirds.length < 8) {
             state.thirds.push(teamName);
-            if (card) card.classList.add('selected');
+            el.classList.add('selected'); // Tady se přidá zelená barva
         } else {
             alert("Můžeš vybrat maximálně 8 týmů.");
             return;
         }
     }
 
-    // 3. Aktualizace počítadla (tohle ti už fungovalo)
+    // 2. Aktualizace počítadla
     const counterEl = document.getElementById('thirds-counter');
     if (counterEl) {
         counterEl.innerText = `${state.thirds.length} / 8`;
     }
 
-    // 4. Synchronizace pořadí (badges)
-    document.querySelectorAll('.card-third').forEach(c => {
-        const name = c.getAttribute('data-name');
-        const badge = c.querySelector('.selection-order');
-        if (state.thirds.includes(name)) {
-            c.classList.add('selected'); // Tady natvrdo vynutíme barvu
-            if (badge) {
-                badge.style.display = 'flex';
-                badge.innerText = state.thirds.indexOf(name) + 1;
+    // 3. Přepočet čísel (badges)
+    // Abychom nechtěně nesmazali barvu, omezíme se jen na ty elementy, které JSOU vybrané
+    
+    // Nejprve skryjeme všechna čísla
+    document.querySelectorAll('.selection-order').forEach(badge => {
+        badge.style.display = 'none';
+        badge.innerText = '';
+    });
+
+    // Projdeme jen pole state.thirds a najdeme příslušné karty přes text uvnitř
+    state.thirds.forEach((selectedTeamName, index) => {
+        // Najdeme všechny karty a zkontrolujeme jejich obsah nebo onclick
+        document.querySelectorAll('.card-third').forEach(card => {
+            // Kontrola buď přes data-name, nebo jestli text uvnitř odpovídá názvu týmu
+            if (card.getAttribute('data-name') === selectedTeamName || card.innerText.includes(selectedTeamName)) {
+                card.classList.add('selected'); // Pojistka, že zůstane zelená
+                
+                const badge = card.querySelector('.selection-order');
+                if (badge) {
+                    badge.style.display = 'flex';
+                    badge.innerText = index + 1;
+                }
             }
-        } else {
-            c.classList.remove('selected');
-            if (badge) badge.style.display = 'none';
-        }
+        });
     });
 }
     
