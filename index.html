@@ -73,72 +73,38 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-/* --- ZÁKLADNÍ ROZVRŽENÍ A CENTROVÁNÍ --- */
+/* --- OPRAVA HLAVNÍHO KONTEJNERU --- */
 .main-content { 
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;      /* Centrování na střed */
     padding: 10px;
     box-sizing: border-box;
-    overflow-x: hidden;  /* Zabrání ujíždění do stran na mobilu */
+    overflow-x: hidden;  /* Klíčové: nepustí obsah mimo obrazovku mobilu */
 }
 
-.site-header {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 20px 0;
-}
-
-/* --- NAVIGACE FÁZÍ (Skupiny, 3. místa atd.) --- */
+/* --- OPRAVA NAVIGACE (Texty pod nadpisem) --- */
 .phase-navigation {
     display: flex;
-    flex-wrap: wrap;      /* Povolí zalomení pod sebe na mobilu */
-    justify-content: center; 
-    gap: 10px;
+    flex-wrap: wrap;      /* POVOLÍ ZALOMENÍ pod sebe na mobilu */
+    justify-content: center; /* VYCENTRUJE tlačítka na střed */
+    gap: 8px;             /* Mezery mezi tlačítky */
     width: 100%;
-    white-space: normal;  
-    margin-bottom: 25px;
+    margin: 15px 0;       /* Mezera od nadpisu */
+    white-space: normal;  /* Povolí textu se zalomit */
 }
 
-/* --- VLAJKY A HOSTŮ BAR --- */
-.mini-host-bar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.03);
-    padding: 15px 25px;
-    border-radius: 12px;
+/* Pokud jsou to tlačítka nebo odkazy v navigaci, dej jim stejnou šířku na mobilu */
+@media (max-width: 600px) {
+    .phase-navigation > * {
+        flex: 1 1 40%;    /* Na mobilu budou 2 vedle sebe a zbytek pod nimi */
+        text-align: center;
+        font-size: 0.85rem;
+        padding: 8px 5px;
+    }
 }
 
-.mini-flags {
-    display: flex;
-    gap: 8px;
-}
-
-.mini-flags img {
-    height: 40px; /* Mobilní základ */
-    width: auto;
-    border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    transition: height 0.3s ease;
-}
-
-@media (min-width: 768px) {
-    .mini-flags img { height: 120px; } /* PC velikost */
-}
-
-.mini-text {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: center;
-}
-
-/* --- ŽEBŘÍČEK (Leaderboard) --- */
+/* --- TVŮJ STÁVAJÍCÍ STYL (Leaderboard, Vlajky atd.) --- */
 #leaderboard tbody tr:nth-child(1) {
     background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
     color: #fbbf24; font-weight: bold;
@@ -152,22 +118,56 @@
     color: #d97706;
 }
 
-.rank-icon { margin-right: 8px; font-size: 1.1rem; }
 .fa-trophy, .fa-medal { filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3)); vertical-align: middle; }
+.rank-icon { margin-right: 8px; font-size: 1.1rem; }
 
-/* --- SEKCE TŘETÍCH MÍST --- */
-.thirds-wrapper {
-    display: block !important;
-    width: 100% !important;
-    padding: 20px;
-    box-sizing: border-box;
+.site-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
 }
 
+.mini-host-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px 25px;
+    border-radius: 12px;
+}
+
+.mini-flags { display: flex; gap: 8px; }
+.mini-flags img {
+    height: 40px;
+    width: auto;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: height 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    .mini-flags img { height: 120px; border-radius: 4px; }
+    .rank-badge { width: 30px; height: 30px; font-size: 16px; top: -10px; }
+}
+
+.mini-text {
+    font-size: 0.85rem; color: #94a3b8; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase; text-align: center;
+}
+
+@media (max-width: 600px) {
+    .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
+    .host-info-bar { padding: 8px 15px; gap: 10px; }
+}
+
+/* --- TŘETÍ MÍSTA A MŘÍŽKA --- */
 .thirds-header-row {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 20px !important;
+    justify-content: space-between !important; /* Counter na druhou stranu */
+    gap: 15px !important;
     width: 100% !important;
     padding: 10px 0 20px 0 !important;
     border-bottom: 1px solid var(--border) !important;
@@ -178,115 +178,69 @@
     font-size: 1.1rem !important;
     font-weight: 600 !important;
     color: var(--text) !important;
-    white-space: nowrap !important;
 }
 
 #thirds-counter {
-    background: var(--accent);
-    color: #000;
-    padding: 5px 15px;
-    border-radius: 8px;
-    font-weight: 900;
-    font-size: 1.2rem;
-    min-width: 60px;
-    text-align: center;
+    background: var(--accent); color: #000; padding: 5px 15px;
+    border-radius: 8px; font-weight: 900; font-size: 1.2rem;
+    min-width: 60px; text-align: center;
 }
 
-/* --- MŘÍŽKA KARET (GRID) --- */
+.thirds-wrapper {
+    display: block !important;
+    width: 100% !important;
+    padding: 10px; /* Sníženo pro mobil */
+    box-sizing: border-box;
+}
+
 #thirds-actual-grid {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important; /* PC */
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 12px !important;
     width: 100% !important;
 }
 
+.card-third {
+    background: #1e293b; border: 1px solid var(--border);
+    padding: 15px 5px; border-radius: 12px; text-align: center;
+    cursor: pointer; transition: 0.2s; min-height: 80px;
+    display: flex; flex-direction: column; justify-content: center;
+}
+
+.card-third.selected {
+    background: rgba(34, 197, 94, 0.2) !important;
+    border-color: var(--winner) !important;
+    color: var(--winner) !important;
+}
+
+/* --- MODALY A BADGES --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); display: flex; justify-content: center; align-items: center; z-index: 9999;
+}
+.modal-content {
+    background: #1e293b; padding: 30px; border-radius: 15px; border: 1px solid rgba(251, 191, 36, 0.3);
+    text-align: center; max-width: 400px; width: 90%;
+}
+.modal-btn { background: #fbbf24; color: #1e293b; border: none; padding: 10px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+.team-card { position: relative; cursor: pointer; }
+.selection-order {
+    position: absolute; top: -5px; right: -5px; background-color: #007bff;
+    color: white; width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: bold; border: 2px solid white; z-index: 10;
+}
+
+/* --- RESPONSIVITA GRIDU --- */
 @media (max-width: 1000px) {
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 @media (max-width: 600px) {
     #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .thirds-header-row { flex-direction: column; align-items: center !important; }
 }
 
-/* --- STYL KARTY --- */
-.card-third, .team-card {
-    position: relative;
-    background: #1e293b;
-    border: 1px solid var(--border);
-    padding: 15px 5px;
-    border-radius: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.2s;
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    user-select: none;
-}
-
-.card-third.selected, .team-card.selected {
-    background: rgba(34, 197, 94, 0.2) !important;
-    border-color: var(--winner, #22c55e) !important;
-    color: var(--winner, #22c55e) !important;
-}
-
-/* --- RANK BADGE / POŘADÍ VÝBĚRU --- */
-.selection-order, .rank-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #007bff;
-    color: white;
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    border: 2px solid white;
-    z-index: 10;
-}
-
-@media (min-width: 768px) {
-    .rank-badge { width: 30px; height: 30px; font-size: 16px; top: -10px; }
-}
-
-/* --- MODÁLNÍ OKNO --- */
-.modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 9999;
-}
-
-.modal-content {
-    background: #1e293b;
-    padding: 30px;
-    border-radius: 15px;
-    border: 1px solid rgba(251, 191, 36, 0.3);
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-}
-
-.modal-icon { font-size: 3rem; color: #fbbf24; margin-bottom: 15px; }
-.modal-btn {
-    background: #fbbf24; color: #1e293b; border: none;
-    padding: 10px 30px; border-radius: 8px; font-weight: bold;
-    cursor: pointer; transition: 0.2s;
-}
-
-/* --- OSTATNÍ --- */
-#playoff-container {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.hidden { display: none !important; }
     /* --- ZBYTEK PŮVODNÍCH STYLŮ --- */
     .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
     
