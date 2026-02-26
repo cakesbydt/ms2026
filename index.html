@@ -1291,7 +1291,7 @@ async function nacistAdminVysledky() {
         .from('admin_vysledky')
         .select('*')
         .eq('id', 1)
-        .single();
+        .maybeSingle(); // <--- TADY JE TA OPRAVA
 
     if (data) {
         // Dosadíme data z databáze zpět do tvých proměnných
