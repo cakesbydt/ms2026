@@ -179,16 +179,37 @@
     white-space: nowrap !important; /* Zabrání lámání textu do řádků */
 }
 
-        #thirds-counter {
-    background: var(--accent);
+        /* Centrování a zamezení přetečení */
+.main-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* Navigace pod hlavním nadpisem - oprava pro mobil */
+.phase-navigation {
+    display: flex;
+    flex-wrap: wrap;      /* Důležité: zalomí tlačítka pod sebe */
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 0;
+}
+
+       /* Počítadlo - tvůj styl s fixem pro zobrazení */
+#thirds-counter {
+    background: var(--accent, #fbbf24);
     color: #000;
     padding: 5px 15px;
     border-radius: 8px;
     font-weight: 900;
     font-size: 1.2rem;
-    min-width: 60px;
+    min-width: 65px;
     text-align: center;
-    transition: 0.3s;
+    display: inline-block; /* Aby drželo tvar i s textem */
 }
         
 /* --- FINÁLNÍ OPRAVA: ČISTÁ MŘÍŽKA BEZ LEVÉHO SLOUPCE --- */
@@ -199,12 +220,12 @@
     box-sizing: border-box;
 }
 
-/* Kontejner mřížky, aby využil celou šířku */
+/* Mřížka 3. míst - responzivní */
 #thirds-actual-grid {
     display: grid !important;
     grid-template-columns: repeat(4, 1fr) !important;
-    gap: 12px !important;
-    width: 100% !important;
+    gap: 12px;
+    width: 100%;
 }
         
     .thirds-grid-fixed { 
@@ -212,7 +233,9 @@
         gap: 12px; margin-bottom: 20px; 
     }
         
- .card-third {
+ /* Tvůj styl pro karty a výběr */
+.card-third {
+    position: relative;
     background: #1e293b;
     border: 1px solid var(--border);
     padding: 15px 5px;
@@ -220,17 +243,12 @@
     text-align: center;
     cursor: pointer;
     transition: 0.2s;
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
 }
         
     .card-third:hover { border-color: var(--accent); }
 .card-third.selected {
     background: rgba(34, 197, 94, 0.2) !important;
     border-color: var(--winner) !important;
-    color: var(--winner) !important;
 }
     .card-third small { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
 
@@ -305,23 +323,17 @@
     /* tvůj stávající styl */
 }
 
-/* Styl pro pořadové číslo */
 .selection-order {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #007bff; /* Modrá barva */
+    top: -5px; right: -5px;
+    background: #007bff;
     color: white;
-    width: 22px;
-    height: 22px;
+    width: 22px; height: 22px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
+    display: none; /* Zapne se přes JS */
+    align-items: center; justify-content: center;
+    font-size: 12px; font-weight: bold;
     border: 2px solid white;
-    z-index: 10;
 }
 
 /* Vizuální odlišení vybraného týmu */
@@ -329,14 +341,22 @@
     border: 2px solid #007bff;
     background-color: #f0f7ff;
 }
+@media (max-width: 900px) {
+    #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    
+    /* Navigace na mobilu - tlačítka větší pro palec */
+    .phase-navigation > * {
+        flex: 1 1 40%; 
+        font-size: 0.8rem;
+        text-align: center;
+    }
+}
         
 /* Responzivita pro menší obrazovky */
 @media (max-width: 1000px) {
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
-@media (max-width: 600px) {
-    #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
-}
+
 
     /* --- ZBYTEK PŮVODNÍCH STYLŮ --- */
     .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
@@ -692,7 +712,7 @@ function confirmAllGroups() {
             
             <div class="thirds-header-row">
                 <span class="thirds-title-text">Vyber 8 postupujících týmů ze 3. míst</span>
-                <div id="thirds-counter">${state.thirds.length} / 8</div>
+                <div id="thirds-counter">0 / 8</div>
             </div>
             
             <div id="thirds-actual-grid">
@@ -718,33 +738,40 @@ function confirmAllGroups() {
 }
     
   function selectThird(el, teamName) {
+    // 1. Přidání nebo odebrání týmu z tvého pole state.thirds
     if (state.thirds.includes(teamName)) {
-        // Odebrání týmu
         state.thirds = state.thirds.filter(t => t !== teamName);
         el.classList.remove('selected');
-        const badge = el.querySelector('.rank-badge');
-        if(badge) badge.style.display = 'none';
-    } else if (state.thirds.length < 8) {
-        // Přidání týmu
-        state.thirds.push(teamName);
-        el.classList.add('selected');
-        const badge = el.querySelector('.rank-badge');
-        if(badge) badge.style.display = 'block';
+    } else {
+        if (state.thirds.length < 8) {
+            state.thirds.push(teamName);
+            el.classList.add('selected');
+        } else {
+            alert("Můžeš vybrat maximálně 8 týmů!");
+            return;
+        }
     }
 
-    // TA DŮLEŽITÁ ČÁST: Přepočet všech čísel (badges)
-    // Projdeme všechny karty, které mají třídu 'selected'
-    document.querySelectorAll('.third-place-card.selected').forEach(card => {
-        // Zjistíme jméno týmu z datasetu (musíš ho mít v HTML jako data-name="...")
-        const name = card.getAttribute('data-name'); 
-        const badge = card.querySelector('.rank-badge');
-        
-        if (badge) {
-            // Index v poli + 1 (aby to nebylo od nuly)
-            const realIndex = state.thirds.indexOf(name) + 1;
-            if (realIndex > 0) {
-                badge.innerText = realIndex;
+    // 2. KLÍČOVÁ OPRAVA: Aktualizace čísla v počítadle
+    const counterEl = document.getElementById('thirds-counter');
+    if (counterEl) {
+        // Přepíše text ve žlutém poli na aktuální počet (např. "5 / 8")
+        counterEl.innerText = `${state.thirds.length} / 8`;
+    }
+
+    // 3. Aktualizace pořadových čísel (badges) na všech kartách
+    document.querySelectorAll('.card-third').forEach(card => {
+        const name = card.getAttribute('data-name');
+        const badge = card.querySelector('.selection-order');
+        if (state.thirds.includes(name)) {
+            card.classList.add('selected');
+            if (badge) {
+                badge.style.display = 'flex';
+                badge.innerText = state.thirds.indexOf(name) + 1;
             }
+        } else {
+            card.classList.remove('selected');
+            if (badge) badge.style.display = 'none';
         }
     });
 }
