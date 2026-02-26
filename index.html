@@ -73,39 +73,14 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-/* Toto dej na hlavní obal celého webu/sekce */
+/* --- ZÁKLADNÍ NASTAVENÍ A CENTROVÁNÍ --- */
 .main-content { 
-    width: 100%;         /* Chci zabrat celou šířku */
-    max-width: 1200px;   /* Ale na PC se neroztahuj víc než tohle */
-    margin: 0 auto;      /* TOTO zajistí vycentrování na střed */
-    padding: 10px;       /* Aby se text nelepil na hrany mobilu */
-    box-sizing: border-box; /* Důležité: padding nebude zvětšovat šířku */
-}
-        
-   /* Styl pro první tři řádky */
-#leaderboard tbody tr:nth-child(1) {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
-    color: #fbbf24; /* Zlatá */
-    font-weight: bold;
-}
-#leaderboard tbody tr:nth-child(2) {
-    background: linear-gradient(90deg, rgba(148, 163, 184, 0.15), transparent) !important;
-    color: #cbd5e1; /* Stříbrná */
-}
-#leaderboard tbody tr:nth-child(3) {
-    background: linear-gradient(90deg, rgba(180, 83, 9, 0.15), transparent) !important;
-    color: #d97706; /* Bronzová */
-}
-
-    .fa-trophy, .fa-medal {
-    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3));
-    vertical-align: middle;
-}
-
-/* Ikony v žebříčku */
-.rank-icon {
-    margin-right: 8px;
-    font-size: 1.1rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;      /* Centrování na střed */
+    padding: 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;  /* Klíčové: nepustí obsah mimo obrazovku */
 }
 
 .site-header {
@@ -115,252 +90,107 @@
     padding: 20px 0;
 }
 
-.mini-host-bar {
-    display: flex;
-    flex-direction: column; /* Naskládá prvky pod sebe */
-    align-items: center;    /* Vycentruje vlajky i text na střed */
-    gap: 10px;              /* Mezera mezi vlajkami a textem */
-    background: rgba(255, 255, 255, 0.03);
-    padding: 15px 25px;
-    border-radius: 12px;
-}
-
-        .mini-flags {
-    display: flex;
-    gap: 8px;               /* Mezera mezi vlajkami navzájem */
-}
-        
-/* ZÁKLADNÍ STYL (pro mobilní zařízení) */
-.mini-flags img {
-    height: 40px; /* Tvá původní velikost pro mobil */
-    width: auto;
-    border-radius: 2px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    transition: height 0.3s ease; /* Plynulý přechod při změně velikosti okna */
-}
-
-/* Kontejner pro tlačítka fází (Skupiny, 3. místa...) */
+/* --- NAVIGACE FÁZÍ (Skupiny, 3. místa atd.) --- */
 .phase-navigation {
     display: flex;
-    flex-wrap: wrap;      /* POVOLÍ ZALOMENÍ pod sebe na mobilu */
-    justify-content: center; /* VYCENTRUJE tlačítka na střed */
-    gap: 10px;            /* Mezery mezi tlačítky */
+    flex-wrap: wrap;      /* Povolí zalomení pod sebe na mobilu */
+    justify-content: center; 
+    gap: 10px;
     width: 100%;
-    white-space: normal;  /* OPRAVA: Povolí textu, aby se zalomil, pokud je dlouhý */
-}
-        
-
-/* STYL PRO PC (obrazovky širší než 768px) */
-@media (min-width: 768px) {
-    .mini-flags img {
-        height: 120px; /* Zvětšená velikost pro počítače - uprav si dle potřeby */
-        border-radius: 4px; /* Na PC můžeš i trochu víc zaoblit rohy */
-    }
-}
-        @media (min-width: 768px) {
-    .rank-badge {
-        width: 30px;
-        height: 30px;
-        font-size: 16px;
-        top: -10px; /* Posunout víc do rohu, aby to sedělo k větší vlajce */
-    }
+    white-space: normal;  
+    margin-bottom: 20px;
 }
 
-.mini-text {
-    font-size: 0.85rem;
-    color: #94a3b8;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: center;
-}
-        
-/* Responzivita: Na malých displejích to trochu zmenšíme */
-@media (max-width: 600px) {
-    .host-text { font-size: 0.75rem !important; letter-spacing: 1px; }
-    .host-info-bar { padding: 8px 15px; gap: 10px; }
-}
-        /* --- OPRAVA HLAVIČKY A MŘÍŽKY --- */
-.thirds-header-row {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 20px !important; /* Mezera mezi textem a počítadlem */
-    width: 100% !important;
-    padding: 10px 0 20px 0 !important;
-    border-bottom: 1px solid var(--border) !important;
-    margin-bottom: 20px !important;
-}
-
-.thirds-title-text {
-    font-size: 1.1rem !important;
-    font-weight: 600 !important;
-    color: var(--text) !important;
-    white-space: nowrap !important; /* Zabrání lámání textu do řádků */
-}
-
-        #thirds-counter {
-    background: var(--accent);
-    color: #000;
-    padding: 5px 15px;
-    border-radius: 8px;
-    font-weight: 900;
-    font-size: 1.2rem;
-    min-width: 60px;
-    text-align: center;
-    transition: 0.3s;
-}
-        
-/* --- FINÁLNÍ OPRAVA: ČISTÁ MŘÍŽKA BEZ LEVÉHO SLOUPCE --- */
+/* --- SEKCE TŘETÍCH MÍST --- */
 .thirds-wrapper {
-    display: block !important; /* Zrušíme flex, který to tlačil doleva */
+    display: block !important;
     width: 100% !important;
-    padding: 20px;
+    max-width: 100% !important;
+    padding: 10px;        /* Zmenšeno pro mobil */
     box-sizing: border-box;
 }
 
-/* Kontejner mřížky, aby využil celou šířku */
 #thirds-actual-grid {
     display: grid !important;
-    grid-template-columns: repeat(4, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important; /* PC: 4 sloupce */
     gap: 12px !important;
     width: 100% !important;
 }
-        
-    .thirds-grid-fixed { 
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
-        gap: 12px; margin-bottom: 20px; 
+
+/* Responzivita pro mřížku */
+@media (max-width: 1000px) {
+    #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+@media (max-width: 600px) {
+    #thirds-actual-grid { 
+        grid-template-columns: repeat(2, 1fr) !important; /* Mobil: 2 sloupce */
+        gap: 8px !important;
     }
-        
- .card-third {
-    background: #1e293b;
-    border: 1px solid var(--border);
-    padding: 15px 5px;
-    border-radius: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.2s;
-    min-height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-        
-    .card-third:hover { border-color: var(--accent); }
-.card-third.selected {
-    background: rgba(34, 197, 94, 0.2) !important;
-    border-color: var(--winner) !important;
-    color: var(--winner) !important;
-}
-    .card-third small { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
-
-        /* Info lišta nahoře */
-.thirds-info-bar {
-    background: rgba(15, 23, 42, 0.6);
-    padding: 15px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
-        /* Styl pro počítadlo v hlavičce */
-.counter-badge {
-    background: var(--accent);
-    color: #000;
-    padding: 2px 10px;
-    border-radius: 6px;
-    font-weight: 900;
-    margin-left: 10px;
+/* --- VLAJKY (Mini-flags) --- */
+.mini-flags img {
+    height: 40px; /* Mobil */
+    width: auto;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    transition: 0.3s;
 }
 
-
-        .modal-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    display: flex; justify-content: center; align-items: center;
-    z-index: 9999;
+@media (min-width: 768px) {
+    .mini-flags img { height: 120px; } /* PC */
 }
 
-.modal-content {
-    background: #1e293b; /* Tmavé pozadí jako v žebříčku */
-    padding: 30px;
-    border-radius: 15px;
-    border: 1px solid rgba(251, 191, 36, 0.3); /* Zlatý nádech */
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+/* --- LEADERBOARD (První 3 místa) --- */
+#leaderboard tbody tr:nth-child(1) {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
+    color: #fbbf24; font-weight: bold;
+}
+#leaderboard tbody tr:nth-child(2) {
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.15), transparent) !important;
+    color: #cbd5e1;
+}
+#leaderboard tbody tr:nth-child(3) {
+    background: linear-gradient(90deg, rgba(180, 83, 9, 0.15), transparent) !important;
+    color: #d97706;
 }
 
-.modal-icon {
-    font-size: 3rem;
-    color: #fbbf24; /* Zlatá */
-    margin-bottom: 15px;
-}
-
-.modal-content h2 { color: white; margin-bottom: 10px; }
-.modal-content p { color: #94a3b8; margin-bottom: 25px; }
-
-.modal-btn {
-    background: #fbbf24;
-    color: #1e293b;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.modal-btn:hover { transform: scale(1.05); }
-.hidden { display: none !important; }
-
-/* Kontejner týmu musí mít position relative */
-.team-card {
-    position: relative;
-    cursor: pointer;
-    /* tvůj stávající styl */
-}
-
-/* Styl pro pořadové číslo */
+/* --- RANK BADGE (Čísla výběru) --- */
 .selection-order {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #007bff; /* Modrá barva */
+    top: -5px; right: -5px;
+    background-color: #007bff;
     color: white;
-    width: 22px;
-    height: 22px;
+    width: 22px; height: 22px;
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: bold;
     border: 2px solid white;
     z-index: 10;
 }
 
-/* Vizuální odlišení vybraného týmu */
-.team-card.selected {
-    border: 2px solid #007bff;
-    background-color: #f0f7ff;
+@media (min-width: 768px) {
+    .selection-order { width: 30px; height: 30px; font-size: 16px; top: -10px; }
 }
 
-        #playoff-container {
+/* --- PAVOUK (Bracket) --- */
+#playoff-container {
     width: 100%;
-    overflow-x: auto;
+    overflow-x: auto; /* Klíčové: povolí skrolování do stran jen u pavouka */
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 20px;
 }
-        
-/* Responzivita pro menší obrazovky */
-@media (max-width: 1000px) {
-    #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
-}
+
+/* --- MOBILNÍ FIXY PRO TEXT A LIŠTY --- */
 @media (max-width: 600px) {
-    #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .mini-host-bar { padding: 10px; }
+    .thirds-header-row { 
+        flex-direction: column; /* Na mobilu dáme titulek a counter pod sebe */
+        align-items: center !important; 
+        text-align: center;
+    }
+    .thirds-title-text { white-space: normal !important; }
 }
 
     /* --- ZBYTEK PŮVODNÍCH STYLŮ --- */
