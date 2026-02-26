@@ -73,30 +73,115 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
-   /* Styl pro první tři řádky */
-#leaderboard tbody tr:nth-child(1) {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
-    color: #fbbf24; /* Zlatá */
-    font-weight: bold;
-}
-#leaderboard tbody tr:nth-child(2) {
-    background: linear-gradient(90deg, rgba(148, 163, 184, 0.15), transparent) !important;
-    color: #cbd5e1; /* Stříbrná */
-}
-#leaderboard tbody tr:nth-child(3) {
-    background: linear-gradient(90deg, rgba(180, 83, 9, 0.15), transparent) !important;
-    color: #d97706; /* Bronzová */
+/* --- LUXUSNÍ TOP 3 ŽEBŘÍČEK (Síň slávy) --- */
+
+/* Základní reset tabulky pro čistý vzhled */
+#leaderboard {
+    border-collapse: separate;
+    border-spacing: 0 10px; /* Mezery mezi řádky pro vyniknutí efektů */
+    width: 100%;
 }
 
-    .fa-trophy, .fa-medal {
-    filter: drop-shadow(0 0 5px rgba(251, 191, 36, 0.3));
+#leaderboard tbody tr {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Jemný hover efekt pro všechny řádky */
+#leaderboard tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* --- SPOLEČNÉ STYLY PRO TOP 3 --- */
+#leaderboard tbody tr:nth-child(1),
+#leaderboard tbody tr:nth-child(2),
+#leaderboard tbody tr:nth-child(3) {
+    font-weight: 800;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Lepší čitelnost textu */
+    position: relative;
+}
+
+/* Společný styl pro ikony trofejí a medailí */
+.rank-icon {
+    font-size: 1.8rem; /* Větší ikony */
+    margin-right: 12px;
+    vertical-align: middle;
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+/* Animace ikon při hoveru na řádek */
+#leaderboard tbody tr:hover .rank-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* --- 1. MÍSTO (ZLATÁ BOMBA) --- */
+#leaderboard tbody tr:nth-child(1) {
+    /* Zlatý gradient s odleskem */
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(251, 191, 36, 0.05) 50%, rgba(251, 191, 36, 0.3)) !important;
+    color: #fbbf24 !important; /* Jasná zlatá */
+    border: 2px solid rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+    
+    /* Vizuální zvětšení prvního místa */
+    transform: scale(1.02);
+}
+
+/* Zlatá trofej se září */
+#leaderboard tbody tr:nth-child(1) .rank-icon {
+    color: #fbbf24;
+    filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+}
+
+/* --- 2. MÍSTO (STŘÍBRNÝ LUXUS) --- */
+#leaderboard tbody tr:nth-child(2) {
+    /* Stříbrný gradient */
+    background: linear-gradient(135deg, rgba(148, 163, 184, 0.25), rgba(148, 163, 184, 0.05) 50%, rgba(148, 163, 184, 0.25)) !important;
+    color: #cbd5e1 !important; /* Stříbrno-šedá */
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: 0 0 15px rgba(148, 163, 184, 0.1);
+}
+
+/* Stříbrná medaile se září */
+#leaderboard tbody tr:nth-child(2) .rank-icon {
+    color: #cbd5e1;
+    filter: drop-shadow(0 0 6px rgba(148, 163, 184, 0.5));
+}
+
+/* --- 3. MÍSTO (BRONZOVÁ ELEGANCE) --- */
+#leaderboard tbody tr:nth-child(3) {
+    /* Bronzový gradient */
+    background: linear-gradient(135deg, rgba(180, 83, 9, 0.2), rgba(180, 83, 9, 0.05) 50%, rgba(180, 83, 9, 0.2)) !important;
+    color: #d97706 !important; /* Jantarová/bronzová */
+    border: 1px solid rgba(180, 83, 9, 0.3);
+}
+
+/* Bronzová medaile se září */
+#leaderboard tbody tr:nth-child(3) .rank-icon {
+    color: #d97706;
+    filter: drop-shadow(0 0 5px rgba(180, 83, 9, 0.4));
+}
+
+/* --- ÚPRAVA OSTATNÍCH ŘÁDKŮ (Pro kontrast) --- */
+#leaderboard tbody tr:nth-child(n+4) {
+    background: rgba(255, 255, 255, 0.02);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Styl pro buňky tabulky pro zarovnání obsahu */
+#leaderboard td {
+    padding: 15px;
     vertical-align: middle;
 }
 
-/* Ikony v žebříčku */
-.rank-icon {
-    margin-right: 8px;
-    font-size: 1.1rem;
+/* První sloupec (pořadí) - uděláme ho užší */
+#leaderboard td:first-child {
+    width: 60px;
+    text-align: center;
+    font-size: 1.2rem;
 }
 
 .site-header {
