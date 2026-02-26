@@ -1363,6 +1363,65 @@ function getTeamsForStage(id, fallbackTeams) {
     return state.history[id] || [];
 }
 
+
+// Tuto funkci zavoláš v adminu ve chvíli, kdy klikneš na "Vyhodnotit"
+// Jako parametr 'adminVysledky' jí předáš ten svůj uložený objekt s reálnými výsledky
+async function vyhodnotitTipy(adminVysledky) {
+    // 1. Stáhneme všechny uživatelské tipy ze Supabase
+    const { data: vsechnyTipy, error: fetchError } = await supabaseClient
+        .from('tipy')
+        .select('*');
+
+    if (fetchError) {
+        console.error("Chyba při načítání tipů z DB:", fetchError);
+        alert("Nepodařilo se načíst tipy uživatelů.");
+        return;
+    }
+
+    let pocetVyhodnocenych = 0;
+
+    // 2. Projdeme tipy jeden po druhém a obodujeme je
+    for (const radek of vsechnyTipy) {
+        let celkoveBody = 0;
+        const userTip = radek.tip_data; // Zde je uložený JSON s pavoukem uživatele
+
+        // --- A. SKUPINY (4 body za přesné umístění ve skupině) ---
+        if (userTip.groups && adminVysledky.groups) {
+            for (let i = 0; i < adminVysledky.groups.length; i++) {
+                const adminSkupina = adminVysledky.groups[i];
+                const userSkupina = userTip.groups[i] || [];
+
+                for (let j = 0; j < adminSkupina.length; j++) {
+                    // Porovnáváme, zda je tým na naprosto stejném indexu (1., 2., 3. nebo 4. místo)
+                    if (adminSkupina[j] && userSkupina[j] === adminSkupina[j]) {
+                        celkoveBody += 4;
+                    }
+                }
+            }
+        }
+
+        // --- B. CELKOVÝ VÍTĚZ (12 bodů za přesnou trefu) ---
+        if (userTip.winner && adminVysledky.winner) {
+            if (userTip.winner === adminVysledky.winner) {
+                celkoveBody += 12;
+            }
+        }
+
+        // 3. Pošleme sečtené body zpět do databáze k danému uživateli
+        const { error: updateError } = await supabaseClient
+            .from('tipy')
+            .update({ body: celkoveBody })
+            .eq('user_id', radek.user_id);
+
+        if (!updateError) {
+            pocetVyhodnocenych++;
+        }
+    }
+
+    alert(`Úspěšně vyhodnoceno! Rozděleny body pro ${pocetVyhodnocenych} hráčů.`);
+}
+    
+
    // --- 1. REGISTRACE NOVÉHO ÚČTU ---
 async function registerUser() {
     const email = document.getElementById('auth-email').value;
