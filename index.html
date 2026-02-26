@@ -331,18 +331,32 @@
     /* tvůj stávající styl */
 }
 
-/* Badge s pořadím */
+/* Nádherný odznak pro pořadí výběru (1., 2., 3. místo...) */
 .selection-order {
     position: absolute;
-    top: -5px; right: -5px;
-    background: #007bff;
-    color: white;
-    width: 22px; height: 22px;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, #fbbf24, #d97706); /* Zlatý přechod */
+    color: #1e293b;          /* Tmavý text pro super kontrast */
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    display: none; /* Zapne JS */
-    align-items: center; justify-content: center;
-    font-size: 12px; font-weight: bold;
-    border: 2px solid #1e293b;
+    display: none;           /* Skryté, dokud JS neřekne jinak */
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 900;
+    border: 2px solid #1e293b; /* Rámeček v barvě pozadí karty */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Pěkný stín */
+    z-index: 10;
+    
+    /* Vyskakovací animace */
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+        @keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
 
 /* Vizuální odlišení vybraného týmu */
@@ -744,18 +758,21 @@ function confirmAllGroups() {
 }
     
 function selectThird(el, teamName) {
-    // 1. Zjistíme, jestli už tým je v poli
+    // 1. Logika přidání/odebrání (to už nám funguje)
     const isAlreadySelected = state.thirds.includes(teamName);
 
     if (isAlreadySelected) {
         // ODEBRAT
         state.thirds = state.thirds.filter(t => t !== teamName);
-        el.classList.remove('selected'); 
+        el.classList.remove('selected');
+        // Skryjeme číslo na odznačené kartě
+        const badge = el.querySelector('.selection-order');
+        if (badge) badge.style.display = 'none';
     } else {
         // PŘIDAT
         if (state.thirds.length < 8) {
             state.thirds.push(teamName);
-            el.classList.add('selected'); // Tady se přidá zelená barva
+            el.classList.add('selected');
         } else {
             alert("Můžeš vybrat maximálně 8 týmů.");
             return;
@@ -768,28 +785,34 @@ function selectThird(el, teamName) {
         counterEl.innerText = `${state.thirds.length} / 8`;
     }
 
-    // 3. Přepočet čísel (badges)
-    // Abychom nechtěně nesmazali barvu, omezíme se jen na ty elementy, které JSOU vybrané
-    
-    // Nejprve skryjeme všechna čísla
-    document.querySelectorAll('.selection-order').forEach(badge => {
+    // 3. Přepočet a zobrazení pořadových čísel (1, 2, 3...)
+    // Nejdřív skryjeme všechna čísla pro jistotu
+    document.querySelectorAll('.card-third .selection-order').forEach(badge => {
         badge.style.display = 'none';
-        badge.innerText = '';
     });
 
-    // Projdeme jen pole state.thirds a najdeme příslušné karty přes text uvnitř
+    // Teď projdeme vybrané týmy přesně v tom pořadí, v jakém jsi je naklikal
     state.thirds.forEach((selectedTeamName, index) => {
-        // Najdeme všechny karty a zkontrolujeme jejich obsah nebo onclick
         document.querySelectorAll('.card-third').forEach(card => {
-            // Kontrola buď přes data-name, nebo jestli text uvnitř odpovídá názvu týmu
+            // Kontrola přes data-name nebo text uvnitř
             if (card.getAttribute('data-name') === selectedTeamName || card.innerText.includes(selectedTeamName)) {
-                card.classList.add('selected'); // Pojistka, že zůstane zelená
                 
-                const badge = card.querySelector('.selection-order');
-                if (badge) {
-                    badge.style.display = 'flex';
-                    badge.innerText = index + 1;
+                // Zkusíme najít odznak v kartě. Pokud v HTML není, JS ho sám vytvoří!
+                let badge = card.querySelector('.selection-order');
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'selection-order';
+                    card.appendChild(badge);
                 }
+                
+                // Zobrazíme ho a nastavíme číslo pořadí
+                badge.style.display = 'flex';
+                badge.innerText = index + 1; 
+                
+                // Restart animace pro pěkný efekt při každém posunu čísel
+                badge.style.animation = 'none';
+                badge.offsetHeight; /* Trigger reflow */
+                badge.style.animation = null; 
             }
         });
     });
