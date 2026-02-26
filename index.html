@@ -73,6 +73,41 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
+/* Hlavní obal pro celou sekci play-off/skupin */
+.bracket-container {
+    width: 100%;
+    max-width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Vycentruje obsah vodorovně */
+    overflow-x: hidden;  /* Zamezí nechtěnému skrolování celé stránky */
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+/* Specifický obal pro samotného pavouka (grafiku) */
+.stage-wrapper {
+    width: 100%;
+    overflow-x: auto;    /* Povolí skrolování DOSTRANY jen u pavouka */
+    -webkit-overflow-scrolling: touch; /* Plynulé skrolování na iPhone */
+    display: flex;
+    justify-content: flex-start; /* Na mobilu začne zleva, aby byl vidět začátek */
+    padding-bottom: 20px; /* Prostor pro scrollbar */
+}
+
+/* Pokud chceš na PC mít pavouka na středu */
+@media (min-width: 768px) {
+    .stage-wrapper {
+        justify-content: center;
+    }
+}
+
+/* Oprava pro karty týmů, aby nebyly moc široké na mobilu */
+.team-card-third {
+    max-width: 90vw; /* Zajistí, že karta nepřeroste šířku mobilu */
+    margin: 5px auto;
+}
+        
    /* Styl pro první tři řádky */
 #leaderboard tbody tr:nth-child(1) {
     background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
@@ -417,6 +452,18 @@
 
             <div id="playoff-container"></div>
             <div id="sec-thirds" class="hidden"></div>
+
+            <div class="bracket-container">
+    <h2>Skupiny / Třetí místa</h2>
+    <div class="thirds-selection-grid">
+        </div>
+
+    <h2>Pavouk Play-off</h2>
+    <div class="stage-wrapper">
+        <div id="s32" class="tournament-bracket">
+            </div>
+    </div>
+</div>
             
             <div id="final-box" class="hidden section-box" style="border: 2px solid var(--winner); text-align: center;">
                 <div class="section-header">🏆 FINÁLNÍ ODESLÁNÍ</div>
