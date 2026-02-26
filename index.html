@@ -73,6 +73,15 @@
     .group-card.filled { border-color: var(--winner); color: var(--winner); }
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
+/* Toto dej na hlavní obal celého webu/sekce */
+.main-content { 
+    width: 100%;         /* Chci zabrat celou šířku */
+    max-width: 1200px;   /* Ale na PC se neroztahuj víc než tohle */
+    margin: 0 auto;      /* TOTO zajistí vycentrování na střed */
+    padding: 10px;       /* Aby se text nelepil na hrany mobilu */
+    box-sizing: border-box; /* Důležité: padding nebude zvětšovat šířku */
+}
+        
    /* Styl pro první tři řádky */
 #leaderboard tbody tr:nth-child(1) {
     background: linear-gradient(90deg, rgba(251, 191, 36, 0.2), transparent) !important;
@@ -130,12 +139,14 @@
     transition: height 0.3s ease; /* Plynulý přechod při změně velikosti okna */
 }
 
+/* Kontejner pro tlačítka fází (Skupiny, 3. místa...) */
 .phase-navigation {
     display: flex;
-    flex-wrap: wrap;       /* Tlačítka se naskládají pod sebe */
-    justify-content: center; /* Vše bude krásně na středu */
-    gap: 10px;
-    padding: 10px;
+    flex-wrap: wrap;      /* POVOLÍ ZALOMENÍ pod sebe na mobilu */
+    justify-content: center; /* VYCENTRUJE tlačítka na střed */
+    gap: 10px;            /* Mezery mezi tlačítky */
+    width: 100%;
+    white-space: normal;  /* OPRAVA: Povolí textu, aby se zalomil, pokud je dlouhý */
 }
         
 
