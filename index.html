@@ -1339,7 +1339,7 @@ function getTeamsForStage(id, fallbackTeams) {
     return state.history[id] || [];
 }
 
-    // --- 1. REGISTRACE NOVÉHO ÚČTU ---
+   // --- 1. REGISTRACE NOVÉHO ÚČTU ---
 async function registerUser() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
@@ -1349,7 +1349,8 @@ async function registerUser() {
         return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
+    // TADY JE TA OPRAVA: voláme tvůj supabaseClient
+    const { data, error } = await supabaseClient.auth.signUp({
         email: email,
         password: password
     });
@@ -1357,8 +1358,8 @@ async function registerUser() {
     if (error) {
         alert("Chyba při registraci: " + error.message);
     } else {
-        alert("Účet vytvořen! Nyní jsi přihlášen (nebo si zkontroluj email pro potvrzení, pokud to máš v Supabase zapnuté).");
-        checkUserSession(); // Aktualizuje vzhled
+        alert("Účet vytvořen! Nyní jsi přihlášen.");
+        checkUserSession(); 
     }
 }
 
@@ -1367,27 +1368,28 @@ async function loginUser() {
     const email = document.getElementById('auth-email').value;
     const password = document.getElementById('auth-password').value;
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password
     });
 
     if (error) {
-        alert("Špatný email nebo heslo!");
+        alert("Špatný email nebo heslo! " + error.message);
     } else {
-        checkUserSession(); // Aktualizuje vzhled
+        checkUserSession(); 
     }
 }
 
 // --- 3. ODHLÁŠENÍ ---
 async function logoutUser() {
-    await supabase.auth.signOut();
-    checkUserSession(); // Aktualizuje vzhled
+    await supabaseClient.auth.signOut();
+    checkUserSession(); 
 }
 
-// --- 4. KONTROLA STAVU (Mění vzhled podle toho, jestli je přihlášený) ---
+// --- 4. KONTROLA STAVU (Mění vzhled, když jsi přihlášen) ---
 async function checkUserSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    // I tady používáme tvůj supabaseClient
+    const { data: { session } } = await supabaseClient.auth.getSession();
     
     const authSection = document.getElementById('auth-section');
     const loggedInSection = document.getElementById('logged-in-section');
@@ -1395,19 +1397,17 @@ async function checkUserSession() {
 
     if (session) {
         // Uživatel JE přihlášený
-        authSection.classList.add('hidden');
-        loggedInSection.classList.remove('hidden');
-        userDisplay.innerText = session.user.email;
-        
-        // TADY MŮŽEME POZDĚJI PŘIDAT KÓD: "Stáhni z databáze jeho uložený tip a načti ho do pavouka"
+        if (authSection) authSection.classList.add('hidden');
+        if (loggedInSection) loggedInSection.classList.remove('hidden');
+        if (userDisplay) userDisplay.innerText = session.user.email;
     } else {
         // Uživatel NENÍ přihlášený
-        authSection.classList.remove('hidden');
-        loggedInSection.classList.add('hidden');
+        if (authSection) authSection.classList.remove('hidden');
+        if (loggedInSection) loggedInSection.classList.add('hidden');
     }
 }
 
-// Spustí kontrolu hned po načtení stránky
+// Spustíme kontrolu hned po načtení stránky
 window.addEventListener('DOMContentLoaded', checkUserSession);
 
     window.onload = init;
