@@ -1259,6 +1259,62 @@ function cfS(sid, count) {
             Bronz: <select id="a-bro" style="width:100%;margin-top:5px">${teamsData.map(t=>`<option value="${t}" ${currentResults.bronze===t?'selected':''}>${t}</option>`).join('')}</select></div>`;
     }
 
+    // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
+async function ulozitAdminVysledky() {
+    // Sestavíme reálné výsledky z tvého aktuálního naklikaného stavu
+    const adminData = {
+        id: 1, // Záměrně dáváme vždy 1. Chceme mít v tabulce jen jeden řádek, který se neustále přepisuje.
+        groups: state.groups.map(g => g.teams),
+        winner: state.playoff.winner
+        // Pokud už v adminu naklikáváš i s16, s8 atd., přidej je sem úplně stejně jako u uživatelů
+    };
+
+    // Odešleme výsledky do našeho trezoru
+    const { error } = await supabaseClient
+        .from('admin_vysledky')
+        .upsert(adminData);
+
+    if (error) {
+        alert("Něco se nepovedlo při ukládání výsledků: " + error.message);
+        return;
+    }
+
+    alert("Reálné výsledky uloženy! Jdu rozdat body hráčům...");
+    
+    // HNED PO ULOŽENÍ spustíme ten náš vyhodnocovací skript a pošleme mu tyhle čerstvé výsledky
+    await vyhodnotitTipy(adminData);
+}
+
+// 2. FUNKCE PRO NAČTENÍ VÝSLEDKŮ PO OTEVŘENÍ ADMIN STRÁNKY
+async function nacistAdminVysledky() {
+    const { data, error } = await supabaseClient
+        .from('admin_vysledky')
+        .select('*')
+        .eq('id', 1)
+        .single();
+
+    if (data) {
+        // Dosadíme data z databáze zpět do tvých proměnných
+        if (data.groups) {
+            data.groups.forEach((tymyVeSkupine, index) => {
+                state.groups[index].teams = tymyVeSkupine;
+            });
+        }
+        
+        if (data.winner) {
+            state.playoff.winner = data.winner;
+        }
+
+        // TADY ZAVOLEJ SVOJI FUNKCI PRO PŘEKRESLENÍ UI (např. renderGroups(), renderPlayoff() atd.)
+        // aby se ty načtené týmy hned zobrazily na obrazovce.
+        
+        console.log("Admin výsledky úspěšně načteny z databáze.");
+    }
+}
+
+// Spustíme načítání hned, jakmile otevřeš admin sekci
+window.addEventListener('DOMContentLoaded', nacistAdminVysledky);
+
     async function saveAdminResults() {
         let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: document.getElementById('a-win').value, bronze: document.getElementById('a-bro').value };
         for(let i=0; i<12; i++) { let g = []; for(let p=0; p<4; p++) g.push(document.getElementById(`a-g-${i}-${p}`).value); res.groups.push(g); }
