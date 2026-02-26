@@ -189,15 +189,15 @@
     overflow-x: hidden;
 }
 
+/* Oprava navigace pod "MS 2026 Tipovačka" pro mobil */
 .phase-navigation {
-    display: flex;
-    flex-wrap: wrap;      /* Tlačítka skočí pod sebe */
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    margin-bottom: 20px;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    padding: 15px 0 !important;
+    width: 100% !important;
 }
-
  /* --- POČÍTADLO --- */
 #thirds-counter {
     background: #fbbf24 !important;
@@ -250,12 +250,11 @@
     .card-third:hover { border-color: var(--accent); }
 
         
-/* --- VIZUÁL VYBRANÉHO TÝMU (Kritická oprava) --- */
-.card-third.selected, .team-card.selected {
-    background: rgba(34, 197, 94, 0.3) !important; /* Výraznější zelená */
-    border-color: #22c55e !important;             /* Zelený rámeček */
-    color: #ffffff !important;                     /* Bílý text pro čitelnost */
-    box-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+/* VYNUCENÍ BARVY PRO VYBRANÉ TÝMY */
+.card-third.selected {
+    background-color: rgba(34, 197, 94, 0.3) !important; /* Zelené pozadí */
+    border: 2px solid #22c55e !important;             /* Zelený silný rámeček */
+    color: white !important;                            /* Bílý text */
 }
 
         
@@ -351,13 +350,11 @@
     border: 2px solid #007bff;
     background-color: #f0f7ff;
 }
-/* --- MOBILNÍ ÚPRAVY --- */
-@media (max-width: 900px) {
-    #thirds-actual-grid { grid-template-columns: repeat(2, 1fr) !important; }
-    
-    .phase-navigation > * {
-        flex: 1 1 40%; /* Tlačítka navigace 2 vedle sebe */
-        font-size: 0.8rem;
+@media (max-width: 600px) {
+    .phase-navigation button, .phase-navigation a {
+        flex: 1 1 45%; /* Dvě tlačítka vedle sebe */
+        font-size: 0.8rem !important;
+        padding: 10px 5px !important;
     }
 }
         
@@ -428,6 +425,10 @@
                     <button class="btn btn-primary" style="margin-top:20px;" onclick="confirmAllGroups()">Pokračovat na 3. místa</button>
                 </div>
             </div>
+
+            <div class="card-third" data-name="Česko" onclick="selectThird(this, 'Česko')">
+    <div class="selection-order"></div> <span>Česko</span>
+</div>
 
             <div id="phase-thirds" class="hidden section-box">
                 <div class="section-header">
@@ -746,41 +747,42 @@ function confirmAllGroups() {
     window.scrollTo(0,0);
 }
     
- function selectThird(el, teamName) {
-    // 1. Logika pole (přidat/odebrat)
+function selectThird(el, teamName) {
+    // 1. Najdeme samotnou kartu (pokud el není přímo karta, najdeme nejbližší div s třídou card-third)
+    const card = el.closest('.card-third');
+    
+    // 2. Logika pole (přidat/odebrat)
     if (state.thirds.includes(teamName)) {
         state.thirds = state.thirds.filter(t => t !== teamName);
-        el.classList.remove('selected'); // Okamžité odebrání barvy
+        if (card) card.classList.remove('selected');
     } else {
         if (state.thirds.length < 8) {
             state.thirds.push(teamName);
-            el.classList.add('selected'); // Okamžité přidání barvy
+            if (card) card.classList.add('selected');
         } else {
             alert("Můžeš vybrat maximálně 8 týmů.");
             return;
         }
     }
 
-    // 2. Aktualizace počítadla
+    // 3. Aktualizace počítadla (tohle ti už fungovalo)
     const counterEl = document.getElementById('thirds-counter');
     if (counterEl) {
         counterEl.innerText = `${state.thirds.length} / 8`;
     }
 
-    // 3. Synchronizace všech karet (pojistka)
-    document.querySelectorAll('.card-third').forEach(card => {
-        const name = card.getAttribute('data-name');
-        const isSelected = state.thirds.includes(name);
-        const badge = card.querySelector('.selection-order');
-
-        if (isSelected) {
-            card.classList.add('selected');
+    // 4. Synchronizace pořadí (badges)
+    document.querySelectorAll('.card-third').forEach(c => {
+        const name = c.getAttribute('data-name');
+        const badge = c.querySelector('.selection-order');
+        if (state.thirds.includes(name)) {
+            c.classList.add('selected'); // Tady natvrdo vynutíme barvu
             if (badge) {
                 badge.style.display = 'flex';
                 badge.innerText = state.thirds.indexOf(name) + 1;
             }
         } else {
-            card.classList.remove('selected');
+            c.classList.remove('selected');
             if (badge) badge.style.display = 'none';
         }
     });
