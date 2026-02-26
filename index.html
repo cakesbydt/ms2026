@@ -130,6 +130,15 @@
     transition: height 0.3s ease; /* Plynulý přechod při změně velikosti okna */
 }
 
+.phase-navigation {
+    display: flex;
+    flex-wrap: wrap;       /* Tlačítka se naskládají pod sebe */
+    justify-content: center; /* Vše bude krásně na středu */
+    gap: 10px;
+    padding: 10px;
+}
+        
+
 /* STYL PRO PC (obrazovky širší než 768px) */
 @media (min-width: 768px) {
     .mini-flags img {
@@ -328,6 +337,11 @@
 .team-card.selected {
     border: 2px solid #007bff;
     background-color: #f0f7ff;
+}
+
+        #playoff-container {
+    width: 100%;
+    overflow-x: auto;
 }
         
 /* Responzivita pro menší obrazovky */
