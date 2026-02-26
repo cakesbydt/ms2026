@@ -462,6 +462,61 @@
     #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
+        /* --- AUTH KONTEJNER --- */
+.auth-container {
+    background: #1e293b;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 400px;
+    margin: 0 auto 20px auto;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.auth-container h3 {
+    color: white;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.auth-input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #334155);
+    background: #0f172a;
+    color: white;
+    box-sizing: border-box;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-login, .btn-register, .btn-logout {
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+.btn-login { background: #fbbf24; color: #1e293b; flex: 1; }
+.btn-login:hover { transform: scale(1.05); }
+
+.btn-register { background: #334155; color: white; flex: 1; }
+.btn-register:hover { background: #475569; }
+
+.btn-logout { background: #ef4444; color: white; margin-top: 10px; }
+.btn-logout:hover { background: #dc2626; }
+
+.hidden { display: none !important; }
+
 
     /* --- ZBYTEK PŮVODNÍCH STYLŮ --- */
     .team-item { background: #1e293b; padding: 12px; margin: 5px 0; border-radius: 8px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid #334155; }
@@ -497,6 +552,22 @@
     <span class="step-dot" id="dot-fin">Finále</span>
 </div>
     </header>
+
+    <div id="auth-section" class="auth-container">
+    <h3>Přihlášení / Registrace</h3>
+    <input type="email" id="auth-email" placeholder="Tvůj email" class="auth-input">
+    <input type="password" id="auth-password" placeholder="Heslo (min. 6 znaků)" class="auth-input">
+    
+    <div class="auth-buttons">
+        <button onclick="loginUser()" class="btn-login">Přihlásit</button>
+        <button onclick="registerUser()" class="btn-register">Vytvořit účet</button>
+    </div>
+</div>
+
+<div id="logged-in-section" class="auth-container hidden">
+    <p>Přihlášen jako: <strong id="user-email-display"></strong></p>
+    <button onclick="logoutUser()" class="btn-logout">Odhlásit se</button>
+</div>
 
     <div id="admin-panel" class="hidden section-box" style="border-color: var(--lose);">
         <div class="section-header" style="background: var(--lose)">🔧 ADMIN PANEL</div>
@@ -1267,6 +1338,77 @@ function getTeamsForStage(id, fallbackTeams) {
     }
     return state.history[id] || [];
 }
+
+    // --- 1. REGISTRACE NOVÉHO ÚČTU ---
+async function registerUser() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+
+    if (!email || password.length < 6) {
+        alert("Zadej platný email a heslo dlouhé alespoň 6 znaků.");
+        return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+        email: email,
+        password: password
+    });
+
+    if (error) {
+        alert("Chyba při registraci: " + error.message);
+    } else {
+        alert("Účet vytvořen! Nyní jsi přihlášen (nebo si zkontroluj email pro potvrzení, pokud to máš v Supabase zapnuté).");
+        checkUserSession(); // Aktualizuje vzhled
+    }
+}
+
+// --- 2. PŘIHLÁŠENÍ EXISTUJÍCÍHO ÚČTU ---
+async function loginUser() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-password').value;
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+    });
+
+    if (error) {
+        alert("Špatný email nebo heslo!");
+    } else {
+        checkUserSession(); // Aktualizuje vzhled
+    }
+}
+
+// --- 3. ODHLÁŠENÍ ---
+async function logoutUser() {
+    await supabase.auth.signOut();
+    checkUserSession(); // Aktualizuje vzhled
+}
+
+// --- 4. KONTROLA STAVU (Mění vzhled podle toho, jestli je přihlášený) ---
+async function checkUserSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const authSection = document.getElementById('auth-section');
+    const loggedInSection = document.getElementById('logged-in-section');
+    const userDisplay = document.getElementById('user-email-display');
+
+    if (session) {
+        // Uživatel JE přihlášený
+        authSection.classList.add('hidden');
+        loggedInSection.classList.remove('hidden');
+        userDisplay.innerText = session.user.email;
+        
+        // TADY MŮŽEME POZDĚJI PŘIDAT KÓD: "Stáhni z databáze jeho uložený tip a načti ho do pavouka"
+    } else {
+        // Uživatel NENÍ přihlášený
+        authSection.classList.remove('hidden');
+        loggedInSection.classList.add('hidden');
+    }
+}
+
+// Spustí kontrolu hned po načtení stránky
+window.addEventListener('DOMContentLoaded', checkUserSession);
 
     window.onload = init;
 </script>
