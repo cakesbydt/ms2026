@@ -1426,60 +1426,75 @@ function getTeamsForStage(id, fallbackTeams) {
 // Tuto funkci zavoláš v adminu ve chvíli, kdy klikneš na "Vyhodnotit"
 // Jako parametr 'adminVysledky' jí předáš ten svůj uložený objekt s reálnými výsledky
 async function vyhodnotitTipy(adminVysledky) {
-    // 1. Stáhneme všechny uživatelské tipy ze Supabase
     const { data: vsechnyTipy, error: fetchError } = await supabaseClient
         .from('tipy')
         .select('*');
 
     if (fetchError) {
         console.error("Chyba při načítání tipů z DB:", fetchError);
-        alert("Nepodařilo se načíst tipy uživatelů.");
         return;
     }
 
     let pocetVyhodnocenych = 0;
 
-    // 2. Projdeme tipy jeden po druhém a obodujeme je
     for (const radek of vsechnyTipy) {
         let celkoveBody = 0;
-        const userTip = radek.tip_data; // Zde je uložený JSON s pavoukem uživatele
+        const userTip = radek.tip_data;
 
-        // --- A. SKUPINY (4 body za přesné umístění ve skupině) ---
+        // --- 1. SKUPINY (4 body za přesné umístění) ---
         if (userTip.groups && adminVysledky.groups) {
-            for (let i = 0; i < adminVysledky.groups.length; i++) {
-                const adminSkupina = adminVysledky.groups[i];
+            adminVysledky.groups.forEach((adminSkupina, i) => {
                 const userSkupina = userTip.groups[i] || [];
+                adminSkupina.forEach((tym, j) => {
+                    if (tym && userSkupina[j] === tym) celkoveBody += 4;
+                });
+            });
+        }
 
-                for (let j = 0; j < adminSkupina.length; j++) {
-                    // Porovnáváme, zda je tým na naprosto stejném indexu (1., 2., 3. nebo 4. místo)
-                    if (adminSkupina[j] && userSkupina[j] === adminSkupina[j]) {
-                        celkoveBody += 4;
-                    }
+        // --- 2. PAVOUK (Body za účast týmu v daném kole) ---
+        // Definujeme si kola a jejich bodovou hodnotu
+        const kola = [
+            { klic: 's32', body: 2 },
+            { klic: 's16', body: 3 },
+            { klic: 's8',  body: 4 },
+            { klic: 's4',  body: 5 }
+        ];
+
+        kola.forEach(kolo => {
+            const adminTymy = adminVysledky[kolo.klic] || [];
+            const userTymy = userTip[kolo.klic] || [];
+            
+            // Za každý tým, který uživatel "poslal" do tohoto kola a reálně tam je
+            adminTymy.forEach(tym => {
+                if (tym && userTymy.includes(tym)) {
+                    celkoveBody += kolo.body;
                 }
-            }
+            });
+        });
+
+        // --- 3. BRONZ (8 bodů za přesnou trefu) ---
+        if (userTip.bronze && adminVysledky.bronze) {
+            if (userTip.bronze === adminVysledky.bronze) celkoveBody += 8;
         }
 
-        // --- B. CELKOVÝ VÍTĚZ (12 bodů za přesnou trefu) ---
+        // --- 4. CELKOVÝ VÍTĚZ (12 bodů za přesnou trefu) ---
         if (userTip.winner && adminVysledky.winner) {
-            if (userTip.winner === adminVysledky.winner) {
-                celkoveBody += 12;
-            }
+            if (userTip.winner === adminVysledky.winner) celkoveBody += 12;
         }
 
-     // 3. Pošleme sečtené body zpět do databáze (použijeme ID řádku pro jistotu)
+        // Zápis do databáze
         const { error: updateError } = await supabaseClient
             .from('tipy')
             .update({ body: celkoveBody })
-            .match({ id: radek.id }); // Matchujeme přímo konkrétní řádek v DB
+            .match({ id: radek.id });
 
-        if (updateError) {
-            console.error(`Chyba u hráče ${radek.name}:`, updateError.message);
-        } else {
-            pocetVyhodnocenych++;
-        }
+        if (!updateError) pocetVyhodnocenych++;
     }
 
-    alert(`Úspěšně vyhodnoceno! Rozděleny body pro ${pocetVyhodnocenych} hráčů.`);
+    alert(`Úspěšně vyhodnoceno! Body rozděleny pro ${pocetVyhodnocenych} hráčů.`);
+    
+    // Po vyhodnocení hned aktualizujeme tabulku na webu
+    if (typeof nactiZebricek === "function") nactiZebricek();
 }
     
 
@@ -1550,6 +1565,38 @@ async function checkUserSession() {
         if (loggedInSection) loggedInSection.classList.add('hidden');
     }
 }
+
+    // --- TADY ZAČÍNÁ HLÍDAČ (Vlož na konec souboru) ---
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    console.log("Stav uživatele se změnil na:", event);
+
+    // 1. Vždycky aktualizujeme žebříček (body pro všechny)
+    if (typeof nactiZebricek === "function") {
+        await nactiZebricek();
+    }
+
+    // 2. Pokud je někdo přihlášený (session není prázdná)
+    if (session) {
+        const userId = session.user.id;
+        console.log("Přihlášen uživatel:", userId);
+        
+        // Načteme jeho uložený tip do pavouka
+        if (typeof nactiUzivatelskyTip === "function") {
+            await nactiUzivatelskyTip(userId);
+        }
+
+        // Skryjeme sekci pro přihlášení (pokud ji máš v HTML)
+        const authSec = document.getElementById('auth-section');
+        if (authSec) authSec.classList.add('hidden');
+        
+    } else {
+        // Pokud není nikdo přihlášen, ukážeme login
+        console.log("Nikdo není přihlášen.");
+        const authSec = document.getElementById('auth-section');
+        if (authSec) authSec.classList.remove('hidden');
+    }
+});
+// --- TADY KONČÍ HLÍDAČ ---
 
 // Spustíme kontrolu hned po načtení stránky
 window.addEventListener('DOMContentLoaded', checkUserSession);
