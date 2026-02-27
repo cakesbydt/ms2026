@@ -682,41 +682,57 @@ async function loadAll() {
     }
 }
 
-   // UPRAVENÝ ZAČÁTEK FUNKCE renderLeaderboard
 function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
     
+    // POJISTKA: Pokud jako 'real' omylem přijde 'state', vezmeme si z něj ty správné výsledky
+    // Pokud real.playoff existuje, jsme v režimu 'state', jinak bereme 'real' jako admin data
+    const r = real.playoff ? { ...real.playoff, groups: real.groups } : real;
+
     const processed = data.map(row => {
         const tip = typeof row.tip_data === 'string' ? JSON.parse(row.tip_data) : row.tip_data;
         let pts = 0;
 
         // --- BODOVÁNÍ SKUPIN (Všechny 4 pozice) ---
-        if (real.groups && tip.groups) {
-            real.groups.forEach((adminSkupina, i) => {
-                const tipSkupina = tip.groups[i] || [];
-                // Projdeme všechny týmy, které jsi v adminu zadal do skupiny (1. až 4. místo)
-                adminSkupina.forEach((adminTym, pozice) => {
-                    // Pokud se tým na dané pozici shoduje s tipem hráče
-                    if (adminTym && tipSkupina[pozice] === adminTym) {
-                        pts += 2; // Tady si můžeš změnit počet bodů za trefu
-                    }
-                });
+        if (r.groups && tip.groups) {
+            r.groups.forEach((adminG, i) => {
+                const tipG = tip.groups[i] || [];
+                // Musíme zjistit, jestli admin data jsou pole jmen nebo objekty
+                const adminTeams = adminG.teams ? adminG.teams : adminG;
+
+                if (Array.isArray(adminTeams)) {
+                    adminTeams.forEach((team, pos) => {
+                        // Porovnáme jméno týmu na přesné pozici (1. až 4.)
+                        if (team && tipG[pos] === team) {
+                            pts += 2; // 2 body za každou trefenou pozici
+                        }
+                    });
+                }
             });
         }
 
         // --- BODOVÁNÍ PLAYOFF ---
-        const check = (st, p) => { 
-            if (real[st] && tip[st]) {
-                tip[st].forEach(t => { if (real[st].includes(t)) pts += p; }); 
+        // Srovnáváme tipy proti admin datům (s32, s16, s8, s4)
+        const check = (stage, points) => { 
+            const realTeams = r[stage] || [];
+            const tipTeams = tip[stage] || [];
+            if (Array.isArray(realTeams) && realTeams.length > 0) {
+                realTeams.forEach(t => {
+                    if (t && tipTeams.includes(t)) pts += points;
+                });
             }
         };
 
         check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
-        if (real.winner && tip.winner === real.winner) pts += 15;
-        if (real.bronze && tip.bronze === real.bronze) pts += 10;
+
+        // Vítěz a Bronz
+        if (r.winner && tip.winner === r.winner) pts += 15;
+        if (r.bronze && tip.bronze === r.bronze) pts += 10;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
+
+    // ... (zbytek tvé funkce pro vykreslení HTML zůstává stejný)
 
     // ... zbytek funkce (getStatusClass a renderování HTML) zůstává stejný ...
     // Pomocná funkce pro individuální barvení týmů
