@@ -63,6 +63,11 @@
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
 
+        #admin-form-container {
+    min-height: 800px; /* Nastav přibližně podle toho, jak je panel vysoký */
+    transition: min-height 0.3s ease;
+}
+
 /* --- 2. EFEKTY PRO TOP 3 (Prémiový vzhled) --- */
 .row-rank-1 {
     background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, transparent 100%) !important;
@@ -1509,12 +1514,13 @@ function cfS(sid, count) {
     }
 }
    function genAdminForm() {
+    // 1. ZAPAMATOVAT SI POZICI SKROLU
+    const scrollPos = window.scrollY;
+
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
     cont.innerHTML = '';
 
-    // Používáme globální data, která jsme načetli ze Supabase
-    // Pokud nejsou k dispozici, pracujeme s prázdným objektem
     const res = window.currentResults || {};
 
     // 1. GENEROVÁNÍ SKUPIN (A-L)
@@ -1523,9 +1529,7 @@ function cfS(sid, count) {
                     <b style="color:var(--accent)">Skupina ${g.id}</b>`;
         
         for(let p=0; p<4; p++) {
-            // Zjistíme, co je v DB pro tuto pozici
             const saved = res.groups?.[i]?.[p] || "";
-            
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
                     ${GROUP_TEAMS_STATIC[i].map(t => `
@@ -1549,9 +1553,7 @@ function cfS(sid, count) {
                     <b style="color:var(--winner)">${s.n}</b>`;
         
         for(let j=0; j<s.c; j++) {
-            // Kontrola v kořenu i v podobjektu playoff (pro jistotu)
             const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
-            
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- vybrat --</option>
                     ${teamsData.map(t => `
@@ -1579,8 +1581,10 @@ function cfS(sid, count) {
                 ${teamsData.map(t => `<option value="${t}" ${broSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
         </div>`;
-}
 
+    // 2. VRÁTIT SKROL NA PŮVODNÍ MÍSTO
+    window.scrollTo(0, scrollPos);
+}
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
 async function ulozitAdminVysledky() {
     // Sestavíme reálné výsledky z tvého aktuálního naklikaného stavu
