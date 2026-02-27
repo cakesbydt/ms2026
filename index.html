@@ -1626,73 +1626,90 @@ async function checkUserSession() {
     }
 }
 
-async function nactiUzivatelskyTip
-            
-            // 1. NAPLNĚNÍ A PŘEKRESLENÍ SKUPIN
-            if (tip.groups) {
-                tip.groups.forEach((tymy, i) => {
-                    if (state.groups[i]) {
-                        state.groups[i].teams = tymy;
-                        if (tymy && tymy.length > 0) {
-                            state.groups[i].done = true; 
-                            
-                            const dot = document.getElementById('dot-' + state.groups[i].id);
-                            if (dot) {
-                                dot.classList.add('completed');
-                                dot.innerHTML = `
-                                    <span style="font-size: 0.6rem; opacity: 0.7;">Skupina ${state.groups[i].id}</span><br>
-                                    <b style="font-size: 0.8rem;">1. ${tymy[0] || '?'}</b><br>
-                                    <b style="font-size: 0.8rem;">2. ${tymy[1] || '?'}</b>
-                                `;
+async function nactiUzivatelskyTip(userId) {
+    console.log("➡️ [Tip] 1. Začínám stahovat tvůj tip pro pavouka...");
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('tipy')
+            .select('name, tip_data') // Přidali jsme 'name', aby se ti jméno samo vyplnilo
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+            // 0. PŘEDVYPLNĚNÍ JMÉNA
+            if (data.name) {
+                const nameInput = document.getElementById('user-name');
+                if (nameInput) nameInput.value = data.name;
+            }
+
+            if (data.tip_data) {
+                console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
+                const tip = data.tip_data;
+                
+                // 1. NAPLNĚNÍ A PŘEKRESLENÍ SKUPIN
+                if (tip.groups) {
+                    tip.groups.forEach((tymy, i) => {
+                        if (state.groups[i]) {
+                            state.groups[i].teams = tymy;
+                            if (tymy && tymy.length > 0) {
+                                state.groups[i].done = true; 
+                                
+                                const dot = document.getElementById('dot-' + state.groups[i].id);
+                                if (dot) {
+                                    dot.classList.add('completed');
+                                    dot.innerHTML = `
+                                        <span style="font-size: 0.6rem; opacity: 0.7;">Skupina ${state.groups[i].id}</span><br>
+                                        <b style="font-size: 0.8rem;">1. ${tymy[0] || '?'}</b><br>
+                                        <b style="font-size: 0.8rem;">2. ${tymy[1] || '?'}</b>
+                                    `;
+                                }
                             }
                         }
-                    }
-                });
-            }
-            
-            // 2. NAPLNĚNÍ PAVOUKA (Playoff)
-            if (state.playoff) Object.assign(state.playoff, tip);
-
-            console.log("➡️ [Tip] 3. Generuji HTML a simuluji tvé klikání na 3. místa...");
-            
-            // 3. CHYTRÁ SIMULACE 3. MÍST
-            if (tip.thirds && tip.thirds.length === 8) {
-                
-                state.thirds = []; // Vyprázdníme paměť pro čistý průchod
-                if (typeof confirmAllGroups === "function") confirmAllGroups();
-                
-                // NEPRŮSTŘELNÉ HLEDÁNÍ HRUBOU SILOU
-                tip.thirds.forEach(teamName => {
-                    document.querySelectorAll('.card-third').forEach(card => {
-                        const onclickAttr = card.getAttribute('onclick') || "";
-                        if (onclickAttr.includes(teamName)) {
-                            if (typeof selectThird === "function") selectThird(card, teamName);
-                        }
                     });
-                });
+                }
                 
-                // Vygeneruje pavouka (a skryje skupiny)
-                if (typeof confirmThirds === "function") confirmThirds();
+                // 2. NAPLNĚNÍ PAVOUKA (Playoff)
+                if (state.playoff) Object.assign(state.playoff, tip);
+
+                console.log("➡️ [Tip] 3. Generuji HTML a simuluji tvé klikání na 3. místa...");
                 
-                // --- NOVÝ KROK: NÁVRAT ZPĚT NA SKUPINY ---
-                const groupsDiv = document.getElementById('phase-groups');
-                const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
-                const playoffCont = document.getElementById('playoff-container');
-                
-                if (groupsDiv) groupsDiv.classList.remove('hidden');
-                if (thirdsDiv) thirdsDiv.classList.add('hidden');
-                if (playoffCont) playoffCont.classList.add('hidden');
-                
-                // Pokud máš funkci na vizuál postupu nahoře na stránce, vrátíme ji na začátek
-                if (typeof updateStepper === "function") updateStepper('dot-s1');
-                
-                window.scrollTo(0, 0); // Vylistujeme stránku úplně nahoru
-                
-                console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované a ty jsi zpět na skupinách.");
-            } else {
-                console.log("ℹ️ [Tip] Tip není kompletní, nechávám tě na skupinách.");
-            }
-        }
+                // 3. CHYTRÁ SIMULACE 3. MÍST
+                if (tip.thirds && tip.thirds.length === 8) {
+                    state.thirds = []; 
+                    if (typeof confirmAllGroups === "function") confirmAllGroups();
+                    
+                    tip.thirds.forEach(teamName => {
+                        document.querySelectorAll('.card-third').forEach(card => {
+                            const onclickAttr = card.getAttribute('onclick') || "";
+                            if (onclickAttr.includes(teamName)) {
+                                if (typeof selectThird === "function") selectThird(card, teamName);
+                            }
+                        });
+                    });
+                    
+                    if (typeof confirmThirds === "function") confirmThirds();
+                    
+                    // --- NÁVRAT ZPĚT NA SKUPINY ---
+                    const groupsDiv = document.getElementById('phase-groups');
+                    const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
+                    const playoffCont = document.getElementById('playoff-container');
+                    
+                    if (groupsDiv) groupsDiv.classList.remove('hidden');
+                    if (thirdsDiv) thirdsDiv.classList.add('hidden');
+                    if (playoffCont) playoffCont.classList.add('hidden');
+                    
+                    if (typeof updateStepper === "function") updateStepper('dot-s1');
+                    window.scrollTo(0, 0);
+                    
+                    console.log("✅ [Tip] 4. HOTOVO!");
+                } else {
+                    console.log("ℹ️ [Tip] Tip není kompletní, nechávám tě na skupinách.");
+                }
+            } // Konec if (data.tip_data)
+        } // Konec if (data)
     } catch (err) {
         console.error("🛑 [Tip] Kritická chyba při načítání tipu:", err);
     }
