@@ -366,11 +366,13 @@
 /* Oprava navigace pod "MS 2026 Tipovačka" pro mobil */
 .phase-navigation {
     display: flex !important;
-    flex-wrap: wrap !important;
+    flex-wrap: wrap !important; 
     justify-content: center !important;
-    gap: 10px !important;
-    padding: 15px 0 !important;
+    gap: 8px !important; /* O něco menší mezera na mobilu ušetří místo */
+    padding: 10px !important;
     width: 100% !important;
+    max-width: 100vw !important; /* Pojistka: nepřekročí šířku průzoru */
+    box-sizing: border-box !important; /* ZÁSADNÍ: padding se počítá DO šířky, ne k ní */
 }
  /* --- POČÍTADLO --- */
 #thirds-counter {
@@ -541,11 +543,12 @@
     background-color: #f0f7ff;
 }
 @media (max-width: 600px) {
-    .phase-navigation button, .phase-navigation a {
-        flex: 1 1 45%; /* Dvě tlačítka vedle sebe */
-        font-size: 0.8rem !important;
-        padding: 10px 5px !important;
-    }
+   .phase-navigation button, 
+.phase-navigation a {
+    white-space: nowrap; /* Text v tlačítku se nezalomí... */
+    flex-shrink: 1;      /* ...ale tlačítko se může zmenšit */
+    max-width: calc(100% - 20px); /* Tlačítko nikdy nebude širší než řádek */
+}
 }
 
         .winner-icon {
