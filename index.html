@@ -64,8 +64,12 @@
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
 
         #admin-form-container {
-    min-height: 800px; /* Nastav přibližně podle toho, jak je panel vysoký */
-    transition: min-height 0.3s ease;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    /* TOTO JE DŮLEŽITÉ: */
+    min-height: 100vh; 
+    contain: paint; /* Zabrání prohlížeči v přepořádávání celé stránky */
 }
 
 /* --- 2. EFEKTY PRO TOP 3 (Prémiový vzhled) --- */
@@ -841,6 +845,8 @@
 <div class="admin-trigger" onclick="checkAdmin()"><i class="fas fa-lock"></i></div>
 
 <script>
+    // Zabrání prohlížeči v automatických pokusech o obnovu skrolu
+if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsYWJvY3dlem1wd254cnd4aWhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Mjc0MzEsImV4cCI6MjA4NzUwMzQzMX0.0K7vzYzfzSbBihVzUbHrpI5w8ohCsMlQyWyxRPcHy5c";
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
@@ -1626,17 +1632,19 @@ function cfS(sid, count) {
     }
 }
    function genAdminForm() {
-    // 1. Zapamatujeme si pozici skrolu
-    const scrollPos = window.scrollY;
+    // 1. ZÍSKÁNÍ AKTUÁLNÍ POZICE (X i Y)
+    // Používáme širší záběr, aby to fungovalo ve všech prohlížečích
+    const scrollX = window.scrollX || window.pageXOffset;
+    const scrollY = window.scrollY || window.pageYOffset;
 
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // Vytvoříme si prázdnou proměnnou pro celé HTML
+    // Inicializace HTML proměnné (Atomický zápis)
     let finalHTML = ''; 
     const res = window.currentResults || {};
 
-    // 1. GENEROVÁNÍ SKUPIN (A-L)
+    // 2. GENEROVÁNÍ SKUPIN (A-L)
     state.groups.forEach((g, i) => {
         let h = `<div style="background:#0f172a;padding:10px;border-radius:8px;border:1px solid #1e293b">
                     <b style="color:var(--accent)">Skupina ${g.id}</b>`;
@@ -1653,7 +1661,7 @@ function cfS(sid, count) {
         finalHTML += h + `</div>`;
     });
 
-    // 2. GENEROVÁNÍ PLAYOFF (s32, s16, s8, s4)
+    // 3. GENEROVÁNÍ PLAYOFF (s32, s16, s8, s4)
     const stages = [
         {id:'s32', n:'1/16 finále', c:16}, 
         {id:'s16', n:'1/8 finále', c:8}, 
@@ -1677,7 +1685,7 @@ function cfS(sid, count) {
         finalHTML += h + `</div>`;
     });
 
-    // 3. VÍTĚZ A BRONZ
+    // 4. VÍTĚZ A BRONZ
     const winSaved = res.winner || res.playoff?.winner || "";
     const broSaved = res.bronze || res.playoff?.bronze || "";
 
@@ -1695,15 +1703,18 @@ function cfS(sid, count) {
             </select>
         </div>`;
 
-    // !!! JEDEN ZÁPIS DO DOM !!!
+    // 5. JEDEN ZÁPIS DO DOM (Stránka se scvrkne a hned zase roztáhne)
     cont.innerHTML = finalHTML;
 
-    // VRÁTIT SKROL NA PŮVODNÍ MÍSTO
-    window.scrollTo({
-        top: scrollPos,
-        behavior: 'instant'
+    // 6. NEPRŮSTŘELNÝ FIX SKROLU (Zavolá se hned po vykreslení)
+    requestAnimationFrame(() => {
+        window.scrollTo({
+            top: scrollY,
+            left: scrollX,
+            behavior: 'instant'
+        });
     });
-} // Tady ta závorka ti chyběla
+}
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
 async function ulozitAdminVysledky() {
     // Sestavíme reálné výsledky z tvého aktuálního naklikaného stavu
