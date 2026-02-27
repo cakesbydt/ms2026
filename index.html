@@ -1607,17 +1607,14 @@ async function nactiUzivatelskyTip(userId) {
             console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
             const tip = data.tip_data;
             
-            // 1. NAPLNĚNÍ SKUPIN
+            // 1. NAPLNĚNÍ A PŘEKRESLENÍ SKUPIN
             if (tip.groups) {
                 tip.groups.forEach((tymy, i) => {
                     if (state.groups[i]) {
                         state.groups[i].teams = tymy;
-                        
-                        // DŮLEŽITÉ: Označíme skupinu jako hotovou, ať nás to pustí dál
                         if (tymy && tymy.length > 0) {
                             state.groups[i].done = true; 
                             
-                            // VIZUÁLNÍ PŘEKRESLENÍ KARTIČKY SKUPINY (TEČKY)
                             const dot = document.getElementById('dot-' + state.groups[i].id);
                             if (dot) {
                                 dot.classList.add('completed');
@@ -1632,26 +1629,40 @@ async function nactiUzivatelskyTip(userId) {
                 });
             }
             
-            // 2. NAPLNĚNÍ 3. MÍST A PAVOUKA
-            if (tip.thirds) state.thirds = tip.thirds;
+            // 2. NAPLNĚNÍ PAVOUKA (Playoff)
             if (state.playoff) Object.assign(state.playoff, tip);
 
-            console.log("➡️ [Tip] 3. Data připravena. Generuji HTML pro 3. místa a pavouka...");
+            console.log("➡️ [Tip] 3. Generuji HTML a simuluji tvé klikání na 3. místa...");
             
-            // 3. SIMULACE PRŮCHODU WEBPEM (aby se vygenerovalo HTML)
-            if (state.thirds && state.thirds.length === 8) {
+            // 3. CHYTRÁ SIMULACE 3. MÍST (naklikáme je za tebe)
+            if (tip.thirds && tip.thirds.length === 8) {
                 
-                // Vygeneruje HTML pro 3. místa a označí vybrané týmy
+                // Úmyslně vyprázdníme paměť 3. míst, abychom ji mohli znovu "naklikat"
+                state.thirds = [];
+                
+                // Vygeneruje čisté, prázdné HTML pro 3. místa
                 if (typeof confirmAllGroups === "function") confirmAllGroups();
                 
-                // Vygeneruje HTML pro pavouka a schová předchozí fáze
+                // Teď kód vezme tvých stažených 8 týmů a "klikne" na ně přesně jako ty
+                tip.thirds.forEach(teamName => {
+                    document.querySelectorAll('.card-third').forEach(card => {
+                        // Pokud karta obsahuje jméno týmu, nasimulujeme klik
+                        if (card.innerText.includes(teamName)) {
+                            if (typeof selectThird === "function") {
+                                selectThird(card, teamName);
+                            }
+                        }
+                    });
+                });
+                
+                // Teď už jsou 3. místa vizuálně dokonalá (i s odznáčky 1-8).
+                // Můžeme s klidem schovat začátek a ukázat hotového pavouka.
                 if (typeof confirmThirds === "function") confirmThirds();
                 
-                console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované.");
+                console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované i s vizuálem 3. míst.");
             } else {
                 console.log("ℹ️ [Tip] Tip není kompletní, nechávám tě na skupinách.");
             }
-
         }
     } catch (err) {
         console.error("🛑 [Tip] Kritická chyba při načítání tipu:", err);
