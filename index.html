@@ -660,37 +660,22 @@ let state = {
     console.log("➡️ [loadAll] 1. Funkce spuštěna...");
     
     try {
-        console.log("➡️ [loadAll] 2. Jdu se zeptat Supabase na tabulku 'nastaveni'...");
+        console.log("➡️ [loadAll] 2. Přeskakuji nastavení a zkouším stáhnout ROVNOU TIPY...");
         
-        const odpovedNastaveni = await supabaseClient
-            .from('nastaveni')
-            .select('vysledky')
-            .eq('id', 1)
-            .maybeSingle();
-
-        // TADY se ukáže pravda!
-        console.log("➡️ [loadAll] 3. Supabase odpověděl (nastaveni):", odpovedNastaveni);
-
-        if (odpovedNastaveni.error) throw odpovedNastaveni.error;
-
-        // Bezpečné uložení výsledků, i kdyby neexistovaly
-        window.currentResults = odpovedNastaveni.data?.vysledky || {};
-        console.log("➡️ [loadAll] 4. Nastavení uloženo, jdu na 'tipy'...");
-
+        // Jdeme rovnou na tipy
         const odpovedTipy = await supabaseClient
             .from('tipy')
             .select('*');
 
-        console.log("➡️ [loadAll] 5. Supabase odpověděl (tipy):", odpovedTipy);
+        console.log("➡️ [loadAll] 3. Supabase odpověděl (tipy):", odpovedTipy);
 
         if (odpovedTipy.error) throw odpovedTipy.error;
 
-        console.log("➡️ [loadAll] 6. Jdu kreslit tabulku...");
+        console.log("➡️ [loadAll] 4. Jdu kreslit tabulku...");
         if (typeof renderLeaderboard === "function") {
-            renderLeaderboard(odpovedTipy.data || [], window.currentResults);
+            // Použijeme prázdné nastavení, jen abychom viděli, jestli se tabulka objeví
+            renderLeaderboard(odpovedTipy.data || [], window.currentResults || {});
             console.log("✅ HOTOVO! Tabulka je vykreslena.");
-        } else {
-            console.error("❌ renderLeaderboard() neexistuje!");
         }
 
     } catch (error) {
