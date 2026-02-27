@@ -363,17 +363,20 @@
     overflow-x: hidden;
 }
 
-/* Oprava navigace pod "MS 2026 Tipovačka" pro mobil */
+/* Definitivní oprava navigace pro mobil */
 .phase-navigation {
     display: flex !important;
-    flex-wrap: wrap !important; 
-    justify-content: center !important;
-    gap: 8px !important; /* O něco menší mezera na mobilu ušetří místo */
-    padding: 10px !important;
+    flex-wrap: wrap !important; /* Povolí skládání do více řad */
+    justify-content: center !important; /* Centrování necháme, ale přidáme pojistky */
+    gap: 8px !important; /* Mezera mezi tlačítky */
+    padding: 15px 10px !important; /* Vnitřní okraj, aby se tlačítka nedotýkala hran */
     width: 100% !important;
-    max-width: 100vw !important; /* Pojistka: nepřekročí šířku průzoru */
-    box-sizing: border-box !important; /* ZÁSADNÍ: padding se počítá DO šířky, ne k ní */
+    box-sizing: border-box !important; /* DŮLEŽITÉ: padding nezvětší šířku nad 100% */
+    
+    /* Změna zarovnání, pokud je tlačítek moc (prohlížeč je dá od začátku) */
+    align-items: center !important;
 }
+        
  /* --- POČÍTADLO --- */
 #thirds-counter {
     background: #fbbf24 !important;
@@ -543,11 +546,12 @@
     background-color: #f0f7ff;
 }
 @media (max-width: 600px) {
-   .phase-navigation button, 
+  /* Pojistka pro tlačítka uvnitř */
+.phase-navigation button, 
 .phase-navigation a {
-    white-space: nowrap; /* Text v tlačítku se nezalomí... */
-    flex-shrink: 1;      /* ...ale tlačítko se může zmenšit */
-    max-width: calc(100% - 20px); /* Tlačítko nikdy nebude širší než řádek */
+    flex: 0 1 auto !important; /* Tlačítka se mohou smrsknout, ale nerostou zbytečně */
+    min-width: fit-content !important; /* Každé tlačítko je tak široké, jak potřebuje jeho text */
+    margin: 0 !important;
 }
 }
 
