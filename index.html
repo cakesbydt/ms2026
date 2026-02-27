@@ -762,22 +762,34 @@ function renderLeaderboard(data, real) {
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
-    // POMOCNÁ FUNKCE PRO BARVY (Tady byla ta chyba aS.some - OPRAVENO)
-    const getStatusClass = (stageId, teamName, stageCount) => {
-        const aS = r[stageId] || [];
-        if (!teamName) return ''; 
+   const getStatusClass = (stageId, teamName, stageCount) => {
+    const aS = r[stageId] || [];
+    if (!teamName) return ''; 
 
-        if (Array.isArray(aS)) {
-            if (aS.length === 0) return '';
-            if (aS.some(t => t && String(t).trim() === String(teamName).trim())) return 'status-correct';
-            if (aS.length >= stageCount) return 'status-wrong';
-        } else {
-            // Pro winner/bronze, kde je v aS jen jeden text
-            if (!aS) return '';
-            return (String(aS).trim() === String(teamName).trim()) ? 'status-correct' : 'status-wrong';
-        }
-        return '';
-    };
+    // Převedeme na pole a vyčistíme od prázdných hodnot, abychom věděli, kolik je skutečných výsledků
+    const validResults = Array.isArray(aS) 
+        ? aS.filter(t => t && t.trim() !== "") 
+        : (aS && aS.trim() !== "" ? [aS] : []);
+
+    // 1. Pokud v adminu ještě není žádný výsledek pro toto kolo -> ŠEDÁ (status-pending)
+    if (validResults.length === 0) return 'status-pending';
+
+    // 2. Pokud je tým v admin výsledcích -> ZELENÁ (status-correct)
+    const isHit = validResults.some(t => String(t).trim() === String(teamName).trim());
+    if (isHit) return 'status-correct';
+
+    // 3. Pokud je tým v adminu jiný (u winner/bronze) nebo je kolo už plné a tým tam není -> ČERVENÁ (status-wrong)
+    if (!Array.isArray(aS)) {
+        // Logika pro winner/bronze: pokud je tam jiný tým než náš, je to špatně
+        return 'status-wrong';
+    } else if (validResults.length >= stageCount) {
+        // Logika pro playoff: pokud je v adminu už plný počet týmů a náš tam není, je to špatně
+        return 'status-wrong';
+    }
+
+    // 4. Všechno ostatní (kolo se postupně vyplňuje) -> ŠEDÁ
+    return 'status-pending';
+};
 
     let currentRank = 0;
     let lastPoints = -1;
