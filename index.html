@@ -656,34 +656,46 @@ let state = {
     // TADY JSEM SMAZAL: await loadAll(); 
 }
 
-   async function loadAll() {
-    console.log("➡️ [loadAll] Začínám stahovat nastavení z DB...");
+  async function loadAll() {
+    console.log("➡️ [loadAll] 1. Funkce spuštěna...");
     
-    // 1. Stahujeme nastavení (výsledky turnaje)
-    const { data: n, error: errN } = await supabaseClient
-        .from('nastaveni')
-        .select('vysledky')
-        .eq('id', 1)
-        .maybeSingle();
+    try {
+        console.log("➡️ [loadAll] 2. Jdu se zeptat Supabase na tabulku 'nastaveni'...");
+        
+        const odpovedNastaveni = await supabaseClient
+            .from('nastaveni')
+            .select('vysledky')
+            .eq('id', 1)
+            .maybeSingle();
 
-    if (errN) console.error("❌ [loadAll] Chyba při čtení nastavení:", errN);
-    if (n && n.vysledky) currentResults = n.vysledky;
+        // TADY se ukáže pravda!
+        console.log("➡️ [loadAll] 3. Supabase odpověděl (nastaveni):", odpovedNastaveni);
 
-    console.log("➡️ [loadAll] Nastavení staženo, jdu na tipy...");
+        if (odpovedNastaveni.error) throw odpovedNastaveni.error;
 
-    // 2. Stahujeme všechny tipy hráčů
-    const { data: t, error: errT } = await supabaseClient
-        .from('tipy')
-        .select('*');
+        // Bezpečné uložení výsledků, i kdyby neexistovaly
+        window.currentResults = odpovedNastaveni.data?.vysledky || {};
+        console.log("➡️ [loadAll] 4. Nastavení uloženo, jdu na 'tipy'...");
 
-    if (errT) console.error("❌ [loadAll] Chyba při čtení tipů:", errT);
+        const odpovedTipy = await supabaseClient
+            .from('tipy')
+            .select('*');
 
-    console.log("➡️ [loadAll] Tipy staženy, jdu kreslit tabulku...");
+        console.log("➡️ [loadAll] 5. Supabase odpověděl (tipy):", odpovedTipy);
 
-    // 3. Vykreslení
-    renderLeaderboard(t || [], currentResults);
-    
-    console.log("➡️ [loadAll] HOTOVO! Tabulka by měla být vidět.");
+        if (odpovedTipy.error) throw odpovedTipy.error;
+
+        console.log("➡️ [loadAll] 6. Jdu kreslit tabulku...");
+        if (typeof renderLeaderboard === "function") {
+            renderLeaderboard(odpovedTipy.data || [], window.currentResults);
+            console.log("✅ HOTOVO! Tabulka je vykreslena.");
+        } else {
+            console.error("❌ renderLeaderboard() neexistuje!");
+        }
+
+    } catch (error) {
+        console.error("🛑 KRITICKÁ CHYBA v loadAll:", error.message || error);
+    }
 }
 
     function renderLeaderboard(data, real) {
