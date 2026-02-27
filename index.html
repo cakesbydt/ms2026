@@ -1605,7 +1605,6 @@ async function nactiUzivatelskyTip(userId) {
         if (data && data.tip_data) {
             console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
             const tip = data.tip_data;
-            console.log("🔍 CO JE REÁLNĚ V DATABÁZI:", tip);
             
             // 1. NAPLNĚNÍ A PŘEKRESLENÍ SKUPIN
             if (tip.groups) {
@@ -1640,35 +1639,34 @@ async function nactiUzivatelskyTip(userId) {
                 state.thirds = []; // Vyprázdníme paměť pro čistý průchod
                 if (typeof confirmAllGroups === "function") confirmAllGroups();
                 
-                console.log("➡️ [Tip] Jdu simulovat kliknutí na tyto týmy:", tip.thirds);
-                
                 // NEPRŮSTŘELNÉ HLEDÁNÍ HRUBOU SILOU
                 tip.thirds.forEach(teamName => {
-                    let nalezeno = false;
-                    
-                    // Projdeme ÚPLNĚ VŠECHNY karty třetích míst
                     document.querySelectorAll('.card-third').forEach(card => {
                         const onclickAttr = card.getAttribute('onclick') || "";
-                        
-                        // Pokud parametr onclick obsahuje jméno hledaného týmu
                         if (onclickAttr.includes(teamName)) {
-                            if (typeof selectThird === "function") {
-                                selectThird(card, teamName);
-                                nalezeno = true;
-                            }
+                            if (typeof selectThird === "function") selectThird(card, teamName);
                         }
                     });
-                    
-                    // Vypíše varování, pokud nějaký tým nešel nakliknout
-                    if (!nalezeno) {
-                        console.warn(`⚠️ [Tip] Nenašel jsem HTML kartu pro tým: ${teamName}`);
-                    }
                 });
                 
-                // Zobrazíme pavouka
+                // Vygeneruje pavouka (a skryje skupiny)
                 if (typeof confirmThirds === "function") confirmThirds();
                 
-                console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované i s vizuálem 3. míst.");
+                // --- NOVÝ KROK: NÁVRAT ZPĚT NA SKUPINY ---
+                const groupsDiv = document.getElementById('phase-groups');
+                const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
+                const playoffCont = document.getElementById('playoff-container');
+                
+                if (groupsDiv) groupsDiv.classList.remove('hidden');
+                if (thirdsDiv) thirdsDiv.classList.add('hidden');
+                if (playoffCont) playoffCont.classList.add('hidden');
+                
+                // Pokud máš funkci na vizuál postupu nahoře na stránce, vrátíme ji na začátek
+                if (typeof updateStepper === "function") updateStepper('dot-s1');
+                
+                window.scrollTo(0, 0); // Vylistujeme stránku úplně nahoru
+                
+                console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované a ty jsi zpět na skupinách.");
             } else {
                 console.log("ℹ️ [Tip] Tip není kompletní, nechávám tě na skupinách.");
             }
