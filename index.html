@@ -1370,21 +1370,78 @@ function cfS(sid, count) {
         genAdminForm();
     }
 }
-    function genAdminForm() {
-        const cont = document.getElementById('admin-form-container'); cont.innerHTML = '';
-        state.groups.forEach((g, i) => {
-            let h = `<div style="background:#0f172a;padding:10px;border-radius:8px"><b>Sk. ${g.id}</b>`;
-            for(let p=0; p<4; p++) h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:4px">${GROUP_TEAMS_STATIC[i].map(t => `<option value="${t}" ${currentResults.groups[i]?.[p]===t?'selected':''}>${t}</option>`).join('')}</select>`;
-            cont.innerHTML += h + `</div>`;
-        });
-        [{id:'s32', n:'1/16', c:16}, {id:'s16', n:'1/8', c:8}, {id:'s8', n:'QF', c:4}, {id:'s4', n:'SF', c:4}].forEach(s => {
-            let h = `<div style="background:#0f172a;padding:10px;border-radius:8px"><b>${s.n}</b>`;
-            for(let j=0; j<s.c; j++) h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:4px"><option value="">--</option>${teamsData.map(t => `<option value="${t}" ${currentResults[s.id]?.[j]===t?'selected':''}>${t}</option>`).join('')}</select>`;
-            cont.innerHTML += h + `</div>`;
-        });
-        cont.innerHTML += `<div style="background:#0f172a;padding:10px;border-radius:8px">Vítěz: <select id="a-win" style="width:100%">${teamsData.map(t=>`<option value="${t}" ${currentResults.winner===t?'selected':''}>${t}</option>`).join('')}</select>
-            Bronz: <select id="a-bro" style="width:100%;margin-top:5px">${teamsData.map(t=>`<option value="${t}" ${currentResults.bronze===t?'selected':''}>${t}</option>`).join('')}</select></div>`;
-    }
+   function genAdminForm() {
+    const cont = document.getElementById('admin-form-container'); 
+    if (!cont) return;
+    cont.innerHTML = '';
+
+    // Používáme globální data, která jsme načetli ze Supabase
+    // Pokud nejsou k dispozici, pracujeme s prázdným objektem
+    const res = window.currentResults || {};
+
+    // 1. GENEROVÁNÍ SKUPIN (A-L)
+    state.groups.forEach((g, i) => {
+        let h = `<div style="background:#0f172a;padding:10px;border-radius:8px;border:1px solid #1e293b">
+                    <b style="color:var(--accent)">Skupina ${g.id}</b>`;
+        
+        for(let p=0; p<4; p++) {
+            // Zjistíme, co je v DB pro tuto pozici
+            const saved = res.groups?.[i]?.[p] || "";
+            
+            h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
+                    <option value="" ${saved === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
+                    ${GROUP_TEAMS_STATIC[i].map(t => `
+                        <option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>
+                    `).join('')}
+                  </select>`;
+        }
+        cont.innerHTML += h + `</div>`;
+    });
+
+    // 2. GENEROVÁNÍ PLAYOFF (s32, s16, s8, s4)
+    const stages = [
+        {id:'s32', n:'1/16 finále', c:16}, 
+        {id:'s16', n:'1/8 finále', c:8}, 
+        {id:'s8', n:'Čtvrtfinále', c:4}, 
+        {id:'s4', n:'Semifinále', c:4}
+    ];
+
+    stages.forEach(s => {
+        let h = `<div style="background:#0f172a;padding:10px;border-radius:8px;border:1px solid #1e293b">
+                    <b style="color:var(--winner)">${s.n}</b>`;
+        
+        for(let j=0; j<s.c; j++) {
+            // Kontrola v kořenu i v podobjektu playoff (pro jistotu)
+            const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
+            
+            h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
+                    <option value="" ${saved === '' ? 'selected' : ''}>-- vybrat --</option>
+                    ${teamsData.map(t => `
+                        <option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>
+                    `).join('')}
+                  </select>`;
+        }
+        cont.innerHTML += h + `</div>`;
+    });
+
+    // 3. VÍTĚZ A BRONZ
+    const winSaved = res.winner || res.playoff?.winner || "";
+    const broSaved = res.bronze || res.playoff?.bronze || "";
+
+    cont.innerHTML += `
+        <div style="background:#0f172a;padding:10px;border-radius:8px;border:2px solid var(--winner);grid-column: 1 / -1">
+            <b>🏆 Vítěz:</b>
+            <select id="a-win" style="width:100%;margin-bottom:10px;background:#1e293b;color:white;border:1px solid #334155">
+                <option value="">-- vybrat vítěze --</option>
+                ${teamsData.map(t => `<option value="${t}" ${winSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+            <b>🥉 Bronz:</b>
+            <select id="a-bro" style="width:100%;background:#1e293b;color:white;border:1px solid #334155">
+                <option value="">-- vybrat 3. místo --</option>
+                ${teamsData.map(t => `<option value="${t}" ${broSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+        </div>`;
+}
 
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
 async function ulozitAdminVysledky() {
