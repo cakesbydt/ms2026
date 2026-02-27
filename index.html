@@ -1550,62 +1550,57 @@ async function nacistAdminVysledky() {
 }
 
   async function saveAdminResults() {
-    console.log("🛠️ STARTUJI TVRDÉ UKLÁDÁNÍ...");
+    console.log("🛠️ STARTUJI SBĚR DAT Z POLÍČEK...");
 
-    // Pomocná funkce pro čtení hodnot z políček
-    const getVal = (id) => {
+    // Pomocná funkce, aby kód nebyl dlouhý
+    const getV = (id) => {
         const el = document.getElementById(id);
-        if (!el) {
-            console.error(`❌ Kritická chyba: Políčko s ID ${id} neexistuje!`);
-            return "";
-        }
-        return el.value;
+        return el ? el.value : "";
     };
 
     // 1. SBĚR SKUPIN (12 skupin, každá 4 místa)
     const groups = [];
     for (let i = 0; i < 12; i++) {
-        const gTeams = [];
+        const gT = [];
         for (let p = 0; p < 4; p++) {
-            gTeams.push(getVal(`a-g-${i}-${p}`));
+            gT.push(getV(`a-g-${i}-${p}`));
         }
-        groups.push(gTeams);
+        groups.push(gT);
     }
 
-    // 2. SBĚR PLAYOFF (Důležité: s4 musí mít 4 týmy!)
+    // 2. SBĚR PLAYOFF (Přesně podle ID v genAdminForm)
     const adminData = {
         groups: groups,
-        s32: Array.from({length: 16}, (_, j) => getVal(`a-s32-${j}`)),
-        s16: Array.from({length: 8}, (_, j) => getVal(`a-s16-${j}`)),
-        s8:  Array.from({length: 4}, (_, j) => getVal(`a-s8-${j}`)),
-        s4:  Array.from({length: 4}, (_, j) => getVal(`a-s4-${j}`)), // OPRAVA NA 4
-        winner: getVal('a-win'),
-        bronze: getVal('a-bro')
+        s32: Array.from({length: 16}, (_, j) => getV(`a-s32-${j}`)),
+        s16: Array.from({length: 8},  (_, j) => getV(`a-s16-${j}`)),
+        s8:  Array.from({length: 4},  (_, j) => getV(`a-s8-${j}`)),
+        s4:  Array.from({length: 4},  (_, j) => getV(`a-s4-${j}`)),
+        winner: getV('a-win'),
+        bronze: getV('a-bro')
     };
 
-    console.log("📤 SKUTEČNĚ ODESÍLÁM TOTO:", adminData);
+    // 🔥 DIAGNOSTICKÝ LOG - Tady v konzoli uvidíš, co JS skutečně "vidí" před odesláním
+    console.log("📤 ODESÍLÁM DO DATABÁZE:", adminData);
+    if (adminData.winner !== "Slovensko" && document.getElementById('a-win').value === "Slovensko") {
+        console.error("❌ KRITICKÁ CHYBA: V políčku je Slovensko, ale JS čte něco jiného! Máš v HTML duplicitní ID 'a-win'?");
+    }
 
     try {
         const { error } = await supabaseClient
             .from('admin_vysledky')
-            .upsert({ 
-                id: 1, 
-                ...adminData 
-            });
+            .upsert({ id: 1, ...adminData });
 
         if (error) throw error;
-        
-        // Zobrazení potvrzení přímo s jménem vítěze pro kontrolu
-        alert(`✅ ÚSPĚŠNĚ ULOŽENO!\nVítěz v DB: ${adminData.winner}`);
 
-        // Aktualizace lokální paměti, aby žebříček hned věděl o změnách
+        // Aktualizujeme globální proměnnou a hlášku
         window.currentResults = adminData;
+        alert("✅ Uloženo! Vítěz: " + adminData.winner);
 
-        // Refresh žebříčku
+        // Překreslíme žebříček
         if (typeof loadAll === "function") await loadAll();
 
     } catch (err) {
-        console.error("❌ CHYBA PŘI UKLÁDÁNÍ:", err);
+        console.error("Chyba při ukládání:", err);
         alert("Chyba: " + err.message);
     }
 }
