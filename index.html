@@ -1377,6 +1377,49 @@ window.addEventListener('DOMContentLoaded', nacistAdminVysledky);
         showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
     }
 }
+async function nactiUzivatelskyTip(userId) {
+    console.log("Stahuji tvůj uložený tip z databáze...");
+    const { data, error } = await supabaseClient
+        .from('tipy')
+        .select('tip_data')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Chyba při načítání tvého tipu:", error);
+        return;
+    }
+
+    if (data && data.tip_data) {
+        const tip = data.tip_data;
+        
+        // A. Načteme týmy do skupin v našem objektu 'state'
+        if (tip.groups) {
+            tip.groups.forEach((tymy, i) => {
+                if (state.groups[i]) {
+                    state.groups[i].teams = tymy;
+                }
+            });
+        }
+
+        // B. Načteme zbytek playoff do 'state'
+        // (Vezmeme vše z tip_data a nahrajeme to do state.playoff)
+        if (state.playoff) {
+            Object.assign(state.playoff, tip);
+        }
+
+        // C. !!! DŮLEŽITÉ !!! Překreslení webu
+        // Tady musíš zavolat SVOJE funkce, které kreslí ty karty na obrazovku.
+        // Pravděpodobně se jmenují takhle:
+        if (typeof renderGroups === "function") renderGroups();
+        if (typeof renderPlayoff === "function") renderPlayoff();
+        
+        console.log("Tvůj pavouk byl úspěšně vyplněn.");
+    } else {
+        console.log("Pro tohoto uživatele zatím v DB není žádný tip.");
+    }
+}
+    
     // Pomocné funkce pro ovládání okna
 function showCustomAlert(title, message) {
     document.getElementById('modal-title').innerText = title;
