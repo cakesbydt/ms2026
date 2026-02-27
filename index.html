@@ -805,7 +805,7 @@ function renderLeaderboard(data, real) {
                 if (Array.isArray(adminTeams)) {
                     adminTeams.forEach((team, pos) => {
                         if (team && tipG[pos] && String(team).trim() === String(tipG[pos]).trim()) {
-                            pts += 2;
+                            pts += 4;
                         }
                     });
                 }
@@ -826,16 +826,16 @@ function renderLeaderboard(data, real) {
             }
         };
 
-        check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
+        check('s32', 2); check('s16', 3); check('s8', 4); check('s4', 5);
 
         // --- 3. VÍTĚZ A BRONZ ---
         const rWin = r.winner ? String(r.winner).trim() : null;
         const tWin = tip.winner ? String(tip.winner).trim() : null;
-        if (rWin && tWin === rWin) pts += 15;
+        if (rWin && tWin === rWin) pts += 12;
 
         const rBro = r.bronze ? String(r.bronze).trim() : null;
         const tBro = tip.bronze ? String(tip.bronze).trim() : null;
-        if (rBro && tBro === rBro) pts += 10;
+        if (rBro && tBro === rBro) pts += 8;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
