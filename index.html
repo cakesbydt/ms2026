@@ -1609,84 +1609,55 @@ async function checkUserSession() {
     }
 }
 
-   // ==========================================
-// KOMPLETNÍ HLÍDAČ PŘIHLÁŠENÍ A NAČÍTÁNÍ DAT
-// ==========================================
-
-// 1. Pomocná funkce, která stáhne data z DB a vyplní pavouka
+// 1. Pomocná funkce pro stažení dat
 async function nactiUzivatelskyTip(userId) {
-    console.log("🛠️ Zahajuji stahování tvého tipu z databáze...");
-    
-    const { data, error } = await supabaseClient
-        .from('tipy')
-        .select('tip_data')
-        .eq('user_id', userId)
-        .maybeSingle();
+    try {
+        const { data, error } = await supabaseClient
+            .from('tipy')
+            .select('tip_data')
+            .eq('user_id', userId)
+            .maybeSingle();
 
-    if (error) {
-        console.error("❌ Chyba při načítání dat:", error.message);
-        return;
-    }
+        if (data && data.tip_data) {
+            const tip = data.tip_data;
+            // Naplnění skupin
+            if (tip.groups) {
+                tip.groups.forEach((tymy, i) => {
+                    if (state.groups[i]) state.groups[i].teams = tymy;
+                });
+            }
+            // Naplnění playoff
+            if (state.playoff) Object.assign(state.playoff, tip);
 
-    if (data && data.tip_data) {
-        const tip = data.tip_data;
-        console.log("✅ Data dorazila, plním pavouka...");
-
-        // Naplnění skupin do globálního state
-        if (tip.groups) {
-            tip.groups.forEach((tymy, i) => {
-                if (state.groups[i]) state.groups[i].teams = tymy;
-            });
+            // VOLÁNÍ TVÝCH FUNKCÍ - Zkontroluj názvy!
+            if (typeof renderGroups === "function") renderGroups();
+            if (typeof renderPlayoff === "function") renderPlayoff();
         }
-
-        // Naplnění playoff (s32, s16, s8, winner...) do state
-        if (state.playoff) {
-            Object.assign(state.playoff, tip);
-        }
-
-        // PŘEKRESLENÍ UI - tady voláme tvé vykreslovací funkce
-        // Ujisti se, že se jmenují přesně takto, případně je přejmenuj
-        if (typeof renderGroups === "function") renderGroups();
-        if (typeof renderPlayoff === "function") renderPlayoff();
-        
-        console.log("🚀 Pavouk úspěšně vykreslen s tvými týmy.");
-    } else {
-        console.log("ℹ️ V databázi zatím nemáš uložený žádný tip.");
+    } catch (e) {
+        console.error("Chyba v nactiUzivatelskyTip:", e);
     }
 }
 
-// 2. Samotný HLÍDAČ, který reaguje na přihlášení/odhlášení/F5
+// 2. Samotný hlídač
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    console.log("🔔 AUTH UDÁLOST:", event);
-
-    // Vždy aktualizujeme žebříček (pro všechny)
-    if (typeof nactiZebricek === "function") {
-        await nactiZebricek();
-    }
+    console.log("🔔 AUTH:", event);
+    
+    // Načtení žebříčku - dáváme do try/catch, aby to nezabilo login
+    try {
+        if (typeof nactiZebricek === "function") await nactiZebricek();
+    } catch (e) { console.error("Chyba v nactiZebricek:", e); }
 
     const authSec = document.getElementById('auth-section');
 
     if (session) {
-        // UŽIVATEL JE PŘIHLÁŠEN
-        console.log("👤 Uživatel přihlášen, ID:", session.user.id);
-        
-        // Načteme jeho data do pavouka
+        // PŘIHLÁŠEN
         await nactiUzivatelskyTip(session.user.id);
-
-        // Skryjeme login
         if (authSec) authSec.classList.add('hidden');
     } else {
-        // UŽIVATEL NENÍ PŘIHLÁŠEN
-        console.log("👤 Anonymní režim - nepřihlášen.");
-        
-        // Ukážeme login
+        // NEPŘIHLÁŠEN
         if (authSec) authSec.classList.remove('hidden');
-        
-        // (Volitelně) Pokud chceš při odhlášení pavouka vyčistit, 
-        // můžeš sem dát reset state a render.
     }
 });
-
 // Spustíme kontrolu hned po načtení stránky
 window.addEventListener('DOMContentLoaded', checkUserSession);
 
