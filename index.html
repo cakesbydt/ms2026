@@ -63,51 +63,73 @@
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
 
-/* Speciální styly pro TOP 3 */
+/* --- 2. EFEKTY PRO TOP 3 (Prémiový vzhled) --- */
 .row-rank-1 {
-    background: linear-gradient(90deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.05) 100%) !important;
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, transparent 100%) !important;
     border-left: 4px solid #fbbf24 !important;
-    box-shadow: inset 0 0 15px rgba(251, 191, 36, 0.1);
 }
 .row-rank-2 {
-    background: linear-gradient(90deg, rgba(148, 163, 184, 0.15) 0%, rgba(148, 163, 184, 0.05) 100%) !important;
-    border-left: 4px solid #94a3b8 !important;
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.1) 0%, transparent 100%) !important;
+    border-left: 4px solid #cbd5e1 !important;
 }
 .row-rank-3 {
-    background: linear-gradient(90deg, rgba(205, 127, 50, 0.15) 0%, rgba(205, 127, 50, 0.05) 100%) !important;
+    background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, transparent 100%) !important;
     border-left: 4px solid #cd7f32 !important;
 }
         
-    /* Základní styl pro tagy týmů v detailu */
+   /* --- 4. STYL DETAILU --- */
 .det-team-tag {
     display: inline-block;
     padding: 3px 8px;
     margin: 2px;
     border-radius: 4px;
     font-size: 0.75rem;
-    border: 1px solid transparent;
-    transition: all 0.2s;
+    background: #1e293b;
+    border: 1px solid #334155;
 }
     
-   /* Zelená - trefa */
+  /* --- 1. LOGIKA BAREV (Zelená, Červená, Šedá) --- */
 .status-correct {
-    background-color: #059669 !important; 
+    background-color: #059669 !important; /* Trefa */
     color: white !important;
-    border-color: #059669 !important;
 }
-    /* Červená - chyba */
 .status-wrong {
-    background-color: #dc2626 !important;
+    background-color: #dc2626 !important; /* Chyba */
     color: white !important;
-    border-color: #dc2626 !important;
-    opacity: 0.7; /* Trochu ztlumíme chyby, aby netloukly do očí */
+    opacity: 0.7;
+}
+.status-pending {
+    background-color: #334155 !important; /* Nevyhodnoceno - ŠEDÁ */
+    color: #94a3b8 !important;
 }
 
-        /* Šedá - čeká se na vyhodnocení (TOTO JSME PŘIDALI) */
-.status-pending {
-    background-color: #334155 !important; /* Břidlicově šedá */
-    color: #94a3b8 !important; /* Světle šedé písmo */
-    border-color: #475569 !important;
+        /* --- 3. GRAFICKÉ PRVKY (Odznaky a ikony) --- */
+.rank-pill {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 900;
+    font-size: 0.9rem;
+    background: rgba(0,0,0,0.2);
+}
+
+.pts-pill {
+    background: #1e293b;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    display: inline-block;
+}
+
+        /* Animace pulzující trofeje */
+@keyframes trophy-glow {
+    0% { transform: scale(1); filter: drop-shadow(0 0 2px #fbbf24); }
+    50% { transform: scale(1.1); filter: drop-shadow(0 0 6px #fbbf24); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 2px #fbbf24); }
+}
+.winner-animate { 
+    animation: trophy-glow 2s infinite ease-in-out; 
+    display: inline-block;
 }
 
     /* --- PRAVÝ SLOUPEC FORMULÁŘ --- */
@@ -847,106 +869,121 @@ function renderLeaderboard(data, real) {
     let displayedRank = 0;
 
     body.innerHTML = processed.map((player, i) => {
-        if (player.points !== lastPoints) {
-            currentRank = i + 1;
-            displayedRank = currentRank;
-        }
-        lastPoints = player.points;
+    // Logika pro pořadí při shodě bodů
+    if (player.points !== lastPoints) {
+        currentRank = i + 1;
+        displayedRank = currentRank;
+    }
+    lastPoints = player.points;
 
-        let rankIcon = ""; 
-        let rowStyle = "";
-        let nameColor = "inherit";
+    let rankIcon = ""; 
+    let rowStyle = "";
+    let nameColor = "#f8fafc";
+    let extraLabel = "";
 
-        if (displayedRank === 1) {
-            rankIcon = '<i class="fas fa-trophy" style="color: #fbbf24; margin-left: 5px; font-size: 0.9rem;"></i>';
-            rowStyle = "background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent);";
-            nameColor = "#fbbf24";
-        } else if (displayedRank === 2) {
-            rankIcon = '<i class="fas fa-medal" style="color: #cbd5e1; margin-left: 5px; font-size: 0.9rem;"></i>';
-            rowStyle = "background: linear-gradient(90deg, rgba(203, 213, 225, 0.07), transparent);";
-            nameColor = "#cbd5e1";
-        } else if (displayedRank === 3) {
-            rankIcon = '<i class="fas fa-medal" style="color: #cd7f32; margin-left: 5px; font-size: 0.9rem;"></i>';
-            rowStyle = "background: linear-gradient(90deg, rgba(205, 127, 50, 0.07), transparent);";
-            nameColor = "#cd7f32";
-        }
+    // Grafické šperkování prvních tří míst
+    if (displayedRank === 1) {
+        rankIcon = '<i class="fas fa-trophy winner-animate" style="color: #fbbf24; margin-left: 8px;"></i>';
+        rowStyle = "background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, transparent 100%); border-left: 4px solid #fbbf24;";
+        nameColor = "#fbbf24";
+        extraLabel = '<span style="display:block; font-size:10px; color:#fbbf24; opacity:0.8; margin-top:-4px">AKTUÁLNÍ LÍDR</span>';
+    } else if (displayedRank === 2) {
+        rankIcon = '<i class="fas fa-medal" style="color: #cbd5e1; margin-left: 8px;"></i>';
+        rowStyle = "background: linear-gradient(90deg, rgba(203, 213, 225, 0.1) 0%, transparent 100%); border-left: 4px solid #cbd5e1;";
+        nameColor = "#cbd5e1";
+    } else if (displayedRank === 3) {
+        rankIcon = '<i class="fas fa-medal" style="color: #cd7f32; margin-left: 8px;"></i>';
+        rowStyle = "background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, transparent 100%); border-left: 4px solid #cd7f32;";
+        nameColor = "#cd7f32";
+    }
 
-        // ID pro toggleDetail používá user_id z databáze
-        const rowId = player.user_id || player.id;
+    const rowId = player.user_id || player.id;
 
-        return `
-            <tr class="player-row" onclick="toggleDetail('det-${rowId}')" style="${rowStyle}">
-                <td style="width:50px; color:#94a3b8; font-size: 0.85rem; white-space: nowrap; padding-left: 10px;">
+    return `
+        <tr class="player-row" onclick="toggleDetail('det-${rowId}')" style="cursor:pointer; ${rowStyle} transition: all 0.2s;">
+            <td style="width:60px; padding-left: 15px; vertical-align: middle;">
+                <span class="rank-pill" style="color: ${nameColor}">
                     ${displayedRank}.${rankIcon}
-                </td>
-                <td style="font-weight:bold; color: ${nameColor}">${player.name || 'Anonym'}</td>
-                <td style="text-align:right; font-weight:bold; color:var(--accent)">${player.points} b.</td>
-            </tr>
-            <tr id="det-${rowId}" class="tip-detail-row" style="display:none">
-                <td colspan="3">
-                    <div class="detail-container">
-                        <span class="detail-section-title">Skupinová fáze</span>
-                        <div class="det-groups-grid">
-                            ${(player.tip.groups||[]).map((g, idx) => `
-                                <div class="det-group-box">
-                                    <b>Sk. ${String.fromCharCode(65+idx)}</b>
-                                    ${g.map((t, p) => {
-                                        let c = '';
-                                        const adminG = r.groups && r.groups[idx];
-                                        const aTeams = (adminG && adminG.teams) ? adminG.teams : adminG;
-                                        if(aTeams && aTeams[p]) {
-                                            c = (String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
-                                        }
-                                        return `<div class="${c}">${p+1}. ${t}</div>`;
-                                    }).join('')}
-                                </div>`).join('')}
+                </span>
+            </td>
+            <td style="padding: 12px 0; vertical-align: middle;">
+                <div style="font-weight:800; color: ${nameColor}; font-size: 1.05rem; letter-spacing: 0.3px;">
+                    ${player.name || 'Anonym'}
+                </div>
+                ${extraLabel}
+            </td>
+            <td style="text-align:right; padding-right: 15px; vertical-align: middle;">
+                <div class="pts-pill">
+                    <span style="font-weight:900; color:var(--accent); font-size: 1.1rem;">${player.points}</span>
+                    <span style="font-size: 0.65rem; color: #64748b; margin-left: 3px; font-weight: bold;">PTS</span>
+                </div>
+            </td>
+        </tr>
+        <tr id="det-${rowId}" class="tip-detail-row" style="display:none; background: #0f172a;">
+            <td colspan="3" style="padding: 0;">
+                <div class="detail-container" style="border-left: 4px solid #1e293b; padding: 20px;">
+                    <span class="detail-section-title" style="color:var(--accent); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Skupinová fáze</span>
+                    <div class="det-groups-grid" style="margin-top: 10px;">
+                        ${(player.tip.groups||[]).map((g, idx) => `
+                            <div class="det-group-box">
+                                <b>Sk. ${String.fromCharCode(65+idx)}</b>
+                                ${g.map((t, p) => {
+                                    let c = '';
+                                    const adminG = r.groups && r.groups[idx];
+                                    const aTeams = (adminG && adminG.teams) ? adminG.teams : adminG;
+                                    if(aTeams && aTeams[p]) {
+                                        c = (String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
+                                    }
+                                    return `<div class="${c}" style="font-size: 0.8rem; padding: 2px 4px; border-radius: 3px; margin: 1px 0;">${p+1}. ${t}</div>`;
+                                }).join('')}
+                            </div>`).join('')}
+                    </div>
+                    
+                    <span class="detail-section-title" style="color:var(--winner); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 20px;">Play-off pavouk</span>
+                    <div class="det-playoff-stages" style="margin-top: 10px;">
+                        <div class="det-stage-column">
+                            <div class="det-stage-card">
+                                <h5>1/16 Finále</h5>
+                                <div class="det-team-list">
+                                    ${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="det-stage-card">
+                                <h5>1/8 Finále</h5>
+                                <div class="det-team-list">
+                                    ${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}
+                                </div>
+                            </div>
                         </div>
-                        <span class="detail-section-title">Play-off pavouk</span>
-                        <div class="det-playoff-stages">
-                            <div class="det-stage-column">
-                                <div class="det-stage-card">
-                                    <h5>1/16 Finále</h5>
-                                    <div class="det-team-list">
-                                        ${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}
-                                    </div>
-                                </div>
-                                <div class="det-stage-card">
-                                    <h5>1/8 Finále</h5>
-                                    <div class="det-team-list">
-                                        ${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}
-                                    </div>
+                        <div class="det-stage-column">
+                            <div class="det-stage-card">
+                                <h5>Čtvrtfinále</h5>
+                                <div class="det-team-list">
+                                    ${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}
                                 </div>
                             </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card">
-                                    <h5>Čtvrtfinále</h5>
-                                    <div class="det-team-list">
-                                        ${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}
-                                    </div>
-                                </div>
-                                <div class="det-stage-card">
-                                    <h5>Semifinále</h5>
-                                    <div class="det-team-list">
-                                        ${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}
-                                    </div>
+                            <div class="det-stage-card">
+                                <h5>Semifinále</h5>
+                                <div class="det-team-list">
+                                    ${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}
                                 </div>
                             </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card" style="border-color:gold">
-                                    <h5>🥇 Vítěz</h5>
-                                    <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}">${player.tip.winner || '--'}</div>
-                                </div>
-                                <div class="det-stage-card" style="border-color:#cd7f32">
-                                    <h5>🥉 3. Místo</h5>
-                                    <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}">${player.tip.bronze || '--'}</div>
-                                </div>
+                        </div>
+                        <div class="det-stage-column">
+                            <div class="det-stage-card" style="border-top: 2px solid gold; background: rgba(251,191,36,0.05);">
+                                <h5 style="color: gold;">🥇 Vítěz</h5>
+                                <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}" style="font-weight: bold; font-size: 0.9rem;">${player.tip.winner || '--'}</div>
+                            </div>
+                            <div class="det-stage-card" style="border-top: 2px solid #cd7f32; margin-top: 10px; background: rgba(205,127,50,0.05);">
+                                <h5 style="color: #cd7f32;">🥉 3. Místo</h5>
+                                <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}" style="font-weight: bold; font-size: 0.9rem;">${player.tip.bronze || '--'}</div>
                             </div>
                         </div>
                     </div>
-                </td>
-            </tr>`;
-    }).join('');
-}
+                </div>
+            </td>
+        </tr>`;
+}).join('');
     function vypocitejZiskaneBody(tipData, adminVysledky) {
     if (!tipData || !adminVysledky || !adminVysledky.playoff) return 0;
     
