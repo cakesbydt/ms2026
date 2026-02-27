@@ -612,6 +612,76 @@
 .btn-logout { background: #ef4444; color: white; margin-top: 10px; }
 .btn-logout:hover { background: #dc2626; }
 
+        .scoring-legend {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.scoring-legend h3 {
+    margin-top: 0;
+    color: var(--accent);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 12px;
+}
+
+.legend-item {
+    background: #1e293b;
+    padding: 12px 8px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid transparent;
+}
+
+.legend-item .label {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.legend-item .value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #f8fafc;
+}
+
+.legend-item small {
+    display: block;
+    font-size: 0.6rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* Zvýraznění pro vítěze a bronz */
+.special-gold {
+    border-color: #fbbf24 !important;
+    background: linear-gradient(180deg, #1e293b 0%, rgba(251, 191, 36, 0.1) 100%);
+}
+.special-gold .value { color: #fbbf24; }
+
+.special-bronze {
+    border-color: #cd7f32 !important;
+    background: linear-gradient(180deg, #1e293b 0%, rgba(205, 127, 50, 0.1) 100%);
+}
+.special-bronze .value { color: #cd7f32; }
+
 .hidden { display: none !important; }
 
 
@@ -677,6 +747,48 @@
 
     <div class="dashboard">
         <aside>
+
+            <div class="scoring-legend">
+    <h3><i class="fas fa-info-circle"></i> Bodování turnaje</h3>
+    <div class="legend-grid">
+        <div class="legend-item">
+            <span class="label">Skupiny</span>
+            <span class="value">+2 b.</span>
+            <small>za přesné pořadí</small>
+        </div>
+        <div class="legend-item">
+            <span class="label">1/16 finále</span>
+            <span class="value">+2 b.</span>
+            <small>za každý tým</small>
+        </div>
+        <div class="legend-item">
+            <span class="label">1/8 finále</span>
+            <span class="value">+3 b.</span>
+            <small>za každý tým</small>
+        </div>
+        <div class="legend-item">
+            <span class="label">Čtvrtfinále</span>
+            <span class="value">+5 b.</span>
+            <small>za každý tým</small>
+        </div>
+        <div class="legend-item">
+            <span class="label">Semifinále</span>
+            <span class="value">+8 b.</span>
+            <small>za každý tým</small>
+        </div>
+        <div class="legend-item special-gold">
+            <span class="label">Vítěz</span>
+            <span class="value">+15 b.</span>
+            <small>přesný tip</small>
+        </div>
+        <div class="legend-item special-bronze">
+            <span class="label">3. místo</span>
+            <span class="value">+10 b.</span>
+            <small>přesný tip</small>
+        </div>
+    </div>
+</div>
+            
             <div class="section-box">
                 <div class="section-header">📊 ŽEBŘÍČEK HRÁČŮ</div>
                 <table id="leaderboard"><tbody id="public-body"></tbody></table>
