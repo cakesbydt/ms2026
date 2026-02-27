@@ -701,6 +701,42 @@
 }
 .special-bronze .value { color: #cd7f32; }
 
+        /* Toto se aplikuje pouze na mobily (do šířky 768px) */
+@media (max-width: 768px) {
+    /* Hlavní kontejner, který drží všechny sekce */
+    .main-wrapper { 
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 1. Vlajky se státy */
+    .flags-banner { order: 1; }
+
+    /* 2. Nadpis MS 2026 Tipovačka */
+    h1, .main-title { order: 2; margin-bottom: 20px; }
+
+    /* 3. Přihlášení (auth sekce) */
+    #auth-section, #logged-in-section { order: 3; margin-bottom: 20px; }
+
+    /* 4. Informace o bodování (Legenda) */
+    .scoring-legend { order: 4; margin-bottom: 20px; }
+
+    /* 5. Žebříček hráčů */
+    .leaderboard-section { order: 5; margin-bottom: 30px; }
+
+    /* 6. Navigace (přepínače skupin, 3. místa) */
+    .admin-nav-tabs { 
+        order: 6; 
+        display: flex;
+        overflow-x: auto; /* Na mobilu se v tom dá listovat prstem */
+        white-space: nowrap;
+        padding-bottom: 10px;
+    }
+
+    /* 7. Samotný výběr týmů (Admin pole) */
+    #admin-form-container { order: 7; }
+}
+
 .hidden { display: none !important; }
 
 
@@ -762,6 +798,21 @@
     <div class="section-content" id="admin-form-container" style="padding:15px; display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:10px;"></div>
     
     <button type="button" class="btn btn-primary" onclick="saveAdminResults()">ULOŽIT VÝSLEDKY</button>
+</div>
+    <div class="main-wrapper">
+    <div class="flags-banner">...vlajky...</div>
+    <h1 class="main-title">MS 2026 tipovačka</h1>
+    
+    <div id="auth-section">...přihlášení...</div>
+    <div id="logged-in-section" class="hidden">...přihlášen...</div>
+    
+    <div class="scoring-legend">...bodování...</div>
+    
+    <div class="leaderboard-section">...tabulka s body...</div>
+    
+    <div class="admin-nav-tabs">...tlačítka...</div>
+    
+    <div id="admin-form-container">...tady se generuje admin...</div>
 </div>
 
     <div class="dashboard">
