@@ -1607,50 +1607,40 @@ async function nactiUzivatelskyTip(userId) {
             console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
             const tip = data.tip_data;
             
-            // Naplníme skupiny
+            // 1. NAPLNĚNÍ SKUPIN
             if (tip.groups) {
                 tip.groups.forEach((tymy, i) => {
-                    if (state.groups[i]) state.groups[i].teams = tymy;
+                    if (state.groups[i]) {
+                        state.groups[i].teams = tymy;
+                        // DŮLEŽITÉ: Označíme skupinu jako hotovou, ať nás to pustí dál
+                        if (tymy && tymy.length > 0) state.groups[i].done = true; 
+                        
+                        // --- CHYBÍ NAM FUNKCE NA PŘEKRESLENÍ SKUPINY ---
+                        // Tady musíme zavolat tvoji funkci, která vizuálně naplní kartičku skupiny.
+                    }
                 });
             }
             
-            // Naplníme 3. místa
-            if (tip.thirds) {
-                state.thirds = tip.thirds;
-            }
-
-            // Naplníme zbytek pavouka
+            // 2. NAPLNĚNÍ 3. MÍST A PAVOUKA
+            if (tip.thirds) state.thirds = tip.thirds;
             if (state.playoff) Object.assign(state.playoff, tip);
 
-            console.log("➡️ [Tip] 3. Data připravena. Zjišťuji, v jaké jsi fázi...");
+            console.log("➡️ [Tip] 3. Data připravena. Generuji HTML pro 3. místa a pavouka...");
             
-            // ROZHODNUTÍ: Má uživatel hotová 3. místa?
+            // 3. SIMULACE PRŮCHODU WEBPEM (aby se vygenerovalo HTML)
             if (state.thirds && state.thirds.length === 8) {
-                console.log("✅ [Tip] Tip je kompletní. Přepínám rovnou do pavouka.");
                 
-                // Skryjeme skupiny a 3. místa
-                const groupsDiv = document.getElementById('phase-groups');
-                if (groupsDiv) groupsDiv.classList.add('hidden');
+                // Vygeneruje HTML pro 3. místa a označí vybrané týmy
+                if (typeof confirmAllGroups === "function") confirmAllGroups();
                 
-                const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
-                if (thirdsDiv) thirdsDiv.classList.add('hidden');
-
-                // Zobrazíme pavouka
-                const playoffCont = document.getElementById('playoff-container');
-                if (playoffCont) playoffCont.classList.remove('hidden');
-
-                // Poskládáme pavouka
-                if (typeof prepareS32 === "function") {
-                    prepareS32(state.thirds);
-                }
+                // Vygeneruje HTML pro pavouka a schová předchozí fáze
+                if (typeof confirmThirds === "function") confirmThirds();
+                
+                console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované.");
             } else {
-                console.warn("⚠️ [Tip] Tip NENÍ kompletní (chybí 8 týmů ze 3. míst).");
-                // TADY JE TA OPRAVA: Neschováváme skupiny a NEVOLÁME confirmThirds()!
-                // Web zůstane normálně na začátku, abys mohl tip doklikat.
+                console.log("ℹ️ [Tip] Tip není kompletní, nechávám tě na skupinách.");
             }
 
-        } else {
-            console.log("ℹ️ [Tip] V databázi zatím nemáš žádný uložený tip.");
         }
     } catch (err) {
         console.error("🛑 [Tip] Kritická chyba při načítání tipu:", err);
