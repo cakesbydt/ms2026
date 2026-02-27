@@ -63,13 +63,14 @@
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
 
-        #admin-form-container {
+       #admin-form-container {
+    /* Nastavíme minimální výšku, aby se stránka při překreslení nezhroutila */
+    min-height: 1200px; 
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 15px;
-    /* TOTO JE DŮLEŽITÉ: */
-    min-height: 100vh; 
-    contain: paint; /* Zabrání prohlížeči v přepořádávání celé stránky */
+    /* Zabráníme prohlížeči v optimalizacích, které způsobují skákání */
+    overflow-anchor: none; 
 }
 
 /* --- 2. EFEKTY PRO TOP 3 (Prémiový vzhled) --- */
@@ -1632,19 +1633,18 @@ function cfS(sid, count) {
     }
 }
    function genAdminForm() {
-    // 1. ZÍSKÁNÍ AKTUÁLNÍ POZICE (X i Y)
-    // Používáme širší záběr, aby to fungovalo ve všech prohlížečích
+    // 1. Zachycení pozice skrolu (včetně podpory starších prohlížečů)
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
 
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // Inicializace HTML proměnné (Atomický zápis)
+    // Příprava obsahu bokem (Atomic Update)
     let finalHTML = ''; 
     const res = window.currentResults || {};
 
-    // 2. GENEROVÁNÍ SKUPIN (A-L)
+    // 2. Generování skupin (A-L)
     state.groups.forEach((g, i) => {
         let h = `<div style="background:#0f172a;padding:10px;border-radius:8px;border:1px solid #1e293b">
                     <b style="color:var(--accent)">Skupina ${g.id}</b>`;
@@ -1653,15 +1653,13 @@ function cfS(sid, count) {
             const saved = res.groups?.[i]?.[p] || "";
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
-                    ${GROUP_TEAMS_STATIC[i].map(t => `
-                        <option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>
-                    `).join('')}
+                    ${GROUP_TEAMS_STATIC[i].map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
     });
 
-    // 3. GENEROVÁNÍ PLAYOFF (s32, s16, s8, s4)
+    // 3. Generování playoff (s32 - s4)
     const stages = [
         {id:'s32', n:'1/16 finále', c:16}, 
         {id:'s16', n:'1/8 finále', c:8}, 
@@ -1677,15 +1675,13 @@ function cfS(sid, count) {
             const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- vybrat --</option>
-                    ${teamsData.map(t => `
-                        <option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>
-                    `).join('')}
+                    ${teamsData.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
     });
 
-    // 4. VÍTĚZ A BRONZ
+    // 4. Vítěz a Bronz
     const winSaved = res.winner || res.playoff?.winner || "";
     const broSaved = res.bronze || res.playoff?.bronze || "";
 
@@ -1703,10 +1699,10 @@ function cfS(sid, count) {
             </select>
         </div>`;
 
-    // 5. JEDEN ZÁPIS DO DOM (Stránka se scvrkne a hned zase roztáhne)
+    // 5. Jeden zápis do DOM (Klíč k plynulosti)
     cont.innerHTML = finalHTML;
 
-    // 6. NEPRŮSTŘELNÝ FIX SKROLU (Zavolá se hned po vykreslení)
+    // 6. Návrat skrolu po vykreslení
     requestAnimationFrame(() => {
         window.scrollTo({
             top: scrollY,
