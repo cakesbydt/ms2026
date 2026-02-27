@@ -62,28 +62,36 @@
     .det-stage-card { background: #161e2e; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
-    .det-team-tag {
+    /* Základní styl pro tagy týmů v detailu */
+.det-team-tag {
     display: inline-block;
+    padding: 3px 8px;
     margin: 2px;
-    padding: 4px 8px;
-    background: #1e293b;
-    border-radius: 6px;
-    border: 1px solid #334155;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    border: 1px solid transparent;
+    transition: all 0.2s;
 }
     
-    .status-correct {
-    background-color: #059669 !important; /* Sytě zelená */
+   /* Zelená - trefa */
+.status-correct {
+    background-color: #059669 !important; 
     color: white !important;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: bold;
+    border-color: #059669 !important;
 }
-    .status-wrong {
-    background-color: #dc2626 !important; /* Sytě červená */
+    /* Červená - chyba */
+.status-wrong {
+    background-color: #dc2626 !important;
     color: white !important;
-    padding: 2px 6px;
-    border-radius: 4px;
-    opacity: 0.8;
+    border-color: #dc2626 !important;
+    opacity: 0.7; /* Trochu ztlumíme chyby, aby netloukly do očí */
+}
+
+        /* Šedá - čeká se na vyhodnocení (TOTO JSME PŘIDALI) */
+.status-pending {
+    background-color: #334155 !important; /* Břidlicově šedá */
+    color: #94a3b8 !important; /* Světle šedé písmo */
+    border-color: #475569 !important;
 }
 
     /* --- PRAVÝ SLOUPEC FORMULÁŘ --- */
