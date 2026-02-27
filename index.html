@@ -1476,13 +1476,35 @@ async function nacistAdminVysledky() {
 }
 
     async function saveAdminResults() {
-        let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: document.getElementById('a-win').value, bronze: document.getElementById('a-bro').value };
-        for(let i=0; i<12; i++) { let g = []; for(let p=0; p<4; p++) g.push(document.getElementById(`a-g-${i}-${p}`).value); res.groups.push(g); }
-        const col = (id, c) => { let a = []; for(let j=0; j<c; j++) { let v = document.getElementById(`a-${id}-${j}`).value; if(v) a.push(v); } return a; };
-        res.s32 = col('s32', 16); res.s16 = col('s16', 8); res.s8 = col('s8', 4); res.s4 = col('s4', 4);
-        await supabaseClient.from('nastaveni').upsert({ id: 1, vysledky: res });
-        location.reload();
+    // 1. Vyčistíme data ze state, aby v DB nebyl "nepořádek"
+    // Místo objektů {id, teams, done} pošleme jen pole polí jmen
+    const cleanGroups = state.groups.map(g => g.teams); 
+
+    // 2. Připravíme balíček pro Supabase přesně podle tvých nových sloupců
+    const adminData = {
+        groups: cleanGroups,            // [["Česko", "Slovensko"...], ["Anglie"...]]
+        s32: state.playoff.s32 || [],    // ["Tým 1", "Tým 2"...]
+        s16: state.playoff.s16 || [],
+        s8:  state.playoff.s8 || [],
+        s4:  state.playoff.s4 || [],
+        bronze: state.playoff.bronze || "",
+        winner: state.playoff.winner || ""
+    };
+
+    try {
+        const { error } = await supabaseClient
+            .from('admin_vysledky')
+            .upsert({ 
+                id: 1, 
+                ...adminData // Tady se to rozprostře do tvých sloupců s32, s16, groups...
+            });
+
+        if (error) throw error;
+        alert("✅ Výsledky uloženy čistě a správně!");
+    } catch (err) {
+        console.error("Chyba při ukládání admin dat:", err);
     }
+}
 
   async function saveToSupabase() {
     // 1. KONTROLA PŘIHLÁŠENÍ
