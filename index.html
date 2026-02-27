@@ -1612,11 +1612,22 @@ async function nactiUzivatelskyTip(userId) {
                 tip.groups.forEach((tymy, i) => {
                     if (state.groups[i]) {
                         state.groups[i].teams = tymy;
-                        // DŮLEŽITÉ: Označíme skupinu jako hotovou, ať nás to pustí dál
-                        if (tymy && tymy.length > 0) state.groups[i].done = true; 
                         
-                        // --- CHYBÍ NAM FUNKCE NA PŘEKRESLENÍ SKUPINY ---
-                        // Tady musíme zavolat tvoji funkci, která vizuálně naplní kartičku skupiny.
+                        // DŮLEŽITÉ: Označíme skupinu jako hotovou, ať nás to pustí dál
+                        if (tymy && tymy.length > 0) {
+                            state.groups[i].done = true; 
+                            
+                            // VIZUÁLNÍ PŘEKRESLENÍ KARTIČKY SKUPINY (TEČKY)
+                            const dot = document.getElementById('dot-' + state.groups[i].id);
+                            if (dot) {
+                                dot.classList.add('completed');
+                                dot.innerHTML = `
+                                    <span style="font-size: 0.6rem; opacity: 0.7;">Skupina ${state.groups[i].id}</span><br>
+                                    <b style="font-size: 0.8rem;">1. ${tymy[0] || '?'}</b><br>
+                                    <b style="font-size: 0.8rem;">2. ${tymy[1] || '?'}</b>
+                                `;
+                            }
+                        }
                     }
                 });
             }
