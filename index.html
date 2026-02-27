@@ -1399,57 +1399,7 @@ window.addEventListener('DOMContentLoaded', nacistAdminVysledky);
         showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
     }
 }
-// FUNKCE PRO NAČTENÍ A VYKRESLENÍ TVÉHO PAVOUKA
-async function nactiUzivatelskyTip(userId) {
-    console.log("➡️ [Tip] 1. Začínám stahovat tvůj tip pro pavouka...");
-    
-    try {
-        const { data, error } = await supabaseClient
-            .from('tipy')
-            .select('tip_data')
-            .eq('user_id', userId)
-            .maybeSingle();
 
-        if (error) throw error;
-
-        if (data && data.tip_data) {
-            console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
-            const tip = data.tip_data;
-            
-            // 1. Naplníme stav (skupiny, thirds, playoff) z uložených dat
-            if (tip.groups) {
-                tip.groups.forEach((tymy, i) => {
-                    if (state.groups[i]) state.groups[i].teams = tymy;
-                });
-            }
-            if (tip.thirds) state.thirds = tip.thirds;
-            if (state.playoff) Object.assign(state.playoff, tip);
-
-            console.log("➡️ [Tip] 3. Data připravena. Jdu přepnout web do stavu pavouka...");
-            
-            // 2. MAGIE: Rovnou spustíme tvoji funkci, která ukazuje pavouka
-            if (typeof confirmThirds === "function") {
-                // Skryjeme předchozí fáze (skupiny, 3. místa), abychom skočili rovnou do pavouka
-                const groupsDiv = document.getElementById('phase-groups');
-                if(groupsDiv) groupsDiv.classList.add('hidden');
-                
-                const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
-                if(thirdsDiv) thirdsDiv.classList.add('hidden');
-
-                // Zavoláme tvoji originální funkci, která pavouka vykreslí
-                confirmThirds(); 
-            } else {
-                console.warn("⚠️ [Tip] POZOR: Funkce confirmThirds() nenalezena!");
-            }
-
-            console.log("✅ [Tip] 4. HOTOVO! Týmy by měly být v pavouku.");
-        } else {
-            console.log("ℹ️ [Tip] V databázi zatím nemáš žádný uložený tip.");
-        }
-    } catch (err) {
-        console.error("🛑 [Tip] Kritická chyba při načítání tipu:", err);
-    }
-}
     
     // Pomocné funkce pro ovládání okna
 function showCustomAlert(title, message) {
