@@ -1877,7 +1877,7 @@ async function nacistAdminVysledky() {
     }
 }
 
-  async function saveToSupabase() {
+ async function saveToSupabase() {
     // 1. KONTROLA PŘIHLÁŠENÍ
     const { data: sessionData } = await supabaseClient.auth.getSession();
     const session = sessionData?.session;
@@ -1890,12 +1890,12 @@ async function nacistAdminVysledky() {
 
     // 2. KONTROLA JMÉNA
     const name = document.getElementById('user-name').value;
-    if(!name) return showCustomAlert("Chyba", "Zadej své jméno, ať víme, jak ti říkat v žebříčku!");
+    if (!name) return showCustomAlert("Chyba", "Zadej své jméno, ať víme, jak ti říkat v žebříčku!");
 
-    // 3. SESTAVENÍ DAT: Přidali jsme třetí místa!
+    // 3. SESTAVENÍ DAT
     const tipData = { 
         groups: state.groups.map(g => g.teams), 
-        thirds: state.thirds, // <--- TADY JE TA OPRAVA! Konečně se to uloží.
+        thirds: state.thirds, 
         s32: state.playoff.s32, 
         s16: state.playoff.s16, 
         s8: state.playoff.s8, 
@@ -1905,38 +1905,36 @@ async function nacistAdminVysledky() {
     };
 
     try {
-       // --- 4. ODESLÁNÍ (UPSERT) ---
-const { error } = await supabaseClient
-    .from('tipy') // Vidím, že tvoje tabulka se jmenuje 'tipy'
-    .upsert(
-        { 
-            user_id: userId,
-            name: name,      
-            tip_data: tipData 
-        }, 
-        { onConflict: 'user_id' }
-    );
+        // 4. ODESLÁNÍ (UPSERT)
+        const { error } = await supabaseClient
+            .from('tipy')
+            .upsert(
+                { 
+                    user_id: userId,
+                    name: name,      
+                    tip_data: tipData 
+                }, 
+                { onConflict: 'user_id' }
+            );
 
-if (error) throw error;
+        if (error) throw error;
 
-// --- NOVÁ ČÁST: OKAMŽITÁ AKTUALIZACE JMÉNA V HLAVIČCE ---
-const userDisplay = document.getElementById('user-email-display');
-if (userDisplay && name) {
-    // Vezmeme jen první část (email) pro případ, že už tam nějaké jméno bylo
-    const email = userDisplay.innerText.split(' ')[0]; 
-    userDisplay.innerText = `${email} (${name})`;
-}
-// -------------------------------------------------------
+        // --- NOVÁ ČÁST: AKTUALIZACE JMÉNA V HLAVIČCE ---
+        const userDisplay = document.getElementById('user-email-display');
+        if (userDisplay && name) {
+            const email = userDisplay.innerText.split(' ')[0]; 
+            userDisplay.innerText = `${email} (${name})`;
+        }
 
-showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze. Můžeš ho kdykoliv do začátku turnaje upravit.");
+        showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze. Můžeš ho kdykoliv do začátku turnaje upravit.");
 
-// Doporučuji zavolat loadAll(), aby se nové jméno projevilo i v žebříčku pod tabulkou
-if (typeof loadAll === 'function') await loadAll(); 
+        if (typeof loadAll === 'function') await loadAll(); 
 
-} catch (error) {
-    console.error("Supabase chyba:", error);
-    showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
-}
+    } catch (error) {
+        console.error("Supabase chyba:", error);
+        showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
+    }
+} // <--- TATO ZÁVORKA TI TAM CHYBĚLA
     
     // Pomocné funkce pro ovládání okna
 function showCustomAlert(title, message) {
