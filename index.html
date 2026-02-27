@@ -1350,24 +1350,24 @@ window.addEventListener('DOMContentLoaded', nacistAdminVysledky);
     }
 
   async function saveToSupabase() {
-    // 1. KONTROLA PŘIHLÁŠENÍ: Zjistíme, jestli má uživatel účet a je přihlášen
+    // 1. KONTROLA PŘIHLÁŠENÍ
     const { data: sessionData } = await supabaseClient.auth.getSession();
     const session = sessionData?.session;
 
     if (!session) {
-        // Místo uložení vyhodíme tvůj hezký alert
         return showCustomAlert("Pozor!", "Nejdřív se musíš přihlásit nebo vytvořit účet, abychom ti mohli tipy uložit k tvému jménu.");
     }
 
-    const userId = session.user.id; // Unikátní ID z účtu
+    const userId = session.user.id;
 
-    // 2. KONTROLA JMÉNA: Necháme to tak, jak to máš, pro přehlednost v adminu
+    // 2. KONTROLA JMÉNA
     const name = document.getElementById('user-name').value;
     if(!name) return showCustomAlert("Chyba", "Zadej své jméno, ať víme, jak ti říkat v žebříčku!");
 
-    // 3. SESTAVENÍ DAT: Přesně tvoje struktura pro kompletního pavouka a skupiny
+    // 3. SESTAVENÍ DAT: Přidali jsme třetí místa!
     const tipData = { 
         groups: state.groups.map(g => g.teams), 
+        thirds: state.thirds, // <--- TADY JE TA OPRAVA! Konečně se to uloží.
         s32: state.playoff.s32, 
         s16: state.playoff.s16, 
         s8: state.playoff.s8, 
@@ -1377,21 +1377,20 @@ window.addEventListener('DOMContentLoaded', nacistAdminVysledky);
     };
 
     try {
-        // 4. ODESLÁNÍ (UPSERT): Vložíme nebo přepíšeme, pokud už pod tímto účtem tip existuje
+        // 4. ODESLÁNÍ (UPSERT)
         const { error } = await supabaseClient
-            .from('tipy') // Tvoje tabulka se jmenuje 'tipy'
+            .from('tipy')
             .upsert(
                 { 
-                    user_id: userId, // Tohle spáruje tip s účtem (musíš mít tento sloupec v Supabase jako UNIQUE)
+                    user_id: userId,
                     name: name,      
                     tip_data: tipData 
                 }, 
-                { onConflict: 'user_id' } // Pravidlo: Pokud user_id existuje, data jen aktualizuj
+                { onConflict: 'user_id' }
             );
 
         if (error) throw error;
         
-        // Místo alert() zavoláme tvé okno
         showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze. Můžeš ho kdykoliv do začátku turnaje upravit.");
         
     } catch (error) {
