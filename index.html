@@ -654,12 +654,35 @@ let state = {
         await loadAll();
     }
 
-    async function loadAll() {
-        const { data: n } = await supabaseClient.from('nastaveni').select('vysledky').eq('id', 1).maybeSingle();
-        if(n && n.vysledky) currentResults = n.vysledky;
-        const { data: t } = await supabaseClient.from('tipy').select('*');
-        renderLeaderboard(t || [], currentResults);
-    }
+   async function loadAll() {
+    console.log("➡️ [loadAll] Začínám stahovat nastavení z DB...");
+    
+    // 1. Stahujeme nastavení (výsledky turnaje)
+    const { data: n, error: errN } = await supabaseClient
+        .from('nastaveni')
+        .select('vysledky')
+        .eq('id', 1)
+        .maybeSingle();
+
+    if (errN) console.error("❌ [loadAll] Chyba při čtení nastavení:", errN);
+    if (n && n.vysledky) currentResults = n.vysledky;
+
+    console.log("➡️ [loadAll] Nastavení staženo, jdu na tipy...");
+
+    // 2. Stahujeme všechny tipy hráčů
+    const { data: t, error: errT } = await supabaseClient
+        .from('tipy')
+        .select('*');
+
+    if (errT) console.error("❌ [loadAll] Chyba při čtení tipů:", errT);
+
+    console.log("➡️ [loadAll] Tipy staženy, jdu kreslit tabulku...");
+
+    // 3. Vykreslení
+    renderLeaderboard(t || [], currentResults);
+    
+    console.log("➡️ [loadAll] HOTOVO! Tabulka by měla být vidět.");
+}
 
     function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
