@@ -1905,28 +1905,38 @@ async function nacistAdminVysledky() {
     };
 
     try {
-        // 4. ODESLÁNÍ (UPSERT)
-        const { error } = await supabaseClient
-            .from('tipy')
-            .upsert(
-                { 
-                    user_id: userId,
-                    name: name,      
-                    tip_data: tipData 
-                }, 
-                { onConflict: 'user_id' }
-            );
+       // --- 4. ODESLÁNÍ (UPSERT) ---
+const { error } = await supabaseClient
+    .from('tipy') // Vidím, že tvoje tabulka se jmenuje 'tipy'
+    .upsert(
+        { 
+            user_id: userId,
+            name: name,      
+            tip_data: tipData 
+        }, 
+        { onConflict: 'user_id' }
+    );
 
-        if (error) throw error;
-        
-        showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze. Můžeš ho kdykoliv do začátku turnaje upravit.");
-        
-    } catch (error) {
-        console.error("Supabase chyba:", error);
-        showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
-    }
+if (error) throw error;
+
+// --- NOVÁ ČÁST: OKAMŽITÁ AKTUALIZACE JMÉNA V HLAVIČCE ---
+const userDisplay = document.getElementById('user-email-display');
+if (userDisplay && name) {
+    // Vezmeme jen první část (email) pro případ, že už tam nějaké jméno bylo
+    const email = userDisplay.innerText.split(' ')[0]; 
+    userDisplay.innerText = `${email} (${name})`;
 }
+// -------------------------------------------------------
 
+showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze. Můžeš ho kdykoliv do začátku turnaje upravit.");
+
+// Doporučuji zavolat loadAll(), aby se nové jméno projevilo i v žebříčku pod tabulkou
+if (typeof loadAll === 'function') await loadAll(); 
+
+} catch (error) {
+    console.error("Supabase chyba:", error);
+    showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
+}
     
     // Pomocné funkce pro ovládání okna
 function showCustomAlert(title, message) {
@@ -2096,9 +2106,7 @@ async function logoutUser() {
     checkUserSession(); 
 }
 
-// --- 4. KONTROLA STAVU (Mění vzhled, když jsi přihlášen) ---
 async function checkUserSession() {
-    // I tady používáme tvůj supabaseClient
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     const authSection = document.getElementById('auth-section');
@@ -2106,12 +2114,25 @@ async function checkUserSession() {
     const userDisplay = document.getElementById('user-email-display');
 
     if (session) {
-        // Uživatel JE přihlášený
+        // 1. Zjistíme, jestli uživatel už má v databázi uložené jméno
+        const { data: tipData } = await supabaseClient
+            .from('tips')
+            .select('name')
+            .eq('user_id', session.user.id)
+            .maybeSingle(); // Vrátí data, nebo null, pokud záznam neexistuje
+
+        // Pokud jméno existuje, připravíme ho do závorky
+        const nameSuffix = (tipData && tipData.name) ? ` (${tipData.name})` : "";
+
+        // 2. Nastavíme vzhled pro přihlášeného
         if (authSection) authSection.classList.add('hidden');
         if (loggedInSection) loggedInSection.classList.remove('hidden');
-        if (userDisplay) userDisplay.innerText = session.user.email;
+        
+        // Vypíšeme email a k němu (pokud existuje) i jméno
+        if (userDisplay) {
+            userDisplay.innerText = session.user.email + nameSuffix;
+        }
     } else {
-        // Uživatel NENÍ přihlášený
         if (authSection) authSection.classList.remove('hidden');
         if (loggedInSection) loggedInSection.classList.add('hidden');
     }
