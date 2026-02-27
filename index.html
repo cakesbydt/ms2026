@@ -1660,6 +1660,57 @@ async function nactiUzivatelskyTip(userId) {
     }
 }
 
+    // FUNKCE PRO NAČTENÍ A VYKRESLENÍ TVÉHO PAVOUKA
+async function nactiUzivatelskyTip(userId) {
+    console.log("➡️ [Tip] 1. Začínám stahovat tvůj tip pro pavouka...");
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('tipy')
+            .select('tip_data')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (data && data.tip_data) {
+            console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
+            const tip = data.tip_data;
+            
+            // Naplníme skupiny
+            if (tip.groups) {
+                tip.groups.forEach((tymy, i) => {
+                    if (state.groups[i]) state.groups[i].teams = tymy;
+                });
+            }
+            
+            // Naplníme zbytek pavouka
+            if (state.playoff) Object.assign(state.playoff, tip);
+
+            console.log("➡️ [Tip] 3. Data jsou připravena, jdu kreslit HTML karty...");
+            
+            // TADY JE BOD ZLOMU - Zkoušíme zavolat tvé funkce na kreslení
+            if (typeof renderGroups === "function") {
+                renderGroups();
+            } else {
+                console.warn("⚠️ [Tip] POZOR: Funkce renderGroups() u tebe neexistuje! Jak se jmenuje?");
+            }
+
+            if (typeof renderPlayoff === "function") {
+                renderPlayoff();
+            } else {
+                console.warn("⚠️ [Tip] POZOR: Funkce renderPlayoff() u tebe neexistuje! Jak se jmenuje?");
+            }
+
+            console.log("✅ [Tip] 4. HOTOVO! Týmy by měly být v kartičkách.");
+        } else {
+            console.log("ℹ️ [Tip] V databázi zatím nemáš žádný uložený tip. Pavouk zůstane prázdný.");
+        }
+    } catch (err) {
+        console.error("🛑 [Tip] Kritická chyba při načítání tipu:", err);
+    }
+}
+
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log("🔔 AUTH EVENT:", event);
 
