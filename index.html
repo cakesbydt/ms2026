@@ -684,80 +684,73 @@ async function loadAll() {
 
 function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
+    if (!body) return;
     
-    // POJISTKA: Pokud jako 'real' omylem přijde 'state', vezmeme si z něj ty správné výsledky
-    // Pokud real.playoff existuje, jsme v režimu 'state', jinak bereme 'real' jako admin data
+    // POJISTKA: Sjednocení struktury (vždy chceme plochý objekt pro porovnávání)
     const r = real.playoff ? { ...real.playoff, groups: real.groups } : real;
 
     const processed = data.map(row => {
         const tip = typeof row.tip_data === 'string' ? JSON.parse(row.tip_data) : row.tip_data;
         let pts = 0;
 
-        // --- BODOVÁNÍ SKUPIN (Všechny 4 pozice) ---
+        // --- 1. BODOVÁNÍ SKUPIN ---
         if (r.groups && tip.groups) {
             r.groups.forEach((adminG, i) => {
                 const tipG = tip.groups[i] || [];
-                // Musíme zjistit, jestli admin data jsou pole jmen nebo objekty
                 const adminTeams = adminG.teams ? adminG.teams : adminG;
-
                 if (Array.isArray(adminTeams)) {
                     adminTeams.forEach((team, pos) => {
-                        // Porovnáme jméno týmu na přesné pozici (1. až 4.)
-                        if (team && tipG[pos] === team) {
-                            pts += 2; // 2 body za každou trefenou pozici
+                        // Trim pro jistotu, kdyby se v DB vloudila mezera
+                        if (team && tipG[pos] && team.trim() === tipG[pos].trim()) {
+                            pts += 2;
                         }
                     });
                 }
             });
         }
 
-        // --- BODOVÁNÍ PLAYOFF ---
-        // Srovnáváme tipy proti admin datům (s32, s16, s8, s4)
+        // --- 2. BODOVÁNÍ PLAYOFF ---
         const check = (stage, points) => { 
             const realTeams = r[stage] || [];
             const tipTeams = tip[stage] || [];
-            if (Array.isArray(realTeams) && realTeams.length > 0) {
+            if (Array.isArray(realTeams)) {
                 realTeams.forEach(t => {
-                    if (t && tipTeams.includes(t)) pts += points;
+                    if (t && tipTeams.some(tt => tt && tt.trim() === t.trim())) {
+                        pts += points;
+                    }
                 });
             }
         };
 
         check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
 
-        // Vítěz a Bronz
-        if (r.winner && tip.winner === r.winner) pts += 15;
-        if (r.bronze && tip.bronze === r.bronze) pts += 10;
+        // --- 3. VÍTĚZ A BRONZ ---
+        if (r.winner && tip.winner && r.winner.trim() === tip.winner.trim()) pts += 15;
+        if (r.bronze && tip.bronze && r.bronze.trim() === tip.bronze.trim()) pts += 10;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
-    // ... (zbytek tvé funkce pro vykreslení HTML zůstává stejný)
-
-    // ... zbytek funkce (getStatusClass a renderování HTML) zůstává stejný ...
-    // Pomocná funkce pro individuální barvení týmů
+    // Pomocná funkce pro barvení týmů (používá sjednocená data 'r')
     const getStatusClass = (stageId, teamName, stageCount) => {
-        if (!real[stageId] || real[stageId].length === 0) return ''; 
-        if (real[stageId].includes(teamName)) return 'status-correct';
-        // Zčervená jen když je v adminu dané kolo už kompletně vyplněné
-        if (real[stageId].length >= stageCount) return 'status-wrong';
+        const adminStage = r[stageId] || [];
+        if (!teamName || adminStage.length === 0) return ''; 
+        if (adminStage.some(t => t && t.trim() === teamName.trim())) return 'status-correct';
+        if (adminStage.length >= stageCount) return 'status-wrong';
         return '';
     };
 
-    // --- PŘIDÁNO: Proměnné pro hlídání shody bodů ---
     let currentRank = 0;
     let lastPoints = -1;
     let displayedRank = 0;
 
-    body.innerHTML = processed.map((r, i) => {
-        // --- LOGIKA PRO SHODU BODŮ ---
-        if (r.points !== lastPoints) {
+    body.innerHTML = processed.map((player, i) => {
+        if (player.points !== lastPoints) {
             currentRank = i + 1;
             displayedRank = currentRank;
         }
-        lastPoints = r.points;
+        lastPoints = player.points;
 
-        // Logika pro ikony a barvy dle zobrazeného pořadí
         let rankIcon = ""; 
         let rowStyle = "";
         let nameColor = "inherit";
@@ -777,25 +770,26 @@ function renderLeaderboard(data, real) {
         }
 
         return `
-            <tr class="player-row" onclick="toggleDetail('det-${r.id}')" style="${rowStyle}">
+            <tr class="player-row" onclick="toggleDetail('det-${player.user_id}')" style="${rowStyle}">
                 <td style="width:50px; color:#94a3b8; font-size: 0.85rem; white-space: nowrap; padding-left: 10px;">
                     ${displayedRank}.${rankIcon}
                 </td>
-                <td style="font-weight:bold; color: ${nameColor}">${r.name}</td>
-                <td style="text-align:right; font-weight:bold; color:var(--accent)">${r.points} b.</td>
+                <td style="font-weight:bold; color: ${nameColor}">${player.name || 'Anonym'}</td>
+                <td style="text-align:right; font-weight:bold; color:var(--accent)">${player.points} b.</td>
             </tr>
-            <tr id="det-${r.id}" class="tip-detail-row">
+            <tr id="det-${player.user_id}" class="tip-detail-row" style="display:none">
                 <td colspan="3">
                     <div class="detail-container">
                         <span class="detail-section-title">Skupinová fáze</span>
                         <div class="det-groups-grid">
-                            ${(r.tip.groups||[]).map((g, idx) => `
+                            ${(player.tip.groups||[]).map((g, idx) => `
                                 <div class="det-group-box">
                                     <b>Sk. ${String.fromCharCode(65+idx)}</b>
                                     ${g.map((t, p) => {
                                         let c = '';
-                                        if(real.groups && real.groups[idx] && real.groups[idx][p]) {
-                                            c = real.groups[idx][p] === t ? 'status-correct' : 'status-wrong';
+                                        const aG = r.groups && (r.groups[idx]?.teams || r.groups[idx]);
+                                        if(aG && aG[p]) {
+                                            c = (aG[p].trim() === t.trim()) ? 'status-correct' : 'status-wrong';
                                         }
                                         return `<div class="${c}">${p+1}. ${t}</div>`;
                                     }).join('')}
@@ -807,46 +801,13 @@ function renderLeaderboard(data, real) {
                                 <div class="det-stage-card">
                                     <h5>1/16 Finále</h5>
                                     <div class="det-team-list">
-                                        ${(r.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}
+                                        ${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}
                                     </div>
                                 </div>
                                 <div class="det-stage-card">
                                     <h5>1/8 Finále</h5>
                                     <div class="det-team-list">
-                                        ${(r.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card">
-                                    <h5>Čtvrtfinále</h5>
-                                    <div class="det-team-list">
-                                        ${(r.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}
-                                    </div>
-                                </div>
-                                <div class="det-stage-card">
-                                    <h5>Semifinále</h5>
-                                    <div class="det-team-list">
-                                        ${(r.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card" style="border-color:gold">
-                                    <h5>🥇 Vítěz</h5>
-                                    <div class="det-team-tag ${real.winner ? (real.winner===r.tip.winner?'status-correct':'status-wrong') : ''}">${r.tip.winner}</div>
-                                </div>
-                                <div class="det-stage-card" style="border-color:#cd7f32">
-                                    <h5>🥉 3. Místo</h5>
-                                    <div class="det-team-tag ${real.bronze ? (real.bronze===r.tip.bronze?'status-correct':'status-wrong') : ''}">${r.tip.bronze}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-            </tr>`;
-    }).join('');
-}
+                                        ${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>
 
     function vypocitejZiskaneBody(tipData, adminVysledky) {
     if (!tipData || !adminVysledky || !adminVysledky.playoff) return 0;
