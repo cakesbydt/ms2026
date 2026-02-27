@@ -820,21 +820,21 @@ let state = {
     }
 
    function goBack(currentId, prevId, prevDot) {
-    // 1. Skryje aktuální sekci (např. pavouka)
+    // 1. Skryje aktuální sekci (např. 'sec-s32')
     const current = document.getElementById(currentId);
     if (current) current.classList.add('hidden');
 
-    // 2. Ukáže předchozí sekci (např. 3. místa)
+    // 2. Ukáže předchozí sekci (např. 'phase-thirds')
+    // Poznámka: Pokud máš ID 'phase-thirds', musí tam být tento název
     const prev = document.getElementById(prevId);
     if (prev) prev.classList.remove('hidden');
 
     // --- TADY JE TA OPRAVA ---
-    // 3. Řekne hornímu panelu, aby se přebarvil na předchozí tečku
+    // 3. Aktualizuje barvu v horním panelu podle prevDot
     if (prevDot && typeof updateStepper === "function") {
         updateStepper(prevDot);
     }
 }
-
    function editGroup(id) { 
     document.getElementById('group-editor').classList.remove('hidden'); 
     document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; 
@@ -1137,7 +1137,10 @@ function confirmThirds() {
         getT('K', 0), vybrane3[7], // Z87 (1K vs 3DEIJL)
     ];
 
-    genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');
+    /*genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');*/
+     // Původní: genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s32');
+// Opravené:
+genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s2');
 }
   // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
 function genStage(title, teams, count, id, prevPhase, prevDot) {
