@@ -1626,22 +1626,7 @@ async function checkUserSession() {
     }
 }
 
-// FINÁLNÍ FUNKCE PRO NAČTENÍ A VYKRESLENÍ TVÉHO PAVOUKA
-async function nactiUzivatelskyTip(userId) {
-    console.log("➡️ [Tip] 1. Začínám stahovat tvůj tip pro pavouka...");
-    
-    try {
-        const { data, error } = await supabaseClient
-            .from('tipy')
-            .select('tip_data')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-        if (error) throw error;
-
-        if (data && data.tip_data) {
-            console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
-            const tip = data.tip_data;
+async function nactiUzivatelskyTip
             
             // 1. NAPLNĚNÍ A PŘEKRESLENÍ SKUPIN
             if (tip.groups) {
