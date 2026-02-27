@@ -648,11 +648,13 @@ let state = {
 };
     let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
 
-    async function init() {
-        const grid = document.getElementById('groups-grid');
-        state.groups.forEach(g => { grid.innerHTML += `<div class="group-card" id="dot-${g.id}" onclick="editGroup('${g.id}')">${g.id}</div>`; });
-        await loadAll();
-    }
+   async function init() {
+    const grid = document.getElementById('groups-grid');
+    state.groups.forEach(g => { 
+        grid.innerHTML += `<div class="group-card" id="dot-${g.id}" onclick="editGroup('${g.id}')">${g.id}</div>`; 
+    });
+    // TADY JSEM SMAZAL: await loadAll(); 
+}
 
    async function loadAll() {
     console.log("➡️ [loadAll] Začínám stahovat nastavení z DB...");
