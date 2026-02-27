@@ -1638,23 +1638,42 @@ async function nactiUzivatelskyTip(userId) {
     }
 }
 
-// 2. Samotný hlídač
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    console.log("🔔 AUTH:", event);
-    
-    // Načtení žebříčku - dáváme do try/catch, aby to nezabilo login
+    console.log("🔔 AUTH EVENT:", event);
+
+    // KROK 1: Pokus o načtení žebříčku
+    console.log("🔍 Zkouším volat žebříček...");
     try {
-        if (typeof nactiZebricek === "function") await nactiZebricek();
-    } catch (e) { console.error("Chyba v nactiZebricek:", e); }
+        if (typeof nactiZebricek === "function") {
+            await nactiZebricek();
+            console.log("✅ Žebříček načten.");
+        } else {
+            console.warn("⚠️ Funkce nactiZebricek() neexistuje! Jmenuje se ve tvém kódu přesně takhle?");
+        }
+    } catch (err) {
+        console.error("❌ Chyba uvnitř nactiZebricek:", err);
+    }
 
     const authSec = document.getElementById('auth-section');
 
+    // KROK 2: Rozhodnutí podle přihlášení
     if (session) {
-        // PŘIHLÁŠEN
-        await nactiUzivatelskyTip(session.user.id);
+        console.log("👤 Jsi přihlášen. ID:", session.user.id);
+        
+        // KROK 3: Pokus o načtení tvého tipu
+        console.log("🔍 Zkouším načíst tvůj tip...");
+        try {
+            if (typeof nactiUzivatelskyTip === "function") {
+                await nactiUzivatelskyTip(session.user.id);
+                console.log("✅ Uživatelský tip zpracován.");
+            }
+        } catch (err) {
+            console.error("❌ Chyba v nactiUzivatelskyTip:", err);
+        }
+
         if (authSec) authSec.classList.add('hidden');
     } else {
-        // NEPŘIHLÁŠEN
+        console.log("👤 Nejsi přihlášen.");
         if (authSec) authSec.classList.remove('hidden');
     }
 });
