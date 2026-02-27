@@ -63,14 +63,16 @@
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
 
-       #admin-form-container {
-    /* Nastavíme minimální výšku, aby se stránka při překreslení nezhroutila */
-    min-height: 1200px; 
+      #admin-form-container {
+    overflow-anchor: none; /* Zákaz automatického skrolování při změně obsahu */
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
-    /* Zabráníme prohlížeči v optimalizacích, které způsobují skákání */
-    overflow-anchor: none; 
+}
+
+/* Pojistka pro celou stránku */
+html {
+    scroll-behavior: auto !important;
 }
 
 /* --- 2. EFEKTY PRO TOP 3 (Prémiový vzhled) --- */
@@ -1633,22 +1635,24 @@ function cfS(sid, count) {
     }
 }
    function genAdminForm() {
-    // 1. Zachycení pozice skrolu (včetně podpory starších prohlížečů)
-    const scrollX = window.scrollX || window.pageXOffset;
-    const scrollY = window.scrollY || window.pageYOffset;
-
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // Příprava obsahu bokem (Atomic Update)
-    let finalHTML = ''; 
-    const res = window.currentResults || {};
+    // --- KROK A: ZÁMEK VÝŠKY ---
+    // Změříme aktuální výšku a nastavíme ji natvrdo, aby se stránka nesmrštila
+    const currentHeight = cont.offsetHeight;
+    if (currentHeight > 0) {
+        cont.style.minHeight = currentHeight + 'px';
+    }
 
-    // 2. Generování skupin (A-L)
+    const scrollY = window.scrollY || window.pageYOffset;
+    const res = window.currentResults || {};
+    let finalHTML = ''; 
+
+    // 1. GENEROVÁNÍ SKUPIN (A-L)
     state.groups.forEach((g, i) => {
         let h = `<div style="background:#0f172a;padding:10px;border-radius:8px;border:1px solid #1e293b">
                     <b style="color:var(--accent)">Skupina ${g.id}</b>`;
-        
         for(let p=0; p<4; p++) {
             const saved = res.groups?.[i]?.[p] || "";
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
@@ -1659,18 +1663,15 @@ function cfS(sid, count) {
         finalHTML += h + `</div>`;
     });
 
-    // 3. Generování playoff (s32 - s4)
+    // 2. GENEROVÁNÍ PLAYOFF
     const stages = [
-        {id:'s32', n:'1/16 finále', c:16}, 
-        {id:'s16', n:'1/8 finále', c:8}, 
-        {id:'s8', n:'Čtvrtfinále', c:4}, 
-        {id:'s4', n:'Semifinále', c:4}
+        {id:'s32', n:'1/16 finále', c:16}, {id:'s16', n:'1/8 finále', c:8}, 
+        {id:'s8', n:'Čtvrtfinále', c:4}, {id:'s4', n:'Semifinále', c:4}
     ];
 
     stages.forEach(s => {
         let h = `<div style="background:#0f172a;padding:10px;border-radius:8px;border:1px solid #1e293b">
                     <b style="color:var(--winner)">${s.n}</b>`;
-        
         for(let j=0; j<s.c; j++) {
             const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:4px;background:#1e293b;color:white;border:1px solid #334155">
@@ -1681,34 +1682,31 @@ function cfS(sid, count) {
         finalHTML += h + `</div>`;
     });
 
-    // 4. Vítěz a Bronz
-    const winSaved = res.winner || res.playoff?.winner || "";
-    const broSaved = res.bronze || res.playoff?.bronze || "";
-
+    // 3. VÍTĚZ A BRONZ
+    const winS = res.winner || res.playoff?.winner || "";
+    const broS = res.bronze || res.playoff?.bronze || "";
     finalHTML += `
         <div style="background:#0f172a;padding:10px;border-radius:8px;border:2px solid var(--winner);grid-column: 1 / -1">
             <b>🏆 Vítěz:</b>
             <select id="a-win" style="width:100%;margin-bottom:10px;background:#1e293b;color:white;border:1px solid #334155">
                 <option value="">-- vybrat vítěze --</option>
-                ${teamsData.map(t => `<option value="${t}" ${winSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${teamsData.map(t => `<option value="${t}" ${winS === t ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
             <b>🥉 Bronz:</b>
             <select id="a-bro" style="width:100%;background:#1e293b;color:white;border:1px solid #334155">
                 <option value="">-- vybrat 3. místo --</option>
-                ${teamsData.map(t => `<option value="${t}" ${broSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${teamsData.map(t => `<option value="${t}" ${broS === t ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
         </div>`;
 
-    // 5. Jeden zápis do DOM (Klíč k plynulosti)
+    // --- KROK B: ZÁPIS A ODEMČENÍ ---
     cont.innerHTML = finalHTML;
 
-    // 6. Návrat skrolu po vykreslení
     requestAnimationFrame(() => {
-        window.scrollTo({
-            top: scrollY,
-            left: scrollX,
-            behavior: 'instant'
-        });
+        // Vrátíme skrol
+        window.scrollTo({ top: scrollY, behavior: 'instant' });
+        // Uvolníme zámek výšky (aby mohl panel přirozeně růst/klesat dál)
+        cont.style.minHeight = '';
     });
 }
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
