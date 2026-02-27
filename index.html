@@ -1549,62 +1549,64 @@ async function nacistAdminVysledky() {
     }
 }
 
-   async function saveAdminResults() {
-    // 1. Získáme element vítěze
-    const winnerEl = document.getElementById('a-win');
-    const winnerValue = winnerEl ? winnerEl.value : "ELEMENT NENALEZEN";
+  async function saveAdminResults() {
+    console.log("🛠️ STARTUJI TVRDÉ UKLÁDÁNÍ...");
 
-    console.log("🧐 KONTROLA PŘED ULOŽENÍM:");
-    console.log("Vybraný vítěz v políčku:", winnerValue);
+    // Pomocná funkce pro čtení hodnot z políček
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        if (!el) {
+            console.error(`❌ Kritická chyba: Políčko s ID ${id} neexistuje!`);
+            return "";
+        }
+        return el.value;
+    };
 
-    // Pokud tam uvidíš 'Česko', i když jsi klikl na 'Slovensko', 
-    // tak víme, že JavaScript kouká na špatné políčko!
-    if (winnerValue === 'Česko') {
-        const confirmSave = confirm("POZOR: Chystáš se uložit Česko jako vítěze. Je to správně?");
-        if (!confirmSave) return;
-    }
-
-    // --- SBĚR DAT (zbytek zůstává stejný) ---
+    // 1. SBĚR SKUPIN (12 skupin, každá 4 místa)
     const groups = [];
     for (let i = 0; i < 12; i++) {
-        const skupina = [];
+        const gTeams = [];
         for (let p = 0; p < 4; p++) {
-            skupina.push(document.getElementById(`a-g-${i}-${p}`).value);
+            gTeams.push(getVal(`a-g-${i}-${p}`));
         }
-        groups.push(skupina);
+        groups.push(gTeams);
     }
 
-    const getStageData = (id, count) => {
-        const teams = [];
-        for (let j = 0; j < count; j++) {
-            const el = document.getElementById(`a-${id}-${j}`);
-            teams.push(el ? el.value : "");
-        }
-        return teams;
-    };
-
+    // 2. SBĚR PLAYOFF (Důležité: s4 musí mít 4 týmy!)
     const adminData = {
         groups: groups,
-        s32: getStageData('s32', 16),
-        s16: getStageData('s16', 8),
-        s8:  getStageData('s8', 4),
-        s4:  getStageData('s4', 4), // Tady v logu máš Array(2), ale my čekáme 4 týmy!
-        winner: winnerValue,
-        bronze: document.getElementById('a-bro').value
+        s32: Array.from({length: 16}, (_, j) => getVal(`a-s32-${j}`)),
+        s16: Array.from({length: 8}, (_, j) => getVal(`a-s16-${j}`)),
+        s8:  Array.from({length: 4}, (_, j) => getVal(`a-s8-${j}`)),
+        s4:  Array.from({length: 4}, (_, j) => getVal(`a-s4-${j}`)), // OPRAVA NA 4
+        winner: getVal('a-win'),
+        bronze: getVal('a-bro')
     };
+
+    console.log("📤 SKUTEČNĚ ODESÍLÁM TOTO:", adminData);
 
     try {
         const { error } = await supabaseClient
             .from('admin_vysledky')
-            .upsert({ id: 1, ...adminData });
+            .upsert({ 
+                id: 1, 
+                ...adminData 
+            });
 
         if (error) throw error;
-        alert("✅ Uloženo do DB: " + adminData.winner);
         
+        // Zobrazení potvrzení přímo s jménem vítěze pro kontrolu
+        alert(`✅ ÚSPĚŠNĚ ULOŽENO!\nVítěz v DB: ${adminData.winner}`);
+
+        // Aktualizace lokální paměti, aby žebříček hned věděl o změnách
         window.currentResults = adminData;
-        loadAll(); 
+
+        // Refresh žebříčku
+        if (typeof loadAll === "function") await loadAll();
+
     } catch (err) {
-        console.error("Chyba:", err);
+        console.error("❌ CHYBA PŘI UKLÁDÁNÍ:", err);
+        alert("Chyba: " + err.message);
     }
 }
 
