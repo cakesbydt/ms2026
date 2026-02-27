@@ -658,76 +658,62 @@ let state = {
 
 async function loadAll() {
     try {
-        // 1. Nejdřív stáhneme výsledky turnaje od Admina
+        // 1. Stáhneme výsledky z tabulky admin_vysledky (tam máš ty nové sloupce!)
         const { data: n } = await supabaseClient
-            .from('nastaveni')
-            .select('vysledky')
+            .from('admin_vysledky') // <--- ZMĚNA TABULKY
+            .select('*')
             .eq('id', 1)
             .maybeSingle();
             
-        if (n && n.vysledky) {
-            // Uložíme to do globální proměnné, která se nikdy nemění tvým přihlášením
-            window.currentResults = n.vysledky;
-            console.log("✅ Admin výsledky načteny a uzamčeny.");
+        if (n) {
+            window.currentResults = n; // Teď už n obsahuje n.groups, n.s32, n.s16 atd.
+            console.log("✅ Data pro žebříček načtena z admin_vysledky:", window.currentResults);
         }
 
-        // 2. Stáhneme všechny tipy ostatních hráčů
-        const { data: t } = await supabaseClient
-            .from('tipy')
-            .select('*');
+        // 2. Stáhneme tipy
+        const { data: t } = await supabaseClient.from('tipy').select('*');
 
-        // 3. Vykreslíme tabulku - TADY JE ZMĚNA:
-        // Vždycky vynutíme window.currentResults, aby se to nepobilo se 'state'
+        // 3. Vykreslíme
         if (typeof renderLeaderboard === "function") {
             renderLeaderboard(t || [], window.currentResults || {});
         }
     } catch (error) {
-        console.error("❌ Chyba při načítání dat pro tabulku:", error);
+        console.error("❌ Chyba:", error);
     }
 }
 
-   function renderLeaderboard(data, real) {
-       console.log("📊 Žebříček počítám podle těchto výsledků:", real);
+   // UPRAVENÝ ZAČÁTEK FUNKCE renderLeaderboard
+function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
     
-    // --- OPRAVA: Srovnání struktury Admin výsledků ---
-    // Pokud nám přišel celý 'state', vytáhneme si playoff data z něj, jinak bereme 'real' přímo
-    const adminPlayoff = real.playoff ? real.playoff : real;
-    const adminGroups = real.groups ? (real.groups[0]?.teams ? real.groups.map(g => g.teams) : real.groups) : [];
-
     const processed = data.map(row => {
         const tip = typeof row.tip_data === 'string' ? JSON.parse(row.tip_data) : row.tip_data;
         let pts = 0;
 
-        // 1. Výpočet skupin (ošetřeno pro obě struktury)
-        if (adminGroups.length > 0) {
-            adminGroups.forEach((rg, i) => {
-                if (tip.groups?.[i]) {
-                    rg.forEach((t, p) => {
-                        if (t && tip.groups[i][p] === t) pts += 2;
-                    });
-                }
+        // --- BODOVÁNÍ SKUPIN (Všechny 4 pozice) ---
+        if (real.groups && tip.groups) {
+            real.groups.forEach((adminSkupina, i) => {
+                const tipSkupina = tip.groups[i] || [];
+                // Projdeme všechny týmy, které jsi v adminu zadal do skupiny (1. až 4. místo)
+                adminSkupina.forEach((adminTym, pozice) => {
+                    // Pokud se tým na dané pozici shoduje s tipem hráče
+                    if (adminTym && tipSkupina[pozice] === adminTym) {
+                        pts += 2; // Tady si můžeš změnit počet bodů za trefu
+                    }
+                });
             });
         }
 
-        // 2. Pomocná funkce pro playoff (používá adminPlayoff)
+        // --- BODOVÁNÍ PLAYOFF ---
         const check = (st, p) => { 
-            const realStage = adminPlayoff[st];
-            if (realStage && tip[st]) {
-                tip[st].forEach(t => { 
-                    if (realStage.includes(t)) pts += p; 
-                }); 
+            if (real[st] && tip[st]) {
+                tip[st].forEach(t => { if (real[st].includes(t)) pts += p; }); 
             }
         };
 
-        check('s32', 2); 
-        check('s16', 3); 
-        check('s8', 5); 
-        check('s4', 8);
-
-        // 3. Vítěz a bronz (používá adminPlayoff)
-        if (adminPlayoff.winner && tip.winner === adminPlayoff.winner) pts += 15;
-        if (adminPlayoff.bronze && tip.bronze === adminPlayoff.bronze) pts += 10;
+        check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
+        if (real.winner && tip.winner === real.winner) pts += 15;
+        if (real.bronze && tip.bronze === real.bronze) pts += 10;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
@@ -1413,32 +1399,65 @@ async function ulozitAdminVysledky() {
 // 2. FUNKCE PRO NAČTENÍ VÝSLEDKŮ PO OTEVŘENÍ ADMIN STRÁNKY
 async function nacistAdminVysledky() {
     const { data, error } = await supabaseClient
-        .from('admin_vysledky')
+        .from('admin_vysledky') // Ujisti se, že výsledky máš v této tabulce
         .select('*')
         .eq('id', 1)
-        .maybeSingle(); // <--- TADY JE TA OPRAVA
+        .maybeSingle();
+
+    if (error) {
+        console.error("❌ Chyba při stahování admin výsledků:", error);
+        return;
+    }
 
     if (data) {
-        // Dosadíme data z databáze zpět do tvých proměnných
+        console.log("✅ Admin data stažena:", data);
+
+        // A. Uložíme pro žebříček (aby tam nebyly nuly)
+        // Musíme zajistit, aby struktura odpovídala tomu, co čeká renderLeaderboard
+        window.currentResults = {
+            groups: data.groups || [],
+            playoff: {
+                s32: data.s32 || [],
+                s16: data.s16 || [],
+                s8:  data.s8 || [],
+                s4:  data.s4 || [],
+                bronze: data.bronze || "",
+                winner: data.winner || ""
+            },
+            // Přidáme i do kořene pro jistotu, kdyby renderLeaderboard koukal přímo tam
+            s32: data.s32 || [],
+            s16: data.s16 || [],
+            s8:  data.s8 || [],
+            s4:  data.s4 || [],
+            winner: data.winner || "",
+            bronze: data.bronze || ""
+        };
+
+        // B. Dosadíme data zpět do proměnné state (pro tvoje admin UI)
         if (data.groups) {
             data.groups.forEach((tymyVeSkupine, index) => {
-                state.groups[index].teams = tymyVeSkupine;
+                if (state.groups[index]) state.groups[index].teams = tymyVeSkupine;
             });
         }
         
-        if (data.winner) {
-            state.playoff.winner = data.winner;
+        // Naplníme playoff ve state
+        if (state.playoff) {
+            state.playoff.s32 = data.s32 || [];
+            state.playoff.s16 = data.s16 || [];
+            state.playoff.s8  = data.s8 || [];
+            state.playoff.s4  = data.s4 || [];
+            state.playoff.bronze = data.bronze || "";
+            state.playoff.winner = data.winner || "";
         }
 
-        // TADY ZAVOLEJ SVOJI FUNKCI PRO PŘEKRESLENÍ UI (např. renderGroups(), renderPlayoff() atd.)
-        // aby se ty načtené týmy hned zobrazily na obrazovce.
-        
-        console.log("Admin výsledky úspěšně načteny z databáze.");
+        console.log("🚀 window.currentResults připraveno pro žebříček:", window.currentResults);
+
+        // C. Refresh žebříčku (aby nuly zmizely hned po načtení)
+        if (typeof loadAll === "function") {
+            loadAll(); 
+        }
     }
 }
-
-// Spustíme načítání hned, jakmile otevřeš admin sekci
-window.addEventListener('DOMContentLoaded', nacistAdminVysledky);
 
     async function saveAdminResults() {
         let res = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: document.getElementById('a-win').value, bronze: document.getElementById('a-bro').value };
