@@ -1609,37 +1609,83 @@ async function checkUserSession() {
     }
 }
 
-    // --- TADY ZAČÍNÁ HLÍDAČ (Vlož na konec souboru) ---
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    console.log("Stav uživatele se změnil na:", event);
+   // ==========================================
+// KOMPLETNÍ HLÍDAČ PŘIHLÁŠENÍ A NAČÍTÁNÍ DAT
+// ==========================================
 
-    // 1. Vždycky aktualizujeme žebříček (body pro všechny)
+// 1. Pomocná funkce, která stáhne data z DB a vyplní pavouka
+async function nactiUzivatelskyTip(userId) {
+    console.log("🛠️ Zahajuji stahování tvého tipu z databáze...");
+    
+    const { data, error } = await supabaseClient
+        .from('tipy')
+        .select('tip_data')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (error) {
+        console.error("❌ Chyba při načítání dat:", error.message);
+        return;
+    }
+
+    if (data && data.tip_data) {
+        const tip = data.tip_data;
+        console.log("✅ Data dorazila, plním pavouka...");
+
+        // Naplnění skupin do globálního state
+        if (tip.groups) {
+            tip.groups.forEach((tymy, i) => {
+                if (state.groups[i]) state.groups[i].teams = tymy;
+            });
+        }
+
+        // Naplnění playoff (s32, s16, s8, winner...) do state
+        if (state.playoff) {
+            Object.assign(state.playoff, tip);
+        }
+
+        // PŘEKRESLENÍ UI - tady voláme tvé vykreslovací funkce
+        // Ujisti se, že se jmenují přesně takto, případně je přejmenuj
+        if (typeof renderGroups === "function") renderGroups();
+        if (typeof renderPlayoff === "function") renderPlayoff();
+        
+        console.log("🚀 Pavouk úspěšně vykreslen s tvými týmy.");
+    } else {
+        console.log("ℹ️ V databázi zatím nemáš uložený žádný tip.");
+    }
+}
+
+// 2. Samotný HLÍDAČ, který reaguje na přihlášení/odhlášení/F5
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    console.log("🔔 AUTH UDÁLOST:", event);
+
+    // Vždy aktualizujeme žebříček (pro všechny)
     if (typeof nactiZebricek === "function") {
         await nactiZebricek();
     }
 
-    // 2. Pokud je někdo přihlášený (session není prázdná)
-    if (session) {
-        const userId = session.user.id;
-        console.log("Přihlášen uživatel:", userId);
-        
-        // Načteme jeho uložený tip do pavouka
-        if (typeof nactiUzivatelskyTip === "function") {
-            await nactiUzivatelskyTip(userId);
-        }
+    const authSec = document.getElementById('auth-section');
 
-        // Skryjeme sekci pro přihlášení (pokud ji máš v HTML)
-        const authSec = document.getElementById('auth-section');
-        if (authSec) authSec.classList.add('hidden');
+    if (session) {
+        // UŽIVATEL JE PŘIHLÁŠEN
+        console.log("👤 Uživatel přihlášen, ID:", session.user.id);
         
+        // Načteme jeho data do pavouka
+        await nactiUzivatelskyTip(session.user.id);
+
+        // Skryjeme login
+        if (authSec) authSec.classList.add('hidden');
     } else {
-        // Pokud není nikdo přihlášen, ukážeme login
-        console.log("Nikdo není přihlášen.");
-        const authSec = document.getElementById('auth-section');
+        // UŽIVATEL NENÍ PŘIHLÁŠEN
+        console.log("👤 Anonymní režim - nepřihlášen.");
+        
+        // Ukážeme login
         if (authSec) authSec.classList.remove('hidden');
+        
+        // (Volitelně) Pokud chceš při odhlášení pavouka vyčistit, 
+        // můžeš sem dát reset state a render.
     }
 });
-// --- TADY KONČÍ HLÍDAČ ---
 
 // Spustíme kontrolu hned po načtení stránky
 window.addEventListener('DOMContentLoaded', checkUserSession);
