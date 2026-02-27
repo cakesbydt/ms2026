@@ -63,6 +63,16 @@
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
 
+        #admin-panel {
+    min-height: 800px; /* Nastav si podle výšky tvého adminu */
+    overflow-anchor: none; /* KLÍČOVÁ VĚC: Zakáže prohlížeči samovolně hýbat skrolem */
+}
+
+/* Toto zabrání žebříčku, aby se "tlačil" nahoru při překreslování adminu */
+#leaderboard-section {
+    contain: layout; 
+}
+
      html, body {
     /* Zakáže prohlížeči upravovat pozici skrolu při změně obsahu */
     overflow-anchor: none !important;
@@ -1640,11 +1650,19 @@ function cfS(sid, count) {
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // --- KROK 1: ABSOLUTNÍ ZÁMEK CELÉ STRÁNKY ---
-    const currentScrollY = window.scrollY;
-    // Zamkneme výšku body na jeho aktuální velikost v pixelech
-    document.body.style.height = document.body.scrollHeight + 'px';
-    document.body.style.overflowAnchor = 'none';
+    // --- KROK 1: ZÁMEK GEOMETRIE ---
+    // Změříme aktuální výšku kontejneru a zafixujeme ji, aby stránka "nespadla" dolů
+    const currentHeight = cont.offsetHeight;
+    if (currentHeight > 0) {
+        cont.style.minHeight = currentHeight + 'px';
+    }
+
+    // Zapamatujeme si, kde přesně uživatel je
+    const scrollY = window.scrollY || window.pageYOffset;
+    
+    // Dočasně vypneme plynulé skrolování, aby nás prohlížeč neházel jinam
+    const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
 
     const res = window.currentResults || {};
     let finalHTML = ''; 
@@ -1700,21 +1718,18 @@ function cfS(sid, count) {
         </div>`;
 
     // --- KROK 2: ATOMICKÁ VÝMĚNA ---
-    // Místo innerHTML = '' použijeme replaceChildren, což je rychlejší a méně skákavé
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = finalHTML;
-    
-    // Rychlá výměna obsahu bez "vyprázdnění"
-    cont.replaceChildren(...tempDiv.childNodes);
+    // Přepíšeme obsah kontejneru najednou
+    cont.innerHTML = finalHTML;
 
-    // --- KROK 3: NÁVRAT A ODEMČENÍ ---
-    // Okamžitě vynutíme pozici skrolu
-    window.scrollTo(0, currentScrollY);
-
-    // Počkáme na vykreslení a pak uvolníme body
+    // --- KROK 3: UVOLNĚNÍ A FIXACE ---
+    // Musíme počkat na další snímek (frame), aby prohlížeč věděl, že už je tam nový obsah
     requestAnimationFrame(() => {
-        window.scrollTo(0, currentScrollY);
-        document.body.style.height = ''; 
+        // Okamžitý návrat skrolu na původní místo
+        window.scrollTo(0, scrollY);
+        
+        // Odstraníme vynucenou minimální výšku a vrátíme chování skrolu
+        cont.style.minHeight = '';
+        document.documentElement.style.scrollBehavior = originalScrollBehavior;
     });
 }
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
