@@ -2105,6 +2105,7 @@ async function logoutUser() {
 }
 
 async function checkUserSession() {
+    // 1. Získáme základní session (email a ID)
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     const authSection = document.getElementById('auth-section');
@@ -2112,25 +2113,29 @@ async function checkUserSession() {
     const userDisplay = document.getElementById('user-email-display');
 
     if (session) {
-        // 1. Zjistíme, jestli uživatel už má v databázi uložené jméno
+        // 2. Teď se musíme podívat do tabulky 'tipy', jestli tam uživatel už nemá jméno
+        // Používáme session.user.id, abychom našli ten správný řádek
         const { data: tipData } = await supabaseClient
-            .from('tips')
+            .from('tipy')
             .select('name')
             .eq('user_id', session.user.id)
-            .maybeSingle(); // Vrátí data, nebo null, pokud záznam neexistuje
+            .maybeSingle(); // Vrátí buď jeden řádek, nebo null
 
-        // Pokud jméno existuje, připravíme ho do závorky
+        // 3. Připravíme si text jména (pokud existuje)
         const nameSuffix = (tipData && tipData.name) ? ` (${tipData.name})` : "";
 
-        // 2. Nastavíme vzhled pro přihlášeného
+        // 4. Nastavíme viditelnost sekcí
         if (authSection) authSection.classList.add('hidden');
         if (loggedInSection) loggedInSection.classList.remove('hidden');
         
-        // Vypíšeme email a k němu (pokud existuje) i jméno
+        // 5. Vypíšeme email + jméno
         if (userDisplay) {
             userDisplay.innerText = session.user.email + nameSuffix;
         }
+
+        // Tady pravděpodobně voláš další funkce jako loadMyTip() atd.
     } else {
+        // Uživatel NENÍ přihlášený
         if (authSection) authSection.classList.remove('hidden');
         if (loggedInSection) loggedInSection.classList.add('hidden');
     }
