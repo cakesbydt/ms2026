@@ -1637,26 +1637,19 @@ async function nactiUzivatelskyTip(userId) {
             // 3. CHYTRÁ SIMULACE 3. MÍST (naklikáme je za tebe)
             if (tip.thirds && tip.thirds.length === 8) {
                 
-                // Úmyslně vyprázdníme paměť 3. míst, abychom ji mohli znovu "naklikat"
-                state.thirds = [];
-                
-                // Vygeneruje čisté, prázdné HTML pro 3. místa
+                state.thirds = []; // Vyprázdníme paměť pro čistý průchod
                 if (typeof confirmAllGroups === "function") confirmAllGroups();
                 
-                // Teď kód vezme tvých stažených 8 týmů a "klikne" na ně přesně jako ty
+                // NEPRŮSTŘELNÉ HLEDÁNÍ: Hledáme přímo v HTML kódu atribut onclick
                 tip.thirds.forEach(teamName => {
-                    document.querySelectorAll('.card-third').forEach(card => {
-                        // Pokud karta obsahuje jméno týmu, nasimulujeme klik
-                        if (card.innerText.includes(teamName)) {
-                            if (typeof selectThird === "function") {
-                                selectThird(card, teamName);
-                            }
-                        }
-                    });
+                    // Najdeme kartu, která má v atributu onclick přesně jméno tohoto týmu
+                    const card = document.querySelector(`.card-third[onclick*="${teamName}"]`);
+                    if (card && typeof selectThird === "function") {
+                        selectThird(card, teamName);
+                    }
                 });
                 
-                // Teď už jsou 3. místa vizuálně dokonalá (i s odznáčky 1-8).
-                // Můžeme s klidem schovat začátek a ukázat hotového pavouka.
+                // Zobrazíme pavouka
                 if (typeof confirmThirds === "function") confirmThirds();
                 
                 console.log("✅ [Tip] 4. HOTOVO! HTML je kompletně vygenerované i s vizuálem 3. míst.");
