@@ -1606,6 +1606,7 @@ async function nactiUzivatelskyTip(userId) {
         if (data && data.tip_data) {
             console.log("➡️ [Tip] 2. Mám data z DB, plním proměnnou state...");
             const tip = data.tip_data;
+            console.log("🔍 CO JE REÁLNĚ V DATABÁZI:", tip);
             
             // 1. NAPLNĚNÍ A PŘEKRESLENÍ SKUPIN
             if (tip.groups) {
