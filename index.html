@@ -686,9 +686,9 @@ function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
     if (!body) return;
     
-    // POJISTKA: Sjednocení struktury (ošetříme, pokud real je null)
-    const admin = real || window.currentResults || {};
-    const r = admin.playoff ? { ...admin.playoff, groups: admin.groups } : admin;
+    // POJISTKA: Sjednocení struktury admin dat
+    const adminData = real || window.currentResults || {};
+    const r = adminData.playoff ? { ...adminData.playoff, groups: adminData.groups } : adminData;
 
     const processed = data.map(row => {
         let tip = row.tip_data;
@@ -699,78 +699,166 @@ function renderLeaderboard(data, real) {
         
         let pts = 0;
 
-        // 1. Bodování skupin
+        // --- 1. BODOVÁNÍ SKUPIN ---
         if (r.groups && tip.groups) {
             r.groups.forEach((adminG, i) => {
                 const tipG = tip.groups[i] || [];
-                const aTeams = Array.isArray(adminG) ? adminG : (adminG.teams || []);
-                aTeams.forEach((t, pos) => {
-                    if (t && tipG[pos] && String(t).trim() === String(tipG[pos]).trim()) {
-                        pts += 2;
-                    }
-                });
+                const adminTeams = adminG.teams ? adminG.teams : adminG;
+
+                if (Array.isArray(adminTeams)) {
+                    adminTeams.forEach((team, pos) => {
+                        if (team && tipG[pos] && String(team).trim() === String(tipG[pos]).trim()) {
+                            pts += 2;
+                        }
+                    });
+                }
             });
         }
 
-        // 2. Bodování playoff
-        const check = (stage, p) => { 
-            const rT = r[stage] || [];
-            const tT = tip[stage] || [];
-            if (Array.isArray(rT)) {
-                rT.forEach(team => {
-                    if (team && tT.some(ut => ut && String(ut).trim() === String(team).trim())) {
-                        pts += p;
+        // --- 2. BODOVÁNÍ PLAYOFF (s32, s16, s8, s4) ---
+        const check = (stage, points) => { 
+            const realTeams = r[stage] || [];
+            const tipTeams = tip[stage] || [];
+            if (Array.isArray(realTeams)) {
+                realTeams.forEach(t => {
+                    // Používáme .some a .trim pro neprůstřelnou shodu
+                    if (t && Array.isArray(tipTeams) && tipTeams.some(tt => tt && String(tt).trim() === String(t).trim())) {
+                        pts += points;
                     }
                 });
             }
         };
+
         check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
 
-        // 3. Vítěz a Bronz
-        if (r.winner && tip.winner && String(r.winner).trim() === String(tip.winner).trim()) pts += 15;
-        if (r.bronze && tip.bronze && String(r.bronze).trim() === String(tip.bronze).trim()) pts += 10;
+        // --- 3. VÍTĚZ A BRONZ ---
+        const rWin = r.winner ? String(r.winner).trim() : null;
+        const tWin = tip.winner ? String(tip.winner).trim() : null;
+        if (rWin && tWin === rWin) pts += 15;
+
+        const rBro = r.bronze ? String(r.bronze).trim() : null;
+        const tBro = tip.bronze ? String(tip.bronze).trim() : null;
+        if (rBro && tBro === rBro) pts += 10;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
-    // Pomocná funkce pro barvy (getStatusClass)
-    const getStatus = (stage, team, count) => {
-        const aS = r[stage] || [];
-        if (!team || aS.length === 0) return '';
-        if (aS.some(t => t && String(t).trim() === String(team).trim())) return 'status-correct';
-        return (aS.length >= count) ? 'status-wrong' : '';
+    // POMOCNÁ FUNKCE PRO BARVY (Tady byla ta chyba aS.some - OPRAVENO)
+    const getStatusClass = (stageId, teamName, stageCount) => {
+        const aS = r[stageId] || [];
+        if (!teamName) return ''; 
+
+        if (Array.isArray(aS)) {
+            if (aS.length === 0) return '';
+            if (aS.some(t => t && String(t).trim() === String(teamName).trim())) return 'status-correct';
+            if (aS.length >= stageCount) return 'status-wrong';
+        } else {
+            // Pro winner/bronze, kde je v aS jen jeden text
+            if (!aS) return '';
+            return (String(aS).trim() === String(teamName).trim()) ? 'status-correct' : 'status-wrong';
+        }
+        return '';
     };
 
-    let lastPts = -1, rank = 0, dispRank = 0;
+    let currentRank = 0;
+    let lastPoints = -1;
+    let displayedRank = 0;
 
-    body.innerHTML = processed.map((p, i) => {
-        if (p.points !== lastPts) {
-            rank = i + 1;
-            dispRank = rank;
+    body.innerHTML = processed.map((player, i) => {
+        if (player.points !== lastPoints) {
+            currentRank = i + 1;
+            displayedRank = currentRank;
         }
-        lastPts = p.points;
+        lastPoints = player.points;
 
-        const icon = dispRank === 1 ? ' 🏆' : (dispRank === 2 ? ' 🥈' : (dispRank === 3 ? ' 🥉' : ''));
-        const rowBg = dispRank === 1 ? 'background:rgba(251,191,36,0.1)' : '';
+        let rankIcon = ""; 
+        let rowStyle = "";
+        let nameColor = "inherit";
 
-        // Tady se generuje to složité HTML
+        if (displayedRank === 1) {
+            rankIcon = '<i class="fas fa-trophy" style="color: #fbbf24; margin-left: 5px; font-size: 0.9rem;"></i>';
+            rowStyle = "background: linear-gradient(90deg, rgba(251, 191, 36, 0.1), transparent);";
+            nameColor = "#fbbf24";
+        } else if (displayedRank === 2) {
+            rankIcon = '<i class="fas fa-medal" style="color: #cbd5e1; margin-left: 5px; font-size: 0.9rem;"></i>';
+            rowStyle = "background: linear-gradient(90deg, rgba(203, 213, 225, 0.07), transparent);";
+            nameColor = "#cbd5e1";
+        } else if (displayedRank === 3) {
+            rankIcon = '<i class="fas fa-medal" style="color: #cd7f32; margin-left: 5px; font-size: 0.9rem;"></i>';
+            rowStyle = "background: linear-gradient(90deg, rgba(205, 127, 50, 0.07), transparent);";
+            nameColor = "#cd7f32";
+        }
+
+        // ID pro toggleDetail používá user_id z databáze
+        const rowId = player.user_id || player.id;
+
         return `
-            <tr onclick="toggleDetail('det-${p.user_id}')" style="cursor:pointer; ${rowBg}">
-                <td style="width:40px; color:#94a3b8">${dispRank}.</td>
-                <td><strong style="${dispRank <= 3 ? 'color:var(--accent)' : ''}">${p.name || 'Anonym'}${icon}</strong></td>
-                <td style="text-align:right; font-weight:bold">${p.points} b.</td>
+            <tr class="player-row" onclick="toggleDetail('det-${rowId}')" style="${rowStyle}">
+                <td style="width:50px; color:#94a3b8; font-size: 0.85rem; white-space: nowrap; padding-left: 10px;">
+                    ${displayedRank}.${rankIcon}
+                </td>
+                <td style="font-weight:bold; color: ${nameColor}">${player.name || 'Anonym'}</td>
+                <td style="text-align:right; font-weight:bold; color:var(--accent)">${player.points} b.</td>
             </tr>
-            <tr id="det-${p.user_id}" class="hidden" style="display:none; background:#0f172a">
-                <td colspan="3" style="padding:15px; border:1px solid #1e293b">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px">
-                        <div>
-                            <b style="color:var(--accent)">Skupiny:</b><br>
-                            ${(p.tip.groups || []).map((g, idx) => `Sk. ${String.fromCharCode(65+idx)}: ${g.join(', ')}`).slice(0,3).join('<br>')}...
+            <tr id="det-${rowId}" class="tip-detail-row" style="display:none">
+                <td colspan="3">
+                    <div class="detail-container">
+                        <span class="detail-section-title">Skupinová fáze</span>
+                        <div class="det-groups-grid">
+                            ${(player.tip.groups||[]).map((g, idx) => `
+                                <div class="det-group-box">
+                                    <b>Sk. ${String.fromCharCode(65+idx)}</b>
+                                    ${g.map((t, p) => {
+                                        let c = '';
+                                        const adminG = r.groups && r.groups[idx];
+                                        const aTeams = (adminG && adminG.teams) ? adminG.teams : adminG;
+                                        if(aTeams && aTeams[p]) {
+                                            c = (String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
+                                        }
+                                        return `<div class="${c}">${p+1}. ${t}</div>`;
+                                    }).join('')}
+                                </div>`).join('')}
                         </div>
-                        <div>
-                            <b>Playoff:</b><br>
-                            Vítěz: <span class="${getStatus('winner', p.tip.winner, 1)}">${p.tip.winner || '--'}</span><br>
-                            Bronz: <span class="${getStatus('bronze', p.tip.bronze, 1)}">${p.tip.bronze || '--'}</span>
+                        <span class="detail-section-title">Play-off pavouk</span>
+                        <div class="det-playoff-stages">
+                            <div class="det-stage-column">
+                                <div class="det-stage-card">
+                                    <h5>1/16 Finále</h5>
+                                    <div class="det-team-list">
+                                        ${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="det-stage-card">
+                                    <h5>1/8 Finále</h5>
+                                    <div class="det-team-list">
+                                        ${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="det-stage-column">
+                                <div class="det-stage-card">
+                                    <h5>Čtvrtfinále</h5>
+                                    <div class="det-team-list">
+                                        ${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="det-stage-card">
+                                    <h5>Semifinále</h5>
+                                    <div class="det-team-list">
+                                        ${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="det-stage-column">
+                                <div class="det-stage-card" style="border-color:gold">
+                                    <h5>🥇 Vítěz</h5>
+                                    <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}">${player.tip.winner || '--'}</div>
+                                </div>
+                                <div class="det-stage-card" style="border-color:#cd7f32">
+                                    <h5>🥉 3. Místo</h5>
+                                    <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}">${player.tip.bronze || '--'}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </td>
