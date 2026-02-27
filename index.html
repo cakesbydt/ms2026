@@ -1514,12 +1514,14 @@ function cfS(sid, count) {
     }
 }
    function genAdminForm() {
-    // 1. ZAPAMATOVAT SI POZICI SKROLU
+    // 1. Zapamatujeme si pozici, kde uživatel zrovna je
     const scrollPos = window.scrollY;
 
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
-    cont.innerHTML = '';
+
+    // Vytvoříme si prázdnou proměnnou, do které budeme skládat celé HTML
+    let finalHTML = ''; 
 
     const res = window.currentResults || {};
 
@@ -1537,10 +1539,11 @@ function cfS(sid, count) {
                     `).join('')}
                   </select>`;
         }
-        cont.innerHTML += h + `</div>`;
+        // TADY JE ZMĚNA: Nepíšeme hned do cont.innerHTML, ale přidáváme do proměnné
+        finalHTML += h + `</div>`;
     });
 
-    // 2. GENEROVÁNÍ PLAYOFF (s32, s16, s8, s4)
+    // 2. GENEROVÁNÍ PLAYOFF
     const stages = [
         {id:'s32', n:'1/16 finále', c:16}, 
         {id:'s16', n:'1/8 finále', c:8}, 
@@ -1561,9 +1564,37 @@ function cfS(sid, count) {
                     `).join('')}
                   </select>`;
         }
-        cont.innerHTML += h + `</div>`;
+        finalHTML += h + `</div>`;
     });
 
+    // 3. VÍTĚZ A BRONZ
+    const winSaved = res.winner || res.playoff?.winner || "";
+    const broSaved = res.bronze || res.playoff?.bronze || "";
+
+    finalHTML += `
+        <div style="background:#0f172a;padding:10px;border-radius:8px;border:2px solid var(--winner);grid-column: 1 / -1">
+            <b>🏆 Vítěz:</b>
+            <select id="a-win" style="width:100%;margin-bottom:10px;background:#1e293b;color:white;border:1px solid #334155">
+                <option value="">-- vybrat vítěze --</option>
+                ${teamsData.map(t => `<option value="${t}" ${winSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+            <b>🥉 Bronz:</b>
+            <select id="a-bro" style="width:100%;background:#1e293b;color:white;border:1px solid #334155">
+                <option value="">-- vybrat 3. místo --</option>
+                ${teamsData.map(t => `<option value="${t}" ${broSaved === t ? 'selected' : ''}>${t}</option>`).join('')}
+            </select>
+        </div>`;
+
+    // !!! KLÍČOVÝ MOMENT !!!
+    // Teď vložíme všechno najednou. Stránka se nestihne "smrštit".
+    cont.innerHTML = finalHTML;
+
+    // Vrátíme skrol tam, kde byl
+    window.scrollTo({
+        top: scrollPos,
+        behavior: 'instant' // Okamžitý návrat bez animace
+    });
+}
     // 3. VÍTĚZ A BRONZ
     const winSaved = res.winner || res.playoff?.winner || "";
     const broSaved = res.bronze || res.playoff?.bronze || "";
@@ -1585,6 +1616,7 @@ function cfS(sid, count) {
     // 2. VRÁTIT SKROL NA PŮVODNÍ MÍSTO
     window.scrollTo(0, scrollPos);
 }
+    
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
 async function ulozitAdminVysledky() {
     // Sestavíme reálné výsledky z tvého aktuálního naklikaného stavu
