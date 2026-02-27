@@ -1634,18 +1634,34 @@ async function nactiUzivatelskyTip(userId) {
 
             console.log("➡️ [Tip] 3. Generuji HTML a simuluji tvé klikání na 3. místa...");
             
-            // 3. CHYTRÁ SIMULACE 3. MÍST (naklikáme je za tebe)
+            // 3. CHYTRÁ SIMULACE 3. MÍST
             if (tip.thirds && tip.thirds.length === 8) {
                 
                 state.thirds = []; // Vyprázdníme paměť pro čistý průchod
                 if (typeof confirmAllGroups === "function") confirmAllGroups();
                 
-                // NEPRŮSTŘELNÉ HLEDÁNÍ: Hledáme přímo v HTML kódu atribut onclick
+                console.log("➡️ [Tip] Jdu simulovat kliknutí na tyto týmy:", tip.thirds);
+                
+                // NEPRŮSTŘELNÉ HLEDÁNÍ HRUBOU SILOU
                 tip.thirds.forEach(teamName => {
-                    // Najdeme kartu, která má v atributu onclick přesně jméno tohoto týmu
-                    const card = document.querySelector(`.card-third[onclick*="${teamName}"]`);
-                    if (card && typeof selectThird === "function") {
-                        selectThird(card, teamName);
+                    let nalezeno = false;
+                    
+                    // Projdeme ÚPLNĚ VŠECHNY karty třetích míst
+                    document.querySelectorAll('.card-third').forEach(card => {
+                        const onclickAttr = card.getAttribute('onclick') || "";
+                        
+                        // Pokud parametr onclick obsahuje jméno hledaného týmu
+                        if (onclickAttr.includes(teamName)) {
+                            if (typeof selectThird === "function") {
+                                selectThird(card, teamName);
+                                nalezeno = true;
+                            }
+                        }
+                    });
+                    
+                    // Vypíše varování, pokud nějaký tým nešel nakliknout
+                    if (!nalezeno) {
+                        console.warn(`⚠️ [Tip] Nenašel jsem HTML kartu pro tým: ${teamName}`);
                     }
                 });
                 
