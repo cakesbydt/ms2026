@@ -683,23 +683,52 @@ let state = {
     }
 }
 
-    function renderLeaderboard(data, real) {
+   function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
+    
+    // --- OPRAVA: Srovnání struktury Admin výsledků ---
+    // Pokud nám přišel celý 'state', vytáhneme si playoff data z něj, jinak bereme 'real' přímo
+    const adminPlayoff = real.playoff ? real.playoff : real;
+    const adminGroups = real.groups ? (real.groups[0]?.teams ? real.groups.map(g => g.teams) : real.groups) : [];
+
     const processed = data.map(row => {
         const tip = typeof row.tip_data === 'string' ? JSON.parse(row.tip_data) : row.tip_data;
         let pts = 0;
-        if(real.groups) real.groups.forEach((rg, i) => { if(tip.groups?.[i]) rg.forEach((t, p) => { if(t && tip.groups[i][p] === t) pts += 2; }); });
-        
-        const check = (st, p) => { 
-            if(real[st] && tip[st]) tip[st].forEach(t => { if(real[st].includes(t)) pts += p; }); 
-        };
-        
-        check('s32', 2); check('s16', 3); check('s8', 5); check('s4', 8);
-        if(real.winner && tip.winner === real.winner) pts += 15;
-        if(real.bronze && tip.bronze === real.bronze) pts += 10;
-        return { ...row, tip, points: pts };
-    }).sort((a,b) => b.points - a.points);
 
+        // 1. Výpočet skupin (ošetřeno pro obě struktury)
+        if (adminGroups.length > 0) {
+            adminGroups.forEach((rg, i) => {
+                if (tip.groups?.[i]) {
+                    rg.forEach((t, p) => {
+                        if (t && tip.groups[i][p] === t) pts += 2;
+                    });
+                }
+            });
+        }
+
+        // 2. Pomocná funkce pro playoff (používá adminPlayoff)
+        const check = (st, p) => { 
+            const realStage = adminPlayoff[st];
+            if (realStage && tip[st]) {
+                tip[st].forEach(t => { 
+                    if (realStage.includes(t)) pts += p; 
+                }); 
+            }
+        };
+
+        check('s32', 2); 
+        check('s16', 3); 
+        check('s8', 5); 
+        check('s4', 8);
+
+        // 3. Vítěz a bronz (používá adminPlayoff)
+        if (adminPlayoff.winner && tip.winner === adminPlayoff.winner) pts += 15;
+        if (adminPlayoff.bronze && tip.bronze === adminPlayoff.bronze) pts += 10;
+
+        return { ...row, tip, points: pts };
+    }).sort((a, b) => b.points - a.points);
+
+    // ... zbytek funkce (getStatusClass a renderování HTML) zůstává stejný ...
     // Pomocná funkce pro individuální barvení týmů
     const getStatusClass = (stageId, teamName, stageCount) => {
         if (!real[stageId] || real[stageId].length === 0) return ''; 
@@ -812,6 +841,36 @@ let state = {
             </tr>`;
     }).join('');
 }
+
+    function vypocitejZiskaneBody(tipData, adminVysledky) {
+    if (!tipData || !adminVysledky || !adminVysledky.playoff) return 0;
+    
+    let body = 0;
+    const bodovani = { 's32': 2, 's16': 3, 's8': 5, 's4': 8, 'winner': 15 };
+
+    // 1. Kontrola kol pavouka (s32, s16, s8, s4)
+    ['s32', 's16', 's8', 's4'].forEach(faze => {
+        const adminTymy = adminVysledky.playoff[faze] || [];
+        const tipTymy = tipData[faze] || [];
+        
+        if (adminTymy.length > 0) {
+            adminTymy.forEach(tym => {
+                // Pokud tým, který postoupil v reálu, má hráč ve svém tipu v dané fázi
+                if (tym && tipTymy.includes(tym)) {
+                    body += bodovani[faze];
+                }
+            });
+        }
+    });
+
+    // 2. Kontrola vítěze
+    if (adminVysledky.playoff.winner && tipData.winner === adminVysledky.playoff.winner) {
+        body += bodovani.winner;
+    }
+
+    return body;
+}
+    
     function toggleDetail(id) {
         const el = document.getElementById(id);
         const isVisible = el.style.display === 'table-row';
