@@ -656,9 +656,9 @@ let state = {
     // TADY JSEM SMAZAL: await loadAll(); 
 }
 
- async function loadAll() {
+async function loadAll() {
     try {
-        // 1. Stáhneme výsledky turnaje (pokud jsou)
+        // 1. Nejdřív stáhneme výsledky turnaje od Admina
         const { data: n } = await supabaseClient
             .from('nastaveni')
             .select('vysledky')
@@ -666,15 +666,18 @@ let state = {
             .maybeSingle();
             
         if (n && n.vysledky) {
+            // Uložíme to do globální proměnné, která se nikdy nemění tvým přihlášením
             window.currentResults = n.vysledky;
+            console.log("✅ Admin výsledky načteny a uzamčeny.");
         }
 
-        // 2. Stáhneme všechny tipy pro žebříček
+        // 2. Stáhneme všechny tipy ostatních hráčů
         const { data: t } = await supabaseClient
             .from('tipy')
             .select('*');
 
-        // 3. Vykreslíme tabulku
+        // 3. Vykreslíme tabulku - TADY JE ZMĚNA:
+        // Vždycky vynutíme window.currentResults, aby se to nepobilo se 'state'
         if (typeof renderLeaderboard === "function") {
             renderLeaderboard(t || [], window.currentResults || {});
         }
