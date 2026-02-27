@@ -936,6 +936,33 @@ function confirmAllGroups() {
     });
     
     window.scrollTo(0,0);
+// --- PŘIDAT NA ÚPLNÝ KONEC FUNKCE confirmAllGroups() ---
+    
+    // 1. Aktualizace počítadla
+    const counter = document.getElementById('thirds-counter');
+    if (counter) {
+        counter.innerText = `${state.thirds.length} / 8`;
+        counter.style.background = state.thirds.length === 8 ? 'var(--winner)' : 'var(--accent)';
+    }
+
+    // 2. Překreslení čísel (odznáčků) pro už vybrané týmy z paměti
+    state.thirds.forEach((teamName, index) => {
+        document.querySelectorAll('.card-third').forEach(card => {
+            // Najdeme kartu podle atributu onclick
+            if (card.getAttribute('onclick').includes(teamName)) {
+                let badge = card.querySelector('.selection-order');
+                if (!badge) {
+                    // Pokud odznáček neexistuje, JavaScript ho pro tebe vyrobí
+                    badge = document.createElement('div');
+                    badge.className = 'selection-order';
+                    card.appendChild(badge);
+                }
+                badge.style.display = 'flex';
+                badge.innerText = index + 1; // Napíše pořadové číslo 1 až 8
+            }
+        });
+    });
+
 }
     
 function selectThird(el, teamName) {
