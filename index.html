@@ -1660,46 +1660,40 @@ async function nactiUzivatelskyTip(userId) {
     }
 }
 
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log("🔔 AUTH EVENT:", event);
 
-   // KROK 1: Pokus o načtení žebříčku
-    console.log("🔍 Zkouším volat žebříček...");
-    try {
-        // TADY JSME ZMĚNILI NÁZEV NA TVŮJ loadAll
-        if (typeof loadAll === "function") {
-            await loadAll();
-            console.log("✅ Žebříček načten (přes loadAll).");
-        } else {
-            console.warn("⚠️ Funkce loadAll() neexistuje!");
-        }
-    } catch (err) {
-        console.error("❌ Chyba uvnitř loadAll:", err);
-    }
-
-    const authSec = document.getElementById('auth-section');
-
-    // KROK 2: Rozhodnutí podle přihlášení
-    if (session) {
-        console.log("👤 Jsi přihlášen. ID:", session.user.id);
-        
-        // KROK 3: Pokus o načtení tvého tipu
-        console.log("🔍 Zkouším načíst tvůj tip...");
+    // FÍGL: Dáme Supabase 100 milisekund pauzu, než začneme tahat data, 
+    // aby se nezasekl na zpracování přihlášení (deadlock).
+    setTimeout(async () => {
+        console.log("🔍 Zkouším volat žebříček (po krátké pauze)...");
         try {
-            if (typeof nactiUzivatelskyTip === "function") {
-                await nactiUzivatelskyTip(session.user.id);
-                console.log("✅ Uživatelský tip zpracován.");
+            if (typeof loadAll === "function") {
+                await loadAll();
             }
         } catch (err) {
-            console.error("❌ Chyba v nactiUzivatelskyTip:", err);
+            console.error("❌ Chyba v loadAll:", err);
         }
 
-        if (authSec) authSec.classList.add('hidden');
-    } else {
-        console.log("👤 Nejsi přihlášen.");
-        if (authSec) authSec.classList.remove('hidden');
-    }
+        const authSec = document.getElementById('auth-section');
+
+        if (session) {
+            console.log("👤 Přihlášen ID:", session.user.id);
+            try {
+                if (typeof nactiUzivatelskyTip === "function") {
+                    await nactiUzivatelskyTip(session.user.id);
+                }
+            } catch (err) {
+                console.error("❌ Chyba v nactiUzivatelskyTip:", err);
+            }
+            if (authSec) authSec.classList.add('hidden');
+        } else {
+            console.log("👤 Nepřihlášen.");
+            if (authSec) authSec.classList.remove('hidden');
+        }
+    }, 100); // <-- Těch 100ms je ten klíčový detail
 });
+    
 // Spustíme kontrolu hned po načtení stránky
 window.addEventListener('DOMContentLoaded', checkUserSession);
 
