@@ -1466,13 +1466,15 @@ async function vyhodnotitTipy(adminVysledky) {
             }
         }
 
-        // 3. Pošleme sečtené body zpět do databáze k danému uživateli
+     // 3. Pošleme sečtené body zpět do databáze (použijeme ID řádku pro jistotu)
         const { error: updateError } = await supabaseClient
             .from('tipy')
             .update({ body: celkoveBody })
-            .eq('user_id', radek.user_id);
+            .match({ id: radek.id }); // Matchujeme přímo konkrétní řádek v DB
 
-        if (!updateError) {
+        if (updateError) {
+            console.error(`Chyba u hráče ${radek.name}:`, updateError.message);
+        } else {
             pocetVyhodnocenych++;
         }
     }
