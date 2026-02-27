@@ -1641,17 +1641,18 @@ async function nactiUzivatelskyTip(userId) {
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
     console.log("🔔 AUTH EVENT:", event);
 
-    // KROK 1: Pokus o načtení žebříčku
+   // KROK 1: Pokus o načtení žebříčku
     console.log("🔍 Zkouším volat žebříček...");
     try {
-        if (typeof nactiZebricek === "function") {
-            await nactiZebricek();
-            console.log("✅ Žebříček načten.");
+        // TADY JSME ZMĚNILI NÁZEV NA TVŮJ loadAll
+        if (typeof loadAll === "function") {
+            await loadAll();
+            console.log("✅ Žebříček načten (přes loadAll).");
         } else {
-            console.warn("⚠️ Funkce nactiZebricek() neexistuje! Jmenuje se ve tvém kódu přesně takhle?");
+            console.warn("⚠️ Funkce loadAll() neexistuje!");
         }
     } catch (err) {
-        console.error("❌ Chyba uvnitř nactiZebricek:", err);
+        console.error("❌ Chyba uvnitř loadAll:", err);
     }
 
     const authSec = document.getElementById('auth-section');
