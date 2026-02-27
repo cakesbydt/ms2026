@@ -62,10 +62,29 @@
     .det-stage-card { background: #161e2e; padding: 12px; border-radius: 10px; border: 1px solid #334155; }
     .det-stage-card h5 { margin: 0 0 10px 0; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 4px; }
-    .det-team-tag { font-size: 0.75rem; padding: 3px 8px; background: rgba(0,0,0,0.4); border-radius: 4px; border: 1px solid transparent; }
+    .det-team-tag {
+    display: inline-block;
+    margin: 2px;
+    padding: 4px 8px;
+    background: #1e293b;
+    border-radius: 6px;
+    border: 1px solid #334155;
+}
     
-    .status-correct { border-color: var(--winner) !important; color: var(--winner) !important; font-weight: bold; }
-    .status-wrong { border-color: var(--lose) !important; color: var(--lose) !important; }
+    .status-correct {
+    background-color: #059669 !important; /* Sytě zelená */
+    color: white !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+    .status-wrong {
+    background-color: #dc2626 !important; /* Sytě červená */
+    color: white !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+    opacity: 0.8;
+}
 
     /* --- PRAVÝ SLOUPEC FORMULÁŘ --- */
     .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; padding: 20px; }
