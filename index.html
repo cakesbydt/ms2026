@@ -656,30 +656,30 @@ let state = {
     // TADY JSEM SMAZAL: await loadAll(); 
 }
 
-  async function loadAll() {
-    console.log("➡️ [loadAll] 1. Funkce spuštěna...");
-    
+ async function loadAll() {
     try {
-        console.log("➡️ [loadAll] 2. Přeskakuji nastavení a zkouším stáhnout ROVNOU TIPY...");
-        
-        // Jdeme rovnou na tipy
-        const odpovedTipy = await supabaseClient
+        // 1. Stáhneme výsledky turnaje (pokud jsou)
+        const { data: n } = await supabaseClient
+            .from('nastaveni')
+            .select('vysledky')
+            .eq('id', 1)
+            .maybeSingle();
+            
+        if (n && n.vysledky) {
+            window.currentResults = n.vysledky;
+        }
+
+        // 2. Stáhneme všechny tipy pro žebříček
+        const { data: t } = await supabaseClient
             .from('tipy')
             .select('*');
 
-        console.log("➡️ [loadAll] 3. Supabase odpověděl (tipy):", odpovedTipy);
-
-        if (odpovedTipy.error) throw odpovedTipy.error;
-
-        console.log("➡️ [loadAll] 4. Jdu kreslit tabulku...");
+        // 3. Vykreslíme tabulku
         if (typeof renderLeaderboard === "function") {
-            // Použijeme prázdné nastavení, jen abychom viděli, jestli se tabulka objeví
-            renderLeaderboard(odpovedTipy.data || [], window.currentResults || {});
-            console.log("✅ HOTOVO! Tabulka je vykreslena.");
+            renderLeaderboard(t || [], window.currentResults || {});
         }
-
     } catch (error) {
-        console.error("🛑 KRITICKÁ CHYBA v loadAll:", error.message || error);
+        console.error("❌ Chyba při načítání dat pro tabulku:", error);
     }
 }
 
