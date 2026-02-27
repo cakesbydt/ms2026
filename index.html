@@ -1728,17 +1728,22 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
         const authSec = document.getElementById('auth-section');
 
-        if (session) {
+       if (session) {
             console.log("👤 Přihlášen ID:", session.user.id);
             try {
                 if (typeof nactiUzivatelskyTip === "function") {
                     await nactiUzivatelskyTip(session.user.id);
+                } else {
+                    // Tady na nás teď vyskočí obří chyba, pokud funkce chybí
+                    console.error("❌ POZOR: Funkce nactiUzivatelskyTip() není v kódu k nalezení!");
                 }
             } catch (err) {
                 console.error("❌ Chyba v nactiUzivatelskyTip:", err);
             }
             if (authSec) authSec.classList.add('hidden');
-        } else {
+        }
+       
+    else {
             console.log("👤 Nepřihlášen.");
             if (authSec) authSec.classList.remove('hidden');
         }
