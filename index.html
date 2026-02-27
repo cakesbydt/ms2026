@@ -1622,28 +1622,31 @@ async function nactiUzivatelskyTip(userId) {
             // Naplníme zbytek pavouka
             if (state.playoff) Object.assign(state.playoff, tip);
 
-            console.log("➡️ [Tip] 3. Data připravena. Jdu přepnout web do stavu pavouka...");
+            console.log("➡️ [Tip] 3. Data připravena. Zjišťuji, v jaké jsi fázi...");
             
-            // SKRYJEME ZBYTEČNÉ FÁZE (Skupiny a 3. místa)
-            const groupsDiv = document.getElementById('phase-groups');
-            if (groupsDiv) groupsDiv.classList.add('hidden');
-            
-            const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
-            if (thirdsDiv) thirdsDiv.classList.add('hidden');
+            // ROZHODNUTÍ: Má uživatel hotová 3. místa?
+            if (state.thirds && state.thirds.length === 8) {
+                console.log("✅ [Tip] Tip je kompletní. Přepínám rovnou do pavouka.");
+                
+                // Skryjeme skupiny a 3. místa
+                const groupsDiv = document.getElementById('phase-groups');
+                if (groupsDiv) groupsDiv.classList.add('hidden');
+                
+                const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
+                if (thirdsDiv) thirdsDiv.classList.add('hidden');
 
-            // ZOBRAZÍME PAVOUKA
-            const playoffCont = document.getElementById('playoff-container');
-            if (playoffCont) playoffCont.classList.remove('hidden');
+                // Zobrazíme pavouka
+                const playoffCont = document.getElementById('playoff-container');
+                if (playoffCont) playoffCont.classList.remove('hidden');
 
-            // ZAVOLÁME TVOJI FUNKCI PRO SESTAVENÍ PAVOUKA
-            if (typeof prepareS32 === "function" && state.thirds && state.thirds.length === 8) {
-                prepareS32(state.thirds);
-                console.log("✅ [Tip] 4. HOTOVO! Pavouk by měl být zobrazen (přes prepareS32).");
-            } else if (typeof confirmThirds === "function") {
-                confirmThirds();
-                console.log("✅ [Tip] 4. HOTOVO! Pavouk by měl být zobrazen (přes confirmThirds).");
+                // Poskládáme pavouka
+                if (typeof prepareS32 === "function") {
+                    prepareS32(state.thirds);
+                }
             } else {
-                console.warn("⚠️ [Tip] Nenašel jsem funkci prepareS32 ani confirmThirds k vykreslení!");
+                console.warn("⚠️ [Tip] Tip NENÍ kompletní (chybí 8 týmů ze 3. míst).");
+                // TADY JE TA OPRAVA: Neschováváme skupiny a NEVOLÁME confirmThirds()!
+                // Web zůstane normálně na začátku, abys mohl tip doklikat.
             }
 
         } else {
@@ -1653,6 +1656,7 @@ async function nactiUzivatelskyTip(userId) {
         console.error("🛑 [Tip] Kritická chyba při načítání tipu:", err);
     }
 }
+    
 supabaseClient.auth.onAuthStateChange((event, session) => {
     console.log("🔔 AUTH EVENT:", event);
 
