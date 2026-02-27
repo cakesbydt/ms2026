@@ -819,14 +819,21 @@ let state = {
         el.style.display = isVisible ? 'none' : 'table-row';
     }
 
-    function goBack(currId, prevId, dotId) {
-        document.getElementById(currId).classList.add('hidden');
-        document.getElementById(prevId).classList.remove('hidden');
-        document.querySelectorAll('.step-dot').forEach(d => d.classList.remove('active'));
-        document.getElementById(dotId).classList.add('active');
-        // Místo ručního odebírání active tříd stačí:
-updateStepper(dotId);
+   function goBack(currentId, prevId, prevDot) {
+    // 1. Skryje aktuální sekci (např. pavouka)
+    const current = document.getElementById(currentId);
+    if (current) current.classList.add('hidden');
+
+    // 2. Ukáže předchozí sekci (např. 3. místa)
+    const prev = document.getElementById(prevId);
+    if (prev) prev.classList.remove('hidden');
+
+    // --- TADY JE TA OPRAVA ---
+    // 3. Řekne hornímu panelu, aby se přebarvil na předchozí tečku
+    if (prevDot && typeof updateStepper === "function") {
+        updateStepper(prevDot);
     }
+}
 
    function editGroup(id) { 
     document.getElementById('group-editor').classList.remove('hidden'); 
