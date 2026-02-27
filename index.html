@@ -1476,28 +1476,31 @@ async function nacistAdminVysledky() {
 }
 
    async function saveAdminResults() {
-    // 1. Očištění skupin (vytáhneme jen jména)
-    const cleanGroups = state.groups.map(g => {
-        // Pokud je tým objekt {name: "Česko"}, vezmeme name, jinak vezmeme přímo text
-        return (g.teams || []).map(t => typeof t === 'object' ? t.name : t);
-    });
+    console.log("🛠️ PŘÍPRAVA ODESÍLÁNÍ...");
 
-    // 2. Pomocná funkce pro vyčištění polí v playoff (s32, s16...)
+    // 1. Vyčištění skupin
+    const cleanGroups = state.groups.map(g => g.teams);
+
+    // 2. Extrémně bezpečné vyčištění playoff - chceme jen jména!
     const cleanStage = (stage) => {
         const teams = state.playoff[stage] || [];
-        return teams.map(t => typeof t === 'object' ? t.name : t);
+        // Vezme jen text, i kdyby to byl náhodou objekt
+        return teams.map(t => (t && typeof t === 'object') ? t.name : t).filter(t => t);
     };
 
-    // 3. Sestavení dat přesně pro tvé nové sloupce v Supabase
+    // 3. Sestavení finálního balíku dat
     const adminData = {
         groups: cleanGroups,
         s32: cleanStage('s32'),
         s16: cleanStage('s16'),
         s8:  cleanStage('s8'),
         s4:  cleanStage('s4'),
-        bronze: typeof state.playoff.bronze === 'object' ? state.playoff.bronze.name : (state.playoff.bronze || ""),
-        winner: typeof state.playoff.winner === 'object' ? state.playoff.winner.name : (state.playoff.winner || "")
+        winner: (state.playoff.winner?.name || state.playoff.winner || ""),
+        bronze: (state.playoff.bronze?.name || state.playoff.bronze || "")
     };
+
+    // --- KONTROLNÍ BOD ---
+    console.log("📦 TOTO POSÍLÁM DO DATABÁZE:", adminData);
 
     try {
         const { error } = await supabaseClient
@@ -1508,14 +1511,16 @@ async function nacistAdminVysledky() {
             });
 
         if (error) throw error;
-        showCustomAlert("✅ Hotovo!", "Výsledky byly uloženy. Žebříček se teď přepočítá.");
         
-        // Okamžitě aktualizujeme žebříček na stránce, aby se změny projevily
+        console.log("✅ DATABÁZE POTVRDILA PŘIJETÍ");
+        alert("Výsledky byly úspěšně propsány! Teď už bys měl v žebříčku vidět body.");
+        
+        // Refreshujeme žebříček
         if (typeof loadAll === "function") loadAll();
 
     } catch (err) {
-        console.error("Chyba při ukládání admin dat:", err);
-        showCustomAlert("Chyba", "Nepodařilo se uložit data: " + err.message);
+        console.error("❌ CHYBA PŘI ODESÍLÁNÍ:", err);
+        alert("Chyba při ukládání: " + err.message);
     }
 }
 
