@@ -697,36 +697,7 @@
     margin-top: 2px;
 }
 
-      @media (max-width: 768px) {
-    /* Hlavní kontejner, který drží všechno pohromadě */
-    /* Ujisti se, že tvoje sekce jsou uvnitř prvku s tímto ID nebo třídou */
-    .main-content, #main-wrapper, body > main { 
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* 1. Vlajky nahoře */
-    .flags-banner, .header-flags { order: 1 !important; }
-
-    /* 2. Hlavní nadpis */
-    h1, .main-title { order: 2 !important; }
-
-    /* 3. Box s přihlášením */
-    #auth-section, #logged-in-section, .auth-container { order: 3 !important; }
-
-    /* 4. Tabulka bodování */
-    .scoring-legend, #scoring-info { order: 4 !important; }
-
-    /* 5. Žebříček hráčů */
-    .leaderboard-section, #leaderboard { order: 5 !important; }
-
-    /* 6. TA ČERVENÁ ČÁST (Navigace fází) - TVŮJ POŽADAVEK */
-    .phase-navigation { 
-        order: 6 !important; 
-        margin-top: 20px !important;
-        margin-bottom: 10px !important;
-    }
-
+    
     /* 7. Samotné tipování (Pavouk/Skupiny) */
     #admin-form-container { order: 7 !important; }
 }
@@ -764,6 +735,25 @@
     .hidden { display: none !important; }
     input { width: 100%; padding: 14px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
     .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
+
+// --- MOBILNÍ PŘESKLÁDÁNÍ PRVKŮ ---
+window.addEventListener('DOMContentLoaded', () => {
+    // Zkontrolujeme, jestli jsme na mobilním zařízení (šířka pod 1200px, kdy se ti láme .dashboard)
+    if (window.innerWidth <= 1200) {
+        
+        // Najdeme navigaci s tlačítky (Skupiny, 3. místa, Playoff)
+        const nav = document.querySelector('.phase-navigation'); 
+        
+        // Najdeme kontejner se samotným pavoukem / výběrem týmů
+        const adminContainer = document.getElementById('admin-form-container'); 
+        
+        // Pokud oba prvky existují, fyzicky přesuneme navigaci TĚSNĚ NAD pavouka
+        if (nav && adminContainer) {
+            adminContainer.parentNode.insertBefore(nav, adminContainer);
+        }
+    }
+});
+        
 </style>
 </head>
 <body>
