@@ -137,14 +137,41 @@
     .tip-detail-row { display: none; background: rgba(7, 10, 19, 0.8); }
     .detail-container { padding: 25px; border-left: 4px solid var(--accent); }
     .detail-section-title { color: var(--accent); font-size: 0.9rem; font-weight: 800; text-transform: uppercase; margin-bottom: 15px; display: block; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
-    .det-groups-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
+    .det-groups-grid { 
+    display: grid; 
+    /* Místo natvrdo 3 sloupců dovolíme prohlížeči skládat je podle šířky */
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); 
+    gap: 12px; 
+    margin-bottom: 25px; 
+}
     .det-group-box { background: rgba(22, 30, 46, 0.8); padding: 12px; border-radius: 10px; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.05); }
     .det-group-box b { color: var(--accent); display: block; margin-bottom: 8px; font-size: 0.75rem; }
-    .det-playoff-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    /* Základní nastavení (pro velké obrazovky) */
+.det-playoff-stages { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 15px; 
+}
     .det-stage-column { display: flex; flex-direction: column; gap: 15px; }
     .det-stage-card { background: rgba(22, 30, 46, 0.8); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
     .det-stage-card h5 { margin: 0 0 12px 0; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
     .det-team-list { display: flex; flex-direction: column; gap: 6px; }
+        /* OPRAVA PRO MOBILY (šířka pod 768px) */
+@media (max-width: 768px) {
+    .det-playoff-stages {
+        grid-template-columns: 1fr; /* Všechno pod sebou */
+        gap: 20px;
+    }
+    
+    .detail-container {
+        padding: 15px; /* Menší padding, aby bylo víc místa na text */
+    }
+
+    .det-team-tag {
+        font-size: 0.75rem; /* Menší písmo týmů v detailu pro mobil */
+        padding: 4px 6px;
+    }
+}
 
     #admin-panel { min-height: 800px; overflow-anchor: none; }
     #leaderboard-section { contain: layout; }
@@ -153,7 +180,13 @@
     #admin-form-container { min-height: 100vh; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
 
     /* --- LUXUSNÍ TOP 3 ŽEBŘÍČEK (Síň slávy) --- */
-    #leaderboard { border-collapse: separate; border-spacing: 0 8px; width: 100%; padding: 0 10px; }
+    #leaderboard { 
+    border-collapse: separate; 
+    border-spacing: 0 8px; 
+    width: 100%; 
+    padding: 0; 
+    table-layout: fixed; /* Nutí tabulku držet se šířky kontejneru */
+}
     #leaderboard tbody tr { border-radius: 12px; overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease; background: rgba(255, 255, 255, 0.02); }
     #leaderboard tbody tr:hover { transform: translateY(-3px) scale(1.01); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); z-index: 10; position: relative;}
 
@@ -180,6 +213,10 @@
     #leaderboard tbody tr:nth-child(n+4) { border: 1px solid rgba(255, 255, 255, 0.03); }
     #leaderboard td { padding: 15px; vertical-align: middle; border: none; }
     #leaderboard td:first-child { width: 60px; text-align: center; font-size: 1.2rem; }
+    #leaderboard td { 
+    overflow: hidden; 
+    text-overflow: ellipsis; /* Pokud by jméno bylo moc dlouhé, zkrátí ho tečkami */
+}
 
     /* --- VLAJKY --- */
     /* Najdi v CSS tyto třídy a uprav je takto: */
