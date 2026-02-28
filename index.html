@@ -735,24 +735,6 @@
     .hidden { display: none !important; }
     input { width: 100%; padding: 14px; background: #000; color: #fff; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; }
     .admin-trigger { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; cursor: pointer; }
-
-// --- MOBILNÍ PŘESKLÁDÁNÍ PRVKŮ ---
-window.addEventListener('DOMContentLoaded', () => {
-    // Zkontrolujeme, jestli jsme na mobilním zařízení (šířka pod 1200px, kdy se ti láme .dashboard)
-    if (window.innerWidth <= 1200) {
-        
-        // Najdeme navigaci s tlačítky (Skupiny, 3. místa, Playoff)
-        const nav = document.querySelector('.phase-navigation'); 
-        
-        // Najdeme kontejner se samotným pavoukem / výběrem týmů
-        const adminContainer = document.getElementById('admin-form-container'); 
-        
-        // Pokud oba prvky existují, fyzicky přesuneme navigaci TĚSNĚ NAD pavouka
-        if (nav && adminContainer) {
-            adminContainer.parentNode.insertBefore(nav, adminContainer);
-        }
-    }
-});
         
 </style>
 </head>
@@ -2300,6 +2282,34 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
             if (authSec) authSec.classList.remove('hidden');
         }
     }, 100); // <-- Těch 100ms je ten klíčový detail
+});
+
+// --- DYNAMICKÉ PŘESKLÁDÁNÍ NAVIGACE (MOBIL VS PC) ---
+function srovnejNavigaci() {
+    // 1. Najdeme správné prvky
+    const navigace = document.querySelector('.step-indicator'); // Tvoje bubliny
+    const mainSekce = document.querySelector('main'); // Sekce, kde se vybírají týmy
+    const hlavicka = document.querySelector('header'); // Horní část webu
+
+    if (!navigace || !mainSekce || !hlavicka) return;
+
+    // 2. Kontrola šířky (1200px je tvůj zlomový bod v CSS)
+    if (window.innerWidth <= 1200) {
+        // Na mobilu: Přesuneme bubliny těsně nad <main> 
+        // (to znamená přesně POD žebříček, který je v <aside>)
+        mainSekce.parentNode.insertBefore(navigace, mainSekce);
+        navigace.style.marginTop = '20px'; // Ať to není nalepené na žebříčku
+    } else {
+        // Na počítači: Vrátíme bubliny zpět nahoru do hlavičky
+        hlavicka.appendChild(navigace);
+        navigace.style.marginTop = '0';
+    }
+}
+
+// Spustíme to hned po načtení stránky a při každé změně velikosti okna
+window.addEventListener('DOMContentLoaded', () => {
+    srovnejNavigaci();
+    window.addEventListener('resize', srovnejNavigaci);
 });
     
 // Spustíme kontrolu hned po načtení stránky
