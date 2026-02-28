@@ -2287,24 +2287,31 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 // --- DYNAMICKÉ PŘESKLÁDÁNÍ NAVIGACE (MOBIL VS PC) ---
 function srovnejNavigaci() {
     // 1. Najdeme správné prvky
-    const navigace = document.querySelector('.step-indicator'); // Tvoje bubliny
-    const mainSekce = document.querySelector('main'); // Sekce, kde se vybírají týmy
-    const hlavicka = document.querySelector('header'); // Horní část webu
+    const navigace = document.querySelector('.step-indicator'); 
+    const mainSekce = document.querySelector('main'); 
+    
+    // TADY JE OPRAVA: Hledáme header, který je uvnitř tvé hlavní aplikace, ne ten s vlajkami!
+    const spravnaHlavicka = document.querySelector('.app-wrapper header'); 
 
-    if (!navigace || !mainSekce || !hlavicka) return;
+    if (!navigace || !mainSekce || !spravnaHlavicka) return;
 
     // 2. Kontrola šířky (1200px je tvůj zlomový bod v CSS)
     if (window.innerWidth <= 1200) {
         // Na mobilu: Přesuneme bubliny těsně nad <main> 
-        // (to znamená přesně POD žebříček, který je v <aside>)
         mainSekce.parentNode.insertBefore(navigace, mainSekce);
-        navigace.style.marginTop = '20px'; // Ať to není nalepené na žebříčku
+        navigace.style.marginTop = '20px'; 
     } else {
-        // Na počítači: Vrátíme bubliny zpět nahoru do hlavičky
-        hlavicka.appendChild(navigace);
+        // Na počítači: Vrátíme bubliny zpět pod nadpis MS 2026 TIPOVAČKA
+        spravnaHlavicka.appendChild(navigace);
         navigace.style.marginTop = '0';
     }
 }
+
+// Spustíme to hned po načtení stránky a při každé změně velikosti okna
+window.addEventListener('DOMContentLoaded', () => {
+    srovnejNavigaci();
+    window.addEventListener('resize', srovnejNavigaci);
+});
 
 // Spustíme to hned po načtení stránky a při každé změně velikosti okna
 window.addEventListener('DOMContentLoaded', () => {
