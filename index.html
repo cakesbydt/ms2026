@@ -697,29 +697,38 @@
     margin-top: 2px;
 }
 
-        /* Aplikuje se pouze na obrazovky do šířky 768px (mobily a tablety) */
-@media (max-width: 768px) {
-    /* 1. Hlavní obal musíme přepnout na flexbox sloupec */
-    #main-wrapper { /* Změň na třídu/ID obalu, který drží celý tvůj obsah */
+      @media (max-width: 768px) {
+    /* Hlavní kontejner, který drží všechno pohromadě */
+    /* Ujisti se, že tvoje sekce jsou uvnitř prvku s tímto ID nebo třídou */
+    .main-content, #main-wrapper, body > main { 
         display: flex !important;
         flex-direction: column !important;
     }
 
-    /* 2. Jednoduše očíslujeme pořadí, jak jdou za sebou */
-    .flags-banner { order: 1 !important; }
-    
-    h1 { order: 2 !important; margin-bottom: 15px !important; } /* Nadpis MS2026 */
-    
-    #auth-section, 
-    #logged-in-section { order: 3 !important; margin-bottom: 15px !important; }
-    
-    .scoring-legend { order: 4 !important; margin-bottom: 20px !important; }
-    
-    #leaderboard-section { order: 5 !important; margin-bottom: 20px !important; }
-    
-    .phase-navigation { order: 6 !important; margin-bottom: 15px !important; }
-    
-    #admin-form-container { order: 7 !important; } /* Samotný pavouk */
+    /* 1. Vlajky nahoře */
+    .flags-banner, .header-flags { order: 1 !important; }
+
+    /* 2. Hlavní nadpis */
+    h1, .main-title { order: 2 !important; }
+
+    /* 3. Box s přihlášením */
+    #auth-section, #logged-in-section, .auth-container { order: 3 !important; }
+
+    /* 4. Tabulka bodování */
+    .scoring-legend, #scoring-info { order: 4 !important; }
+
+    /* 5. Žebříček hráčů */
+    .leaderboard-section, #leaderboard { order: 5 !important; }
+
+    /* 6. TA ČERVENÁ ČÁST (Navigace fází) - TVŮJ POŽADAVEK */
+    .phase-navigation { 
+        order: 6 !important; 
+        margin-top: 20px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* 7. Samotné tipování (Pavouk/Skupiny) */
+    #admin-form-container { order: 7 !important; }
 }
 
 /* Zvýraznění pro vítěze a bronz */
