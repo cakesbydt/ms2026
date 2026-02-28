@@ -42,14 +42,16 @@
     ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
     /* --- ZÁKLAD --- */
-    body { 
-        background: radial-gradient(circle at top center, #111827 0%, var(--bg) 100%); 
-        color: var(--text); 
-        font-family: 'Inter', sans-serif; 
-        margin: 0; 
-        padding: 0; 
-        min-height: 100vh;
-    }
+   body { 
+    background: radial-gradient(circle at top center, #111827 0%, var(--bg) 100%); 
+    color: var(--text); 
+    font-family: 'Inter', sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    min-height: 100vh;
+    overflow-x: hidden; /* Zabrání horizontálnímu ujíždění */
+    width: 100%;
+}
     
     .app-wrapper { max-width: 1600px; margin: 0 auto; padding: 20px; }
     
@@ -68,7 +70,14 @@
     }
 
     /* --- STEPPER --- */
-    .step-indicator { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; }
+    /* Najdi .step-indicator a přidej tam flex-wrap: wrap */
+.step-indicator { 
+    display: flex; 
+    justify-content: center; 
+    gap: 10px; 
+    margin-bottom: 30px; 
+    flex-wrap: wrap; /* TOTO OPRAVÍ ROZTAŽENÍ STRÁNKY */
+}
     .step-dot { 
         padding: 8px 18px; 
         border-radius: 30px; 
@@ -173,13 +182,49 @@
     #leaderboard td:first-child { width: 60px; text-align: center; font-size: 1.2rem; }
 
     /* --- VLAJKY --- */
-    .site-header { width: 100%; display: flex; justify-content: center; padding: 20px 0; }
-    .mini-host-bar { display: flex; flex-direction: column; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.02); padding: 15px 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
+    /* Najdi v CSS tyto třídy a uprav je takto: */
+.site-header { 
+    width: 100%; 
+    display: flex; 
+    justify-content: center; 
+    padding: 20px 0; 
+    box-sizing: border-box; /* Zajistí, že padding neudělá header širší */
+}
+    .mini-host-bar { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 12px; 
+    background: rgba(255, 255, 255, 0.02); 
+    padding: 15px 20px; /* Trochu jsem zmenšil padding pro mobily */
+    border-radius: 16px; 
+    border: 1px solid rgba(255,255,255,0.05); 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    max-width: 90%; /* Aby na malých mobilech nelezl mimo */
+}
     .mini-flags { display: flex; gap: 12px; }
-    .mini-flags img { height: 40px; width: auto; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.4); transition: transform 0.3s ease, filter 0.3s ease; filter: brightness(0.9); }
+    /* Uprav tento blok */
+.mini-flags img { 
+    height: 40px; 
+    width: auto; 
+    border-radius: 4px; 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4); 
+    transition: transform 0.3s ease, filter 0.3s ease; 
+    filter: brightness(0.9); 
+}
     .mini-flags img:hover { transform: translateY(-3px); filter: brightness(1.1); }
     @media (min-width: 768px) { .mini-flags img { height: 180px; border-radius: 8px; } }
-    .mini-text { font-size: 0.85rem; color: var(--text-muted); font-weight: 800; letter-spacing: 3px; text-transform: uppercase; text-align: center; margin-top: 5px;}
+   /* A uprav tento text, aby se na mobilu nezalamoval ošklivě */
+.mini-text { 
+    font-size: 0.75rem; /* O trochu menší na mobilu */
+    color: var(--text-muted); 
+    font-weight: 800; 
+    letter-spacing: 2px; /* Trochu menší rozestupy */
+    text-transform: uppercase; 
+    text-align: center; 
+    margin-top: 5px;
+    line-height: 1.4;
+}
 
     /* --- ŠIROKÉ KARTY SKUPIN (Nový vzhled) --- */
     .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; padding: 10px 0; }
