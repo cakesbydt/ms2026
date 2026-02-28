@@ -156,10 +156,71 @@
     display: inline-block;
 }
 
-    /* --- PRAVÝ SLOUPEC FORMULÁŘ --- */
-    .groups-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; padding: 20px; }
-    .group-card { background: #0f172a; border: 1px solid var(--border); padding: 12px; border-radius: 8px; text-align: center; cursor: pointer; font-weight: bold; }
-    .group-card.filled { border-color: var(--winner); color: var(--winner); }
+    /* --- NOVÝ VZHLED SKUPIN (Široké karty, týmy vedle sebe) --- */
+.groups-grid {
+    display: grid;
+    /* Karty budou mít minimálně 280px. Na PC budou 3-4 vedle sebe, na mobilu 1 nebo 2 */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.group-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    padding: 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left; /* Zarovnání doleva je u jmen hezčí */
+}
+
+        .group-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+        .group-card.filled {
+    border-color: var(--winner);
+    background: rgba(34, 197, 94, 0.05); /* Jemný zelený podkres při hotové skupině */
+}
+
+        /* Hlavička karty (Skupina A) */
+.g-card-header {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Řádek s týmy */
+.g-teams-row {
+    display: flex;
+    justify-content: space-between; /* Hodí týmy na opačné konce karty */
+    align-items: center;
+}
+
+.g-team-name {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.g-pos-number {
+    color: var(--accent);
+    font-size: 0.8rem;
+    opacity: 0.8;
+    font-weight: 900;
+}
+        
     .group-card.selected { background: var(--accent); color: #000; border-color: var(--accent); }
 
 /* --- LUXUSNÍ TOP 3 ŽEBŘÍČEK (Síň slávy) --- */
@@ -893,12 +954,37 @@ let state = {
 };
     let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
 
-   async function init() {
+  async function init() {
     const grid = document.getElementById('groups-grid');
+    grid.innerHTML = ''; // Vyčistíme pro jistotu
+
     state.groups.forEach(g => { 
-        grid.innerHTML += `<div class="group-card" id="dot-${g.id}" onclick="editGroup('${g.id}')">${g.id}</div>`; 
+        grid.innerHTML += `
+        <div class="group-card" id="dot-${g.id}" onclick="editGroup('${g.id}')">
+            <div class="g-card-header">
+                <span>Skupina ${g.id}</span>
+                <i class="fas fa-edit" style="opacity: 0.5;"></i>
+            </div>
+            <div class="g-teams-row" id="teams-${g.id}">
+                <span style="color:#64748b; font-size:0.85rem; width:100%; text-align:center;">Klikni pro úpravu</span>
+            </div>
+        </div>`; 
     });
-    // TADY JSEM SMAZAL: await loadAll(); 
+}
+
+    function aktualizujVzhledKarty(gid) {
+    const g = state.groups.find(x => x.id === gid);
+    const teamsContainer = document.getElementById(`teams-${gid}`);
+    const card = document.getElementById(`dot-${gid}`);
+
+    if (g && g.done && teamsContainer && card) {
+        card.classList.add('filled');
+        // Vykreslí 1. a 2. místo vedle sebe
+        teamsContainer.innerHTML = `
+            <div class="g-team-name"><span class="g-pos-number">1.</span> ${g.teams[0] || '?'}</div>
+            <div class="g-team-name"><span class="g-pos-number">2.</span> ${g.teams[1] || '?'}</div>
+        `;
+    }
 }
 
 async function loadAll() {
@@ -1227,7 +1313,8 @@ function renderTeamList(gid) {
         `).join('')}
     </div>`;
     
-    g.done = true; 
+    g.done = true;
+    aktualizujVzhledKarty(gid);
     document.getElementById(`dot-${gid}`).classList.add('filled');
 }
 
@@ -2187,19 +2274,18 @@ async function nactiUzivatelskyTip(userId) {
                             if (tymy && tymy.length > 0) {
                                 state.groups[i].done = true; 
                                 
-                                const dot = document.getElementById('dot-' + state.groups[i].id);
-                                if (dot) {
-                                    dot.classList.add('completed');
-                                    dot.innerHTML = `
-                                        <span style="font-size: 0.6rem; opacity: 0.7;">Skupina ${state.groups[i].id}</span><br>
-                                        <b style="font-size: 0.8rem;">1. ${tymy[0] || '?'}</b><br>
-                                        <b style="font-size: 0.8rem;">2. ${tymy[1] || '?'}</b>
-                                    `;
+                                // --- TADY JE TA ZMĚNA VZHLEDU ---
+                                // Zavoláme naši novou funkci, která kartu stylově přeskládá
+                                if (typeof aktualizujVzhledKarty === "function") {
+                                    aktualizujVzhledKarty(state.groups[i].id);
                                 }
+                                // ---------------------------------
                             }
                         }
                     });
                 }
+                
+                // ... (zbytek tvé funkce pokračuje beze změny: 2. NAPLNĚNÍ PAVOUKA atd.) ...
                 
                 // 2. NAPLNĚNÍ PAVOUKA (Playoff)
                 if (state.playoff) Object.assign(state.playoff, tip);
