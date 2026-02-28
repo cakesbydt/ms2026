@@ -1083,7 +1083,7 @@ function confirmThirds() {
 // Opravené:
 genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s2');
 }
-  // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
+ // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
 function genStage(title, teams, count, id, prevPhase, prevDot) {
     const cont = document.getElementById('playoff-container');
     
@@ -1127,13 +1127,29 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     for(let i=0; i<count; i++) {
         let t1 = currentTeams[i*2] || '??';
         let t2 = currentTeams[i*2+1] || '??';
-        let sel1 = prevWins.includes(t1) ? 'selected' : '';
-        let sel2 = prevWins.includes(t2) ? 'selected' : '';
+        
+        // --- LOGIKA BARVENÍ VÍTĚZŮ ---
+        let sel1 = '';
+        let sel2 = '';
+
+        if (id === 's2') {
+            // Kontrola pro Finále (Vítěz turnaje)
+            if (state.playoff.winner === t1 && t1 !== '??') sel1 = 'selected';
+            if (state.playoff.winner === t2 && t2 !== '??') sel2 = 'selected';
+        } else if (id === 's3') {
+            // Kontrola pro zápas O 3. místo (Bronz)
+            if (state.playoff.bronze === t1 && t1 !== '??') sel1 = 'selected';
+            if (state.playoff.bronze === t2 && t2 !== '??') sel2 = 'selected';
+        } else {
+            // Standardní barvení pro kola s32, s16, s8, s4
+            sel1 = prevWins.includes(t1) ? 'selected' : '';
+            sel2 = prevWins.includes(t2) ? 'selected' : '';
+        }
 
         h += `
             <div class="matchup" id="m-${id}-${i}">
                 <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; letter-spacing: 1px;">
-                    <span>ZÁPAS ${i+1}</span>
+                    <span>${id === 's2' ? 'FINÁLE' : (id === 's3' ? 'O 3. MÍSTO' : 'ZÁPAS ' + (i+1))}</span>
                     <i class="fas fa-sitemap" style="opacity: 0.3;"></i>
                 </div>
                 <div class="playoff-team ${sel1}" onclick="pk('${id}',${i},0)">${t1}</div>
@@ -1146,6 +1162,7 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
     // Zobrazení správného kola a skrytí ostatních
     document.querySelectorAll('#playoff-container .section-box, main > .section-box').forEach(div => div.classList.add('hidden'));
     stageDiv.classList.remove('hidden');
+}
 }
 
     function pk(sid, mi, ti) {
