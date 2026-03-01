@@ -770,15 +770,22 @@ const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
 const SB_KEY = "sb_publishable_H9egZ3Rrq5LYi02NxpvjCQ_xDXOQP4X"; // Tvůj klíč
 const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
-const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
-
+// 🚀 NOVÁ PŘEHLEDNÁ STRUKTURA TÝMŮ
 let state = { 
-    groups: Array.from({length:12}, (_, i) => ({ 
-        id: String.fromCharCode(65+i), 
-        teams: [...GROUP_TEAMS_STATIC[i]], 
-        done: false 
-    })), 
+    groups: [
+        { id: 'A', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'B', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'C', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'D', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'E', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'F', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'G', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'H', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'I', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'J', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'K', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'L', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false }
+    ], 
     thirds: [], 
     playoff: {},
     history: {} 
@@ -2010,7 +2017,7 @@ function getTeamsForStage(id, fallbackTeams) {
 
 async function updateRankTrends() {
     const heslo = prompt("Zadej administrátorské heslo pro trendy:");
-    if (heslo !== "TVOJE_HESLO") return alert("Přístup zamítnut!");
+    if (heslo !== "Matysek.2019") return alert("Přístup zamítnut!");
 
     const btn = document.getElementById('btn-update-trends');
     const originalText = btn.innerHTML;
