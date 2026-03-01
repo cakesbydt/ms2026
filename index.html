@@ -665,21 +665,25 @@
         <h2 id="winner-display" style="color:var(--winner); margin: 0 0 30px 0; font-size: 2rem; font-weight: 900; text-shadow: 0 0 20px rgba(34,197,94,0.4);"></h2>
         
         <div class="countdown-wrapper" style="max-width: 400px; margin: 0 auto 25px auto; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #38bdf8;">
-            <div class="countdown-title" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">Tipování se uzavře za:</div>
-            <div id="countdown-timer" class="countdown-numbers" style="color: #fff; font-size: 1.8rem; font-weight: 900;">
-                <span id="cd-days" style="color: #38bdf8;">00</span>d : 
-                <span id="cd-hours" style="color: #38bdf8;">00</span>h : 
-                <span id="cd-mins" style="color: #38bdf8;">00</span>m : 
-                <span id="cd-secs" style="color: #38bdf8;">00</span>s
-            </div>
-            <div id="countdown-expired" style="display: none; color: #ef4444; font-weight: bold; font-size: 1.2rem;">
-                <i class="fas fa-lock"></i> Tipování je uzavřeno!
-            </div>
-        </div>
-        <input type="text" id="user-name" placeholder="Zadej své jméno pro žebříček" style="margin-bottom:25px; text-align:center; font-size:1.2rem; padding: 16px; max-width: 400px; display: block; margin-left: auto; margin-right: auto;">
-        
-        <button id="btn-odeslat-tip" class="btn btn-primary" style="font-size: 1.2rem; padding: 18px 40px; max-width: 400px; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 10px 25px rgba(34,197,94,0.4);" onclick="saveToSupabase()">ODESLAT TIP DO ŽEBŘÍČKU</button>
+    <div class="countdown-title" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">Tipování se uzavře za:</div>
+    
+    <div class="countdown-numbers js-timer-container" style="color: #fff; font-size: 1.8rem; font-weight: 900;">
+        <span class="cd-days" style="color: #38bdf8;">00</span>d : 
+        <span class="cd-hours" style="color: #38bdf8;">00</span>h : 
+        <span class="cd-mins" style="color: #38bdf8;">00</span>m : 
+        <span class="cd-secs" style="color: #38bdf8;">00</span>s
     </div>
+
+    <div class="countdown-expired" style="display: none; color: #ef4444; font-weight: bold; font-size: 1.2rem;">
+        <i class="fas fa-lock"></i> Tipování je uzavřeno!
+    </div>
+</div>
+
+<input type="text" id="user-name" placeholder="Zadej své jméno pro žebříček" style="margin-bottom:25px; text-align:center; font-size:1.2rem; padding: 16px; max-width: 400px; display: block; margin-left: auto; margin-right: auto; background: #1e293b; color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+
+<button id="btn-odeslat-tip" class="btn btn-primary" style="font-size: 1.2rem; padding: 18px 40px; max-width: 400px; width: 100%; display: block; margin: 0 auto; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 10px 25px rgba(34,197,94,0.4); border: none; cursor: pointer; border-radius: 8px;" onclick="saveToSupabase()">
+    ODESLAT TIP DO ŽEBŘÍČKU
+</button>   </div>
 </div>
         </main>
     </div>
@@ -697,94 +701,110 @@ function scrollToContent() {
     }
 }
     
+/* --- 1. ODPOČET (Synchronizovaný pro všechna místa) --- */
 function initCountdown() {
-    // TADY NASTAV PŘESNÝ ČAS UZÁVĚRKY (Rok, Měsíc-1, Den, Hodina, Minuta, Vteřina)
-    // MS 2026 začíná 11. června 2026. Zde je nastaveno 11. 6. 2026 ve 20:00.
+    // MS 2026 začíná 11. června 2026 ve 21:00
     const deadline = new Date("2026-06-11T21:00:00").getTime();
 
     const timerInterval = setInterval(function() {
         const now = new Date().getTime();
         const distance = deadline - now;
 
-        // TADY DOPLŇ PŘESNÁ ID TVÝCH TLAČÍTEK PRO ODESLÁNÍ A ÚPRAVU TIPU
         const btnOdeslat = document.getElementById('btn-odeslat-tip'); 
         const btnUpravit = document.getElementById('btn-upravit-tip');
 
         if (distance < 0) {
-            // ČAS VYPRŠEL
             clearInterval(timerInterval);
             
-            // Přepnutí vzhledu odpočtu na "Uzavřeno"
-            document.getElementById("countdown-timer").style.display = "none";
-            document.getElementById("countdown-expired").style.display = "block";
+            // Schováme všechny běžící timery (pomocí třídy nebo ID)
+            document.querySelectorAll("#countdown-timer, .countdown-numbers").forEach(el => el.style.display = "none");
+            document.querySelectorAll("#countdown-expired, .countdown-expired").forEach(el => el.style.display = "block");
 
-            // NEKOMPROMISNÍ ZABLOKOVÁNÍ TLAČÍTEK
-            if (btnOdeslat) {
-                btnOdeslat.disabled = true;
-                btnOdeslat.style.opacity = "0.3";
-                btnOdeslat.style.cursor = "not-allowed";
-                btnOdeslat.innerText = "Tipování skončilo"; // Přepíše text tlačítka
-            }
-            if (btnUpravit) {
-                btnUpravit.disabled = true;
-                btnUpravit.style.opacity = "0.3";
-                btnUpravit.style.cursor = "not-allowed";
-                btnUpravit.innerText = "Úpravy zamčeny";
-            }
+            // Zablokování tlačítek pro odeslání/úpravu
+            [btnOdeslat, btnUpravit].forEach(btn => {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.style.opacity = "0.3";
+                    btn.style.cursor = "not-allowed";
+                    btn.innerText = "Tipování skončilo";
+                }
+            });
         } else {
-            // ČAS BĚŽÍ - Výpočet zbývajícího času
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            // Výpočet zbývajícího času
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000).toString().padStart(2, '0');
 
-            // Vypsání do HTML (padEnd s 0 zajistí formát "05" místo "5")
-            document.getElementById("cd-days").innerText = days.toString().padStart(2, '0');
-            document.getElementById("cd-hours").innerText = hours.toString().padStart(2, '0');
-            document.getElementById("cd-mins").innerText = minutes.toString().padStart(2, '0');
-            document.getElementById("cd-secs").innerText = seconds.toString().padStart(2, '0');
+            // Aktualizace všech elementů na stránce, které mají tvoje ID
+            // (Pokud máš ID na více místech, doporučuji změnit na querySelectorAll('.cd-days'))
+            const updateText = (id, val) => {
+                const elements = document.querySelectorAll(`#${id}, .${id}`);
+                elements.forEach(el => el.innerText = val);
+            };
+
+            updateText("cd-days", days);
+            updateText("cd-hours", hours);
+            updateText("cd-mins", minutes);
+            updateText("cd-secs", seconds);
         }
-    }, 1000); // Aktualizace každou vteřinu
+    }, 1000);
 }
 
-// Spuštění odpočtu, jakmile se načte stránka
-document.addEventListener('DOMContentLoaded', initCountdown);
-    
-    // Zabrání prohlížeči v automatických pokusech o obnovu skrolu
+/* --- 2. KONFIGURACE A DATA --- */
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
-    const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZsYWJvY3dlem1wd254cnd4aWhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5Mjc0MzEsImV4cCI6MjA4NzUwMzQzMX0.0K7vzYzfzSbBihVzUbHrpI5w8ohCsMlQyWyxRPcHy5c";
-    const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
-    const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
+const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."; // Tvůj klíč
+const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 
-    // 1. Uprav si začátek state (přidáme s3, s2 atd. pro historii)
+const teamsData = ["Česko", "Slovensko", "Brazílie", "Argentina", "Francie", "Anglie", "Španělsko", "Itálie", "Německo", "Portugalsko", "Nizozemsko", "Belgie", "Chorvatsko", "Uruguay", "Maroko", "Japonsko", "USA", "Mexiko", "Kanada", "Senegal", "Polsko", "Dánsko", "Švýcarsko", "Srbsko", "Korea", "Austrálie", "Egypt", "Tunisko", "Nigérie", "Alžírsko", "Katar", "Saúdská Arábie", "Rakousko", "Turecko", "Ukrajina", "Maďarsko", "Norsko", "Švédsko", "Skotsko", "Wales", "Kolumbie", "Chile", "Ekvádor", "Peru", "Paraguay", "Ghana", "Kamerun", "Island"];
+const GROUP_TEAMS_STATIC = Array.from({length:12}, (_, i) => teamsData.slice(i*4, i*4+4));
+
 let state = { 
-    groups: Array.from({length:12}, (_, i) => ({ id: String.fromCharCode(65+i), teams: [...GROUP_TEAMS_STATIC[i]], done: false })), 
+    groups: Array.from({length:12}, (_, i) => ({ 
+        id: String.fromCharCode(65+i), 
+        teams: [...GROUP_TEAMS_STATIC[i]], 
+        done: false 
+    })), 
     thirds: [], 
     playoff: {},
-    history: {} // Sem si budeme ukládat týmy pro každé kolo, aby při návratu nezmizely
+    history: {} 
 };
-    let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
 
-  async function init() {
+let currentResults = { groups: [], s32: [], s16: [], s8: [], s4: [], winner: "", bronze: "" };
+
+/* --- 3. INICIALIZACE SKUPIN (Grid karet) --- */
+async function init() {
     const grid = document.getElementById('groups-grid');
-    grid.innerHTML = ''; // Vyčistíme pro jistotu
+    if (!grid) return;
+    
+    grid.innerHTML = ''; 
 
     state.groups.forEach(g => { 
+        // Kontrola, jestli už je skupina hotová, abychom ukázali týmy místo nápisu
+        const teamsPreview = g.done 
+            ? g.teams.slice(0, 4).map((t, i) => `<div style="font-size:0.75rem;">${i+1}. ${t}</div>`).join('')
+            : `<span style="color:#64748b; font-size:0.85rem; width:100%; text-align:center;">Klikni pro úpravu</span>`;
+
         grid.innerHTML += `
-        <div class="group-card" id="dot-${g.id}" onclick="editGroup('${g.id}')">
+        <div class="group-card ${g.done ? 'completed' : ''}" id="dot-${g.id}" onclick="editGroup('${g.id}')">
             <div class="g-card-header">
                 <span>Skupina ${g.id}</span>
-                <i class="fas fa-edit" style="opacity: 0.5;"></i>
+                <i class="fas ${g.done ? 'fa-check-circle' : 'fa-edit'}" style="opacity: ${g.done ? '1' : '0.5'}; color: ${g.done ? '#22c55e' : 'inherit'};"></i>
             </div>
             <div class="g-teams-row" id="teams-${g.id}">
-                <span style="color:#64748b; font-size:0.85rem; width:100%; text-align:center;">Klikni pro úpravu</span>
+                ${teamsPreview}
             </div>
         </div>`; 
     });
 }
+
+// Spuštění při načtení
+document.addEventListener('DOMContentLoaded', () => {
+    initCountdown();
+    init();
+});
 
     function aktualizujVzhledKarty(gid) {
     const g = state.groups.find(x => x.id === gid);
