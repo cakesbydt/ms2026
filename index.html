@@ -1775,11 +1775,11 @@ function cfS(sid, count) {
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // --- KROK 1: PŘÍPRAVA DAT ---
-    // Potřebujeme seznam VŠECH týmů pro playoff (vytáhneme je z našich nových skupin)
+    // 1. KROK: PŘÍPRAVA SEZNAMU VŠECH TÝMŮ
+    // Vezmeme všechny týmy ze všech 12 skupin a uděláme z nich jeden velký seznam pro playoff
     const allTeams = state.groups.flatMap(g => g.teams);
 
-    // Zámek geometrie pro plynulost
+    // Zámek geometrie (aby stránka při překreslení neskákala)
     const currentHeight = cont.offsetHeight;
     if (currentHeight > 0) cont.style.minHeight = currentHeight + 'px';
     const scrollY = window.scrollY || window.pageYOffset;
@@ -1789,14 +1789,14 @@ function cfS(sid, count) {
     const res = window.currentResults || {};
     let finalHTML = ''; 
 
-    // 1. GENEROVÁNÍ SKUPIN (A-L)
+    // 2. GENEROVÁNÍ SKUPIN (A-L)
     state.groups.forEach((g, i) => {
         let h = `<div style="background:rgba(15, 23, 42, 0.8);padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
                     <b style="color:var(--accent); font-size: 1.1rem; margin-bottom: 10px; display:block;">Skupina ${g.id}</b>`;
         
         for(let p=0; p<4; p++) {
             const saved = res.groups?.[i]?.[p] || "";
-            // 🚀 OPRAVA: Místo GROUP_TEAMS_STATIC[i] používáme přímo g.teams
+            // TADY JE ZMĚNA: Používáme týmy přímo z objektu g.teams
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
                     ${g.teams.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
@@ -1805,7 +1805,7 @@ function cfS(sid, count) {
         finalHTML += h + `</div>`;
     });
 
-    // 2. GENEROVÁNÍ PLAYOFF
+    // 3. GENEROVÁNÍ PLAYOFF (1/16 až Semifinále)
     const stages = [
         {id:'s32', n:'1/16 finále', c:16}, {id:'s16', n:'1/8 finále', c:8}, 
         {id:'s8', n:'Čtvrtfinále', c:4}, {id:'s4', n:'Semifinále', c:4}
@@ -1817,7 +1817,7 @@ function cfS(sid, count) {
         
         for(let j=0; j<s.c; j++) {
             const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
-            // 🚀 OPRAVA: Místo teamsData používáme allTeams
+            // TADY JE ZMĚNA: Používáme námi vytvořené pole allTeams
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- vybrat --</option>
                     ${allTeams.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
@@ -1826,7 +1826,7 @@ function cfS(sid, count) {
         finalHTML += h + `</div>`;
     });
 
-    // 3. VÍTĚZ A BRONZ
+    // 4. VÍTĚZ A BRONZ
     const winS = res.winner || res.playoff?.winner || "";
     const broS = res.bronze || res.playoff?.bronze || "";
     finalHTML += `
@@ -1845,6 +1845,7 @@ function cfS(sid, count) {
 
     cont.innerHTML = finalHTML;
 
+    // Reset skrolu a zámku
     requestAnimationFrame(() => {
         window.scrollTo(0, scrollY);
         cont.style.minHeight = '';
