@@ -1683,17 +1683,14 @@ function cfS(sid, count) {
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // --- KROK 1: ZÁMEK GEOMETRIE ---
-    // Změříme aktuální výšku kontejneru a zafixujeme ji, aby stránka "nespadla" dolů
-    const currentHeight = cont.offsetHeight;
-    if (currentHeight > 0) {
-        cont.style.minHeight = currentHeight + 'px';
-    }
+    // --- KROK 1: PŘÍPRAVA DAT ---
+    // Potřebujeme seznam VŠECH týmů pro playoff (vytáhneme je z našich nových skupin)
+    const allTeams = state.groups.flatMap(g => g.teams);
 
-    // Zapamatujeme si, kde přesně uživatel je
+    // Zámek geometrie pro plynulost
+    const currentHeight = cont.offsetHeight;
+    if (currentHeight > 0) cont.style.minHeight = currentHeight + 'px';
     const scrollY = window.scrollY || window.pageYOffset;
-    
-    // Dočasně vypneme plynulé skrolování, aby nás prohlížeč neházel jinam
     const originalScrollBehavior = document.documentElement.style.scrollBehavior;
     document.documentElement.style.scrollBehavior = 'auto';
 
@@ -1704,11 +1701,13 @@ function cfS(sid, count) {
     state.groups.forEach((g, i) => {
         let h = `<div style="background:rgba(15, 23, 42, 0.8);padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
                     <b style="color:var(--accent); font-size: 1.1rem; margin-bottom: 10px; display:block;">Skupina ${g.id}</b>`;
+        
         for(let p=0; p<4; p++) {
             const saved = res.groups?.[i]?.[p] || "";
+            // 🚀 OPRAVA: Místo GROUP_TEAMS_STATIC[i] používáme přímo g.teams
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
-                    ${GROUP_TEAMS_STATIC[i].map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    ${g.teams.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
@@ -1723,11 +1722,13 @@ function cfS(sid, count) {
     stages.forEach(s => {
         let h = `<div style="background:rgba(15, 23, 42, 0.8);padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
                     <b style="color:var(--winner); font-size: 1.1rem; margin-bottom: 10px; display:block;">${s.n}</b>`;
+        
         for(let j=0; j<s.c; j++) {
             const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
+            // 🚀 OPRAVA: Místo teamsData používáme allTeams
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                     <option value="" ${saved === '' ? 'selected' : ''}>-- vybrat --</option>
-                    ${teamsData.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    ${allTeams.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
@@ -1741,26 +1742,19 @@ function cfS(sid, count) {
             <b style="font-size: 1.2rem; color: #fff;">🏆 Vítěz:</b>
             <select id="a-win" style="width:100%;margin-bottom:20px;margin-top:10px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
                 <option value="">-- vybrat vítěze --</option>
-                ${teamsData.map(t => `<option value="${t}" ${winS === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${allTeams.map(t => `<option value="${t}" ${winS === t ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
             <b style="font-size: 1.2rem; color: #fff;">🥉 Bronz:</b>
             <select id="a-bro" style="width:100%;margin-top:10px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
                 <option value="">-- vybrat 3. místo --</option>
-                ${teamsData.map(t => `<option value="${t}" ${broS === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${allTeams.map(t => `<option value="${t}" ${broS === t ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
         </div>`;
 
-    // --- KROK 2: ATOMICKÁ VÝMĚNA ---
-    // Přepíšeme obsah kontejneru najednou
     cont.innerHTML = finalHTML;
 
-    // --- KROK 3: UVOLNĚNÍ A FIXACE ---
-    // Musíme počkat na další snímek (frame), aby prohlížeč věděl, že už je tam nový obsah
     requestAnimationFrame(() => {
-        // Okamžitý návrat skrolu na původní místo
         window.scrollTo(0, scrollY);
-        
-        // Odstraníme vynucenou minimální výšku a vrátíme chování skrolu
         cont.style.minHeight = '';
         document.documentElement.style.scrollBehavior = originalScrollBehavior;
     });
