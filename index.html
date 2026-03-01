@@ -1173,12 +1173,19 @@ async function renderLeaderboard(data, real) {
         updateStepper(prevDot);
     }
 }
-   function editGroup(id) { 
-    document.getElementById('group-editor').classList.remove('hidden'); 
+  function editGroup(id) { 
+    const editor = document.getElementById('group-editor');
+    if (!editor) return;
+
+    editor.classList.remove('hidden'); 
     document.getElementById('edit-title').innerText = `Pořadí ve Skupině ${id}`; 
     renderTeamList(id); 
-    // Scrollne na editor, aby to bylo na mobilu hned vidět
-   // document.getElementById('group-editor').scrollIntoView({ behavior: 'smooth' });
+
+    // --- 🚀 FIX PRO MOBILY ---
+    // Scrollne na editor plynule, aby byl hned vidět na začátku obrazovky
+    setTimeout(() => {
+        editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
 }
 
 function renderTeamList(gid) {
@@ -1245,71 +1252,72 @@ function dE(e, gid) {
 }
 
 function confirmAllGroups() {
-    if(state.groups.filter(g => g.done).length < 12) return alert("Seřaď všech 12 skupin!");
+    // 1. Validace
+    if(state.groups.filter(g => g.done).length < 12) {
+        return alert("Seřaď všech 12 skupin!");
+    }
     
-    document.getElementById('phase-groups').classList.add('hidden');
-    document.getElementById('phase-thirds').classList.remove('hidden');
+    // 2. Přepnutí sekcí a stepperu
+    const groupsPhase = document.getElementById('phase-groups');
+    const thirdsPhase = document.getElementById('phase-thirds');
+    
+    if (groupsPhase) groupsPhase.classList.add('hidden');
+    if (thirdsPhase) thirdsPhase.classList.remove('hidden');
+    
     updateStepper('dot-s2');
 
+    // 3. Příprava kontejneru
     const container = document.getElementById('thirds-grid'); 
-    
-    // Čistá struktura: TEXT + POČÍTADLO v jedné řadě, pod tím GRID
+    if (!container) return;
+
+    // Čistá struktura: TEXT + POČÍTADLO v jedné řadě
     container.innerHTML = `
         <div class="thirds-wrapper" style="width: 100%; padding: 0px 0px 20px 0px; box-sizing: border-box;">
-            
             <div class="thirds-header-row">
                 <span class="thirds-title-text">Vyber 8 postupujících týmů ze 3. míst</span>
-                <div id="thirds-counter">0 / 8</div>
+                <div id="thirds-counter">${state.thirds.length} / 8</div>
             </div>
-            
-            <div id="thirds-actual-grid">
-                </div>
-
-            </div>
+            <div id="thirds-actual-grid"></div>
+        </div>
     `; 
     
     const actualGrid = document.getElementById('thirds-actual-grid');
     
+    // 4. Generování karet týmů (včetně logiky pro už vybrané týmy)
     state.groups.forEach(g => { 
-        const teamName = g.teams[2];
-        const isSelected = state.thirds.includes(teamName) ? 'selected' : '';
+        const teamName = g.teams[2]; // Tým na 3. místě
+        const selectedIndex = state.thirds.indexOf(teamName);
+        const isSelected = selectedIndex !== -1;
+        const selectedClass = isSelected ? 'selected' : '';
         
-        actualGrid.innerHTML += `
-            <div class="card-third ${isSelected}" onclick="selectThird(this, '${teamName}')">
+        // Vytvoříme kartu
+        const cardHtml = `
+            <div class="card-third ${selectedClass}" onclick="selectThird(this, '${teamName}')">
                 <span style="font-size: 0.75rem; opacity: 0.6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Skupina ${g.id}</span>
                 <span style="font-weight: 800; font-size: 1.1rem; color: #fff;">${teamName}</span>
-            </div>`; 
+                ${isSelected ? `<div class="selection-order" style="display: flex;">${selectedIndex + 1}</div>` : ''}
+            </div>`;
+        
+        actualGrid.insertAdjacentHTML('beforeend', cardHtml);
     });
-    
-    window.scrollTo(0,0);
-// --- PŘIDAT NA ÚPLNÝ KONEC FUNKCE confirmAllGroups() ---
-    
-    // 1. Aktualizace počítadla
+
+    // 5. Stylizace počítadla podle naplnění
     const counter = document.getElementById('thirds-counter');
     if (counter) {
-        counter.innerText = `${state.thirds.length} / 8`;
-        counter.style.background = state.thirds.length === 8 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #fbbf24, #d97706)';
-        counter.style.color = state.thirds.length === 8 ? '#fff' : '#000';
+        const isFull = state.thirds.length === 8;
+        counter.style.background = isFull ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #fbbf24, #d97706)';
+        counter.style.color = isFull ? '#fff' : '#000';
     }
 
-    // 2. Překreslení čísel (odznáčků) pro už vybrané týmy z paměti
-    state.thirds.forEach((teamName, index) => {
-        document.querySelectorAll('.card-third').forEach(card => {
-            // Najdeme kartu podle atributu onclick
-            if (card.getAttribute('onclick').includes(teamName)) {
-                let badge = card.querySelector('.selection-order');
-                if (!badge) {
-                    // Pokud odznáček neexistuje, JavaScript ho pro tebe vyrobí
-                    badge = document.createElement('div');
-                    badge.className = 'selection-order';
-                    card.appendChild(badge);
-                }
-                badge.style.display = 'flex';
-                badge.innerText = index + 1; // Napíše pořadové číslo 1 až 8
-            }
-        });
-    });
-
+    // --- 🚀 FIX PRO MOBILY: CHYTRÉ SCROLLOVÁNÍ 🚀 ---
+    setTimeout(() => {
+        if (thirdsPhase) {
+            thirdsPhase.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }, 100);
 }
     
 function selectThird(el, teamName) {
