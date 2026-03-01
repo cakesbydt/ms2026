@@ -811,53 +811,55 @@ function showPaymentModal(playerName) {
     const modal = document.getElementById('payment-modal-overlay');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. ZJEDNODUŠENÍ DAT: Čím méně znaků, tím větší a čitelnější body v QR kódu.
-    // Krátká zpráva (např. WC26Ptacek) zajistí, že kód bude mít menší hustotu a banka ho snadněji přečte.
-    const cleanName = playerName.normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .substring(0, 8); // Jen 8 znaků jména
-
+    // 1. Očista jména (bez diakritiky) a příprava zprávy
+    const cleanName = playerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    
+    // IBAN CZ12 (ověřený)
     const iban = "CZ1203000000000295511827"; 
     
-    // Sestavení zprávy, která je krátká a přitom identifikovatelná
-    const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC26${cleanName}`;
+    // Sestavení zprávy přesně podle tvého zadání: WC26 Jmeno
+    // Mezery v platebním řetězci banky často zlobí, nahrazujeme je bezpečným kódováním
+    const rawMsg = `WC26 ${cleanName}`;
+    const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:${rawMsg}`;
 
-    // 2. GENERÁTOR S MAXIMÁLNÍ VELIKOSTÍ A ČITELNOSTÍ
-    // size=500 (velké rozlišení), ecc=L (největší body), margin=4 (bílý okraj)
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(spaydData)}&ecc=L&margin=5`;
+    // 2. GENERÁTOR - KLÍČ K ÚSPĚCHU:
+    // size=450 (velký), ecc=L (nízká hustota = velké čtverečky), margin=5 (obří okraj)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=450x450&data=${encodeURIComponent(spaydData)}&ecc=L&margin=5`;
 
     if (qrContainer) {
-        // Vymažeme případné styly z předchozích pokusů a nastavíme čistý vertikální layout
-        qrContainer.style.width = "100%";
-        qrContainer.style.display = "flex";
-        qrContainer.style.flexDirection = "column";
-        qrContainer.style.alignItems = "center";
-
         qrContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                 
-                <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 25px; display: inline-block;">
+                <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 45px rgba(0,0,0,0.7); margin-bottom: 25px; display: inline-block;">
                     <img src="${qrUrl}" alt="QR Platba" 
-                         style="display: block; width: 280px; height: 280px; 
-                                image-rendering: pixelated; /* Pro Chrome/Edge */
-                                image-rendering: -moz-crisp-edges; /* Pro Firefox */
-                                -ms-interpolation-mode: nearest-neighbor; /* Pro staré IE */">
-                    <div style="color: black; font-family: sans-serif; font-weight: 900; font-size: 14px; margin-top: 20px; text-align: center; letter-spacing: 3px;">QR PLATBA</div>
+                         style="display: block; width: 260px; height: 260px; image-rendering: pixelated; border: 1px solid #eee;">
+                    <div style="color: #000; font-family: sans-serif; font-weight: 900; font-size: 14px; margin-top: 20px; text-align: center; letter-spacing: 4px; opacity: 0.5;">QR PLATBA</div>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; width: 100%; max-width: 320px; border: 1px solid rgba(255,255,255,0.1); text-align: left;">
-                    <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Platební údaje</div>
-                    <div style="margin-bottom: 8px; font-size: 1rem;">Částka: <b style="color: #22c55e;">200 Kč</b></div>
-                    <div style="margin-bottom: 8px; font-size: 0.9rem;">Číslo účtu: <b>295511827 / 0300</b></div>
-                    <div style="font-size: 0.9rem;">Hráč: <b>${playerName}</b></div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px; font-style: italic;">Pozn: Do banky propíšeme zkrácenou zprávu pro spárování.</div>
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; width: 100%; max-width: 340px; border: 1px solid rgba(255,255,255,0.1); text-align: left; box-sizing: border-box;">
+                    <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Platební instrukce</div>
+                    
+                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between; font-size: 1rem;">
+                        <span style="opacity: 0.7;">Částka:</span>
+                        <b style="color: #22c55e;">200 Kč</b>
+                    </div>
+                    
+                    <div style="margin-bottom: 8px; display: flex; flex-direction: column;">
+                        <span style="opacity: 0.7; font-size: 0.8rem;">Číslo účtu:</span>
+                        <b style="font-family: monospace; letter-spacing: 0.5px;">295511827 / 0300</b>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="opacity: 0.7; font-size: 0.8rem;">Zpráva (Poznámka):</span>
+                        <b style="color: #fff; font-size: 1.1rem; border-left: 3px solid #fbbf24; padding-left: 8px; margin-top: 4px;">WC26 ${playerName}</b>
+                    </div>
                 </div>
             </div>
         `;
     }
 
     if (modal) {
+        modal.style.display = 'flex';
         modal.style.setProperty('display', 'flex', 'important');
     }
 }
