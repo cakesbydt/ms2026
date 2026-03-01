@@ -11,15 +11,40 @@
 <header class="site-header">
     <div class="mini-host-bar">
         <div class="mini-flags">
-            <img src="https://flagcdn.com/us.svg" alt="USA">
-            <img src="https://flagcdn.com/mx.svg" alt="Mexico">
-            <img src="https://flagcdn.com/ca.svg" alt="Canada">
+            <img src="https://flagcdn.com/us.svg" alt="USA" class="wave-1">
+            <img src="https://flagcdn.com/mx.svg" alt="Mexico" class="wave-2">
+            <img src="https://flagcdn.com/ca.svg" alt="Canada" class="wave-3">
         </div>
         <span class="mini-text">UNITED STATES | MEXICO | CANADA 2026</span>
     </div>
 </header>
     
     <style>
+/* Samotný pohyb ve větru */
+@keyframes flutter {
+    0% { transform: rotate(-5deg) translateY(0px); }
+    50% { transform: rotate(5deg) translateY(-2px); }
+    100% { transform: rotate(-5deg) translateY(0px); }
+}
+
+/* Nastavení pro každou vlajku zvlášť (různé zpoždění animace) */
+.wave-1 {
+    animation: flutter 2.5s ease-in-out infinite;
+    transform-origin: bottom center;
+}
+
+.wave-2 {
+    animation: flutter 2.5s ease-in-out infinite;
+    animation-delay: 0.4s; /* Začne o trochu později */
+    transform-origin: bottom center;
+}
+
+.wave-3 {
+    animation: flutter 2.5s ease-in-out infinite;
+    animation-delay: 0.8s; /* Začne jako poslední */
+    transform-origin: bottom center;
+}
+        
     /* --- VYLEPŠENÉ PROMĚNNÉ --- */
     :root { 
         --bg: #050810; /* Ještě hlubší a luxusnější černomodrá */
