@@ -639,6 +639,18 @@ async function loadAll() {
 function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
     if (!body) return;
+
+    // --- 💰 AKTUALIZACE BANKU 💰 ---
+    // Vezmeme počet odevzdaných tipů (data.length) a vynásobíme vkladem
+    const vklad = 200;
+    const celkovyBank = data.length * vklad;
+    
+    // Najdeme prvek na stránce a propíšeme do něj částku
+    const bankElement = document.getElementById('currentBank');
+    if (bankElement) {
+        bankElement.innerText = celkovyBank.toLocaleString('cs-CZ') + " Kč";
+    }
+    // -------------------------------
     
     // POJISTKA: Sjednocení struktury admin dat
     const adminData = real || window.currentResults || {};
@@ -847,7 +859,7 @@ function renderLeaderboard(data, real) {
                 </div>
             </td>
         </tr>`;
-}).join('');
+    }).join('');
 }
     
     function vypocitejZiskaneBody(tipData, adminVysledky) {
