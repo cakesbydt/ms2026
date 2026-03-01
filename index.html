@@ -1799,37 +1799,30 @@ function cfS(sid, count) {
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // 1. KROK: PŘÍPRAVA SEZNAMU VŠECH TÝMŮ
-    // Vezmeme všechny týmy ze všech 12 skupin a uděláme z nich jeden velký seznam pro playoff
+    // 🚀 Tady je pojistka: seznam všech týmů bereme VŽDY z tvého nového nastavení v kódu
     const allTeams = state.groups.flatMap(g => g.teams);
-
-    // Zámek geometrie (aby stránka při překreslení neskákala)
-    const currentHeight = cont.offsetHeight;
-    if (currentHeight > 0) cont.style.minHeight = currentHeight + 'px';
-    const scrollY = window.scrollY || window.pageYOffset;
-    const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = 'auto';
 
     const res = window.currentResults || {};
     let finalHTML = ''; 
 
-    // 2. GENEROVÁNÍ SKUPIN (A-L)
+    // 1. SKUPINY (A-L)
     state.groups.forEach((g, i) => {
         let h = `<div style="background:rgba(15, 23, 42, 0.8);padding:15px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)">
                     <b style="color:var(--accent); font-size: 1.1rem; margin-bottom: 10px; display:block;">Skupina ${g.id}</b>`;
         
         for(let p=0; p<4; p++) {
-            const saved = res.groups?.[i]?.[p] || "";
-            // TADY JE ZMĚNA: Používáme týmy přímo z objektu g.teams
+            // Tohle je vybraný tým z DB
+            const savedValue = res.groups?.[i]?.[p] || "";
+            
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
-                    <option value="" ${saved === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
-                    ${g.teams.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    <option value="" ${savedValue === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
+                    ${g.teams.map(t => `<option value="${t}" ${String(t).trim() === String(savedValue).trim() ? 'selected' : ''}>${t}</option>`).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
     });
 
-    // 3. GENEROVÁNÍ PLAYOFF (1/16 až Semifinále)
+    // 2. PLAYOFF (s32, s16, s8, s4)
     const stages = [
         {id:'s32', n:'1/16 finále', c:16}, {id:'s16', n:'1/8 finále', c:8}, 
         {id:'s8', n:'Čtvrtfinále', c:4}, {id:'s4', n:'Semifinále', c:4}
@@ -1840,17 +1833,17 @@ function cfS(sid, count) {
                     <b style="color:var(--winner); font-size: 1.1rem; margin-bottom: 10px; display:block;">${s.n}</b>`;
         
         for(let j=0; j<s.c; j++) {
-            const saved = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
-            // TADY JE ZMĚNA: Používáme námi vytvořené pole allTeams
+            const savedValue = (res[s.id]?.[j] || res.playoff?.[s.id]?.[j]) || "";
+            
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
-                    <option value="" ${saved === '' ? 'selected' : ''}>-- vybrat --</option>
-                    ${allTeams.map(t => `<option value="${t}" ${saved === t ? 'selected' : ''}>${t}</option>`).join('')}
+                    <option value="" ${savedValue === '' ? 'selected' : ''}>-- vybrat --</option>
+                    ${allTeams.map(t => `<option value="${t}" ${String(t).trim() === String(savedValue).trim() ? 'selected' : ''}>${t}</option>`).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
     });
 
-    // 4. VÍTĚZ A BRONZ
+    // 3. VÍTĚZ A BRONZ
     const winS = res.winner || res.playoff?.winner || "";
     const broS = res.bronze || res.playoff?.bronze || "";
     finalHTML += `
@@ -1858,23 +1851,16 @@ function cfS(sid, count) {
             <b style="font-size: 1.2rem; color: #fff;">🏆 Vítěz:</b>
             <select id="a-win" style="width:100%;margin-bottom:20px;margin-top:10px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
                 <option value="">-- vybrat vítěze --</option>
-                ${allTeams.map(t => `<option value="${t}" ${winS === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${allTeams.map(t => `<option value="${t}" ${String(t).trim() === String(winS).trim() ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
             <b style="font-size: 1.2rem; color: #fff;">🥉 Bronz:</b>
             <select id="a-bro" style="width:100%;margin-top:10px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px;">
                 <option value="">-- vybrat 3. místo --</option>
-                ${allTeams.map(t => `<option value="${t}" ${broS === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${allTeams.map(t => `<option value="${t}" ${String(t).trim() === String(broS).trim() ? 'selected' : ''}>${t}</option>`).join('')}
             </select>
         </div>`;
 
     cont.innerHTML = finalHTML;
-
-    // Reset skrolu a zámku
-    requestAnimationFrame(() => {
-        window.scrollTo(0, scrollY);
-        cont.style.minHeight = '';
-        document.documentElement.style.scrollBehavior = originalScrollBehavior;
-    });
 }
     // 1. TUTO FUNKCI NAPOJ NA TLAČÍTKO "ULOŽIT VÝSLEDKY" V ADMINU
 async function ulozitAdminVysledky() {
@@ -1939,12 +1925,7 @@ async function nacistAdminVysledky() {
             bronze: data.bronze || ""
         };
 
-        // B. Dosadíme data zpět do proměnné state (pro tvoje admin UI)
-        if (data.groups) {
-            data.groups.forEach((tymyVeSkupine, index) => {
-                if (state.groups[index]) state.groups[index].teams = tymyVeSkupine;
-            });
-        }
+        
         
         // Naplníme playoff ve state
         if (state.playoff) {
