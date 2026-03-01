@@ -848,19 +848,19 @@ async function loadAll() {
 }
 
 async function renderLeaderboard(data, real) {
-    console.log("🚀 START: renderLeaderboard", { pocet_tipu: data?.length });
+    console.log("🚀 START: renderLeaderboard (Full Detail Mode)", { pocet_tipu: data?.length });
     
     const body = document.getElementById('public-body');
-    if (!body) return console.error("❌ Kritická chyba: V HTML chybí id='public-body'");
+    if (!body) return;
 
-    // --- 👤 ZÍSKÁNÍ PŘIHLÁŠENÉHO UŽIVATELE ---
+    // --- 👤 ZÍSKÁNÍ UŽIVATELE ---
     let loggedUserId = null;
     try {
         const { data: authData } = await supabaseClient.auth.getUser();
         if (authData?.user) loggedUserId = authData.user.id;
     } catch (e) { console.warn("Uživatel nepřihlášen."); }
 
-    // --- 🕒 KONTROLA DEADLINE (11.6.2026 20:00) ---
+    // --- 🕒 KONTROLA DEADLINE ---
     const isBeforeDeadline = new Date().getTime() < new Date("2026-06-11T20:00:00").getTime();
 
     // --- 📦 DATA ADMINA A VÝPOČET BODŮ ---
@@ -898,6 +898,16 @@ async function renderLeaderboard(data, real) {
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
+    // --- 🎨 POMOCNÉ FUNKCE PRO BARVY ---
+    const getStatusClass = (stageId, teamName, stageCount) => {
+        const aS = r[stageId] || [];
+        if (!teamName) return ''; 
+        const valid = Array.isArray(aS) ? aS.filter(t => t && t.trim() !== "") : [];
+        if (valid.length === 0) return 'status-pending';
+        if (valid.some(t => String(t).trim() === String(teamName).trim())) return 'status-correct';
+        return (valid.length >= stageCount) ? 'status-wrong' : 'status-pending';
+    };
+
     // --- 🖌️ RENDEROVÁNÍ TABULKY ---
     let lastPoints = -1;
     let currentRank = 0;
@@ -928,7 +938,7 @@ async function renderLeaderboard(data, real) {
 
         return `
             <tr class="player-row" ${canSee ? `onclick="toggleDetail('det-${rowId}')"` : ""} style="cursor:${canSee ? 'pointer':'default'}; ${rowStyle}">
-                <td style="width:70px; padding-left:15px; font-weight:bold; ${nameStyle}">${currentRank}.${trend}</td>
+                <td style="width:75px; padding-left:15px; font-weight:bold; ${nameStyle}">${currentRank}.${trend}</td>
                 <td style="padding:12px 0;">
                     <div style="font-weight:800; ${nameStyle} display:flex; align-items:center; gap:8px;">
                         ${player.name || 'Anonym'} ${!canSee ? '🔒' : ''}
@@ -943,13 +953,45 @@ async function renderLeaderboard(data, real) {
             ${canSee ? `
             <tr id="det-${rowId}" class="tip-detail-row" style="display:none; background:#0f172a;">
                 <td colspan="3" style="padding:20px;">
-                    <div style="border-left:3px solid var(--accent); padding-left:15px;">
-                        <span style="color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase;">Tipy na medaile</span>
-                        <div style="margin-top:10px; color:white; font-size:0.9rem;">
-                            🥇 Vítěz: <b>${player.tip.winner || '--'}</b><br>
-                            🥉 3. místo: <b>${player.tip.bronze || '--'}</b>
+                    <div style="border-left:4px solid #1e293b; padding-left:20px;">
+                        <span style="color:var(--accent); font-weight:bold; font-size:0.75rem; text-transform:uppercase;">Skupiny</span>
+                        <div class="det-groups-grid" style="margin-top:10px;">
+                            ${(player.tip.groups||[]).map((g, idx) => {
+                                const adminG = r.groups && r.groups[idx];
+                                const aTeams = adminG?.teams || adminG;
+                                return `
+                                    <div class="det-group-box">
+                                        <b>Sk. ${String.fromCharCode(65+idx)}</b>
+                                        ${g.map((t, p) => {
+                                            let c = (aTeams && aTeams[p] && String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
+                                            if (!aTeams || !aTeams[p]) c = '';
+                                            return `<div class="${c}" style="font-size:0.8rem; margin:1px 0;">${p+1}. ${t}</div>`;
+                                        }).join('')}
+                                    </div>`;
+                            }).join('')}
                         </div>
-                        <div style="margin-top:10px; font-size:0.7rem; color:#64748b;">Kompletní pavouk se odemkne po startu turnaje.</div>
+
+                        <span style="color:var(--winner); font-weight:bold; font-size:0.75rem; text-transform:uppercase; display:block; margin-top:20px;">Play-off</span>
+                        <div class="det-playoff-stages" style="margin-top:10px;">
+                            <div class="det-stage-column">
+                                <div class="det-stage-card"><h5>1/16</h5><div>${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}</div></div>
+                                <div class="det-stage-card"><h5>1/8</h5><div>${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}</div></div>
+                            </div>
+                            <div class="det-stage-column">
+                                <div class="det-stage-card"><h5>1/4</h5><div>${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}</div></div>
+                                <div class="det-stage-card"><h5>1/2</h5><div>${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}</div></div>
+                            </div>
+                            <div class="det-stage-column">
+                                <div class="det-stage-card" style="border-top:2px solid #cd7f32; background:rgba(205,127,50,0.05);">
+                                    <h5 style="color:#cd7f32;">🥉 3. Místo</h5>
+                                    <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}">${player.tip.bronze || '--'}</div>
+                                </div>
+                                <div class="det-stage-card" style="border-top:2px solid gold; margin-top:10px; background:rgba(251,191,36,0.05);">
+                                    <h5 style="color:gold;">🥇 Vítěz</h5>
+                                    <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}">${player.tip.winner || '--'}</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </td>
             </tr>` : ''}
@@ -963,20 +1005,7 @@ async function renderLeaderboard(data, real) {
         bankEl.innerHTML = `${total.toLocaleString()} Kč <div style="font-size:0.7rem; font-weight:normal; opacity:0.6;">(60% - 30% - 10%)</div>`;
     }
 
-    // --- 📊 HLAS LIDU ---
-    const container = document.getElementById('hlas-lidu-container');
-    if (container && processed.length > 0) {
-        const winners = {};
-        processed.forEach(p => { if(p.tip.winner) winners[p.tip.winner] = (winners[p.tip.winner] || 0) + 1; });
-        const sorted = Object.entries(winners).sort((a,b) => b[1] - a[1]);
-        if (sorted[0]) {
-            container.innerHTML = `<div style="background:#1e293b; padding:15px; border-radius:8px; border-left:4px solid #38bdf8; margin-top:20px;">
-                <small style="color:#38bdf8; font-weight:bold; text-transform:uppercase;">Hlas lidu</small><br>
-                Favorit: <b>${sorted[0][0]}</b> (${Math.round((sorted[0][1]/processed.length)*100)}%)
-            </div>`;
-        }
-    }
-    console.log("✅ ŽEBŘÍČEK HOTOV");
+    console.log("✅ ŽEBŘÍČEK HOTOV (Full)");
 }
     
    async function togglePayment(rowId, currentStatus) {
