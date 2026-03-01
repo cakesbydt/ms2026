@@ -848,7 +848,7 @@ async function loadAll() {
 }
 
 async function renderLeaderboard(data, real) {
-    console.log("🚀 START: renderLeaderboard (Full Detail Mode)", { pocet_tipu: data?.length });
+    console.log("🚀 START: renderLeaderboard (Full Detail Mode + Bank)", { pocet_tipu: data?.length });
     
     const body = document.getElementById('public-body');
     if (!body) return;
@@ -998,13 +998,10 @@ async function renderLeaderboard(data, real) {
         `;
     }).join('');
 
-   // --- 💰 AKTUALIZACE BANKU (Včetně výher pro první 3) ---
+    // --- 💰 AKTUALIZACE BANKU (S výhrami pro bednu) ---
     const bankEl = document.getElementById('currentBank');
     if (bankEl && processed.length > 0) {
-        const vklad = 200;
-        const celkovyBank = processed.length * vklad;
-        
-        // Výpočet odměn
+        const celkovyBank = processed.length * 200;
         const p1 = Math.round(celkovyBank * 0.60);
         const p2 = Math.round(celkovyBank * 0.30);
         const p3 = Math.round(celkovyBank * 0.10);
@@ -1023,6 +1020,9 @@ async function renderLeaderboard(data, real) {
             </div>
         `;
     }
+
+    console.log("✅ ŽEBŘÍČEK HOTOV (Full + Bank)");
+}
     
    async function togglePayment(rowId, currentStatus) {
     // --- 🔒 OCHRANA ADMIN HESLEM 🔒 ---
