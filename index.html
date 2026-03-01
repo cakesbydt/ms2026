@@ -704,6 +704,52 @@
 <div class="admin-trigger" onclick="checkAdmin()"><i class="fas fa-lock"></i></div>
 
 <script>
+function renderHlasLidu(data) {
+    const cont = document.getElementById('hlas-lidu-container');
+    if (!cont || !data || data.length === 0) return;
+
+    // 1. Spočítáme hlasy pro vítěze
+    const counts = {};
+    data.forEach(player => {
+        let tip = player.tip_data;
+        if (typeof tip === 'string') { try { tip = JSON.parse(tip); } catch(e) { return; } }
+        
+        const winner = tip?.winner;
+        if (winner) {
+            counts[winner] = (counts[winner] || 0) + 1;
+        }
+    });
+
+    // 2. Seřadíme a vezmeme top 3
+    const sorted = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+
+    if (sorted.length === 0) return;
+
+    // 3. Vykreslíme to
+    let html = `
+        <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center;">
+            <div style="color: #38bdf8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold;">
+                <i class="fas fa-users"></i> Hlas lidu (Kdo vyhraje MS?)
+            </div>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+    `;
+
+    sorted.forEach(([team, count], idx) => {
+        const percent = Math.round((count / data.length) * 100);
+        html += `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="font-weight: 900; color: ${idx === 0 ? '#fbbf24' : '#fff'}; font-size: 1.1rem;">${team}</div>
+                <div style="font-size: 0.7rem; color: #94a3b8;">${count} tipů (${percent}%)</div>
+            </div>
+        `;
+    });
+
+    html += `</div></div>`;
+    cont.innerHTML = html;
+}
+    
 function scrollToContent() {
     // Najdeme hlavní kontejner tipovačky (např. tvůj main-content nebo konkrétní sekci)
     const element = document.querySelector('.main-content'); 
@@ -841,28 +887,59 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 async function loadAll() {
+    console.log("🔄 Načítám všechna data (Admin + Tipy)...");
     try {
-        // 1. Stáhneme výsledky z tabulky admin_vysledky (tam máš ty nové sloupce!)
-        const { data: n } = await supabaseClient
-            .from('admin_vysledky') // <--- ZMĚNA TABULKY
+        // 1. STÁHNEME VÝSLEDKY ADMINA (Reálný stav turnaje)
+        const { data: n, error: adminErr } = await supabaseClient
+            .from('admin_vysledky')
             .select('*')
             .eq('id', 1)
             .maybeSingle();
             
+        if (adminErr) console.error("❌ Chyba při stahování admin výsledků:", adminErr);
+
         if (n) {
-            window.currentResults = n; // Teď už n obsahuje n.groups, n.s32, n.s16 atd.
-            console.log("✅ Data pro žebříček načtena z admin_vysledky:", window.currentResults);
+            // Uložíme do globální proměnné, aby k datům měly přístup všechny funkce
+            window.currentResults = n; 
+            console.log("✅ Reálné výsledky (Admin) připraveny.");
         }
 
-        // 2. Stáhneme tipy
-        const { data: t } = await supabaseClient.from('tipy').select('*');
+        // 2. STÁHNEME TIPY VŠECH HRÁČŮ
+        const { data: t, error: tipyErr } = await supabaseClient
+            .from('tipy')
+            .select('*');
 
-        // 3. Vykreslíme
-        if (typeof renderLeaderboard === "function") {
-            renderLeaderboard(t || [], window.currentResults || {});
+        if (tipyErr) {
+            console.error("❌ Chyba při stahování tipů:", tipyErr);
+            return;
         }
+
+        // 3. VYKRESLÍME KOMPONENTY (Pokud existují data)
+        if (t && t.length > 0) {
+            
+            // --- A. HLAS LIDU ---
+            // Tato funkce spočítá, komu lidi nejvíc věří na titul
+            if (typeof renderHlasLidu === "function") {
+                renderHlasLidu(t);
+            }
+
+            // --- B. ŽEBŘÍČEK A BANK ---
+            // Tato funkce spočítá body a vykreslí tabulku i bank s odměnami
+            if (typeof renderLeaderboard === "function") {
+                await renderLeaderboard(t, window.currentResults || {});
+            }
+
+            console.log("✅ Všechny komponenty vykresleny.");
+        } else {
+            console.warn("⚠️ Zatím nebyly nalezeny žádné tipy v databázi.");
+            // I když nejsou tipy, vykreslíme prázdný žebříček, aby nezůstal viset loading
+            if (typeof renderLeaderboard === "function") {
+                renderLeaderboard([], window.currentResults || {});
+            }
+        }
+
     } catch (error) {
-        console.error("❌ Chyba:", error);
+        console.error("❌ Kritická chyba v loadAll:", error);
     }
 }
 
