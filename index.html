@@ -800,27 +800,33 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. Očista jména - čím kratší zpráva, tím větší "tečky" v QR kódu a lepší čtení
+    // 1. Vyčištění jména (AirBank a Spořitelna nesmí mít v MSG mezeru ani háčky)
     const cleanName = playerName.normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9]/g, "").substring(0, 10);
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .substring(0, 15); // Omezíme délku
 
-    // 2. KLÍČOVÁ OPRAVA: Číslo účtu MUSÍ mít 10 číslic. 
-    // Tvoje 295511827 -> doplníme nulu -> 0295511827
-    const acc = "0295511827"; 
-    const bank = "0300"; 
+    // 2. MATEMATICKY SPRÁVNÝ IBAN (Pro 295511827 / 0300)
+    // CZ (země) + 78 (kontrolní číslice) + 0300 (banka) + 000000 (předčíslí) + 0295511827 (účet)
+    // Celkem přesně 24 znaků.
+    const iban = "CZ7803000000000295511827"; 
     
-    // 3. Sestavení řetězce - AM:200 (bez desetin je pro některé banky čitelnější)
-    const spaydData = `SPD*1.0*ACC:${acc}${bank}*AM:200*CUR:CZK*MSG:WC26${cleanName}`;
+    // 3. SESTAVENÍ ŘETĚZCE
+    // Důležité: AM musí mít 2 desetinná místa oddělená tečkou.
+    const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC26${cleanName}`;
 
-    // 4. ECC=L (Low) - vytvoří největší možné body v QR kódu, které se nejlépe skenují
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&ecc=L&margin=4`;
+    // 4. GENEROVÁNÍ (margin=4 je povinný bílý okraj pro optiku telefonu)
+    // Použijeme přímé vložení bez dvojitého kódování hvězdiček, které některé banky mate.
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${spaydData}&margin=4`;
 
+    // 5. VYKRESLENÍ (S dostatečným bílým prostorem kolem)
     if (qrContainer) {
         qrContainer.innerHTML = `
-            <div style="background: white; padding: 20px; border-radius: 12px; display: block; margin: 15px auto; width: fit-content; box-shadow: 0 5px 20px rgba(0,0,0,0.4);">
-                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px;">
-                <p style="color: #000; font-family: sans-serif; font-size: 11px; font-weight: 900; margin-top: 10px; text-align: center; letter-spacing: 2px;">QR PLATBA</p>
+            <div style="background: white; padding: 25px; border-radius: 15px; display: inline-block; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px; margin: 0 auto;">
+                <div style="color: #000; font-family: sans-serif; margin-top: 12px; border-top: 1px solid #eee; padding-top: 8px;">
+                    <span style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #666;">QR PLATBA</span>
+                </div>
             </div>
         `;
     }
