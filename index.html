@@ -829,19 +829,23 @@ async function renderLeaderboard(data, real) {
     const body = document.getElementById('public-body');
     if (!body) return;
 
-    // --- 🕒 KONTROLA ČASU (Deadline turnaje) ---
+    // --- 🕒 KONTROLA ČASU ---
     const deadline = new Date("2026-06-11T20:00:00").getTime();
-    const now = new Date().getTime();
-    const isBeforeDeadline = now < deadline;
+    const isBeforeDeadline = new Date().getTime() < deadline;
 
-    // --- 👤 ZÍSKÁNÍ PŘIHLÁŠENÉHO UŽIVATELE ---
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const loggedUserId = user ? user.id : null;
+    // --- 👤 ZÍSKÁNÍ PŘIHLÁŠENÉHO UŽIVATELE (Ošetřeno) ---
+    let loggedUserId = null;
+    try {
+        const { data: authData } = await supabaseClient.auth.getUser();
+        if (authData && authData.user) loggedUserId = authData.user.id;
+    } catch (e) {
+        console.warn("Uživatel není přihlášen:", e);
+    }
 
-    // --- 💰 AKTUALIZACE BANKU ---
+    // --- 💰 VÝPOČET BANKU ---
     const vklad = 200;
-    const celkovyBank = data.length * vklad;
-    const pocetPlaticich = data.filter(p => p.paid === true || p.paid === 1 || String(p.paid) === 'true').length;
+    const celkovyBank = (data || []).length * vklad;
+    const pocetPlaticich = (data || []).filter(p => p.paid === true || p.paid === 1 || String(p.paid) === 'true').length;
     const vybranyBank = pocetPlaticich * vklad;
     
     const prize1 = Math.round(celkovyBank * 0.60);
@@ -868,7 +872,7 @@ async function renderLeaderboard(data, real) {
     const r = adminData.playoff ? { ...adminData.playoff, groups: adminData.groups } : adminData;
 
     // --- VÝPOČET BODŮ ---
-    const processed = data.map(row => {
+    const processed = (data || []).map(row => {
         let tip = row.tip_data;
         if (typeof tip === 'string') {
             try { tip = JSON.parse(tip); } catch (e) { tip = {}; }
@@ -879,25 +883,19 @@ async function renderLeaderboard(data, real) {
         if (r.groups && tip.groups) {
             r.groups.forEach((adminG, i) => {
                 const tipG = tip.groups[i] || [];
-                const adminTeams = adminG.teams ? adminG.teams : adminG;
-                if (Array.isArray(adminTeams)) {
-                    adminTeams.forEach((team, pos) => {
-                        if (team && tipG[pos] && String(team).trim() === String(tipG[pos]).trim()) {
-                            pts += 4;
-                        }
+                const aTeams = adminG.teams || adminG;
+                if (Array.isArray(aTeams)) {
+                    aTeams.forEach((team, pos) => {
+                        if (team && tipG[pos] && String(team).trim() === String(tipG[pos]).trim()) pts += 4;
                     });
                 }
             });
         }
-        const check = (stage, points) => { 
-            const realTeams = r[stage] || [];
-            const tipTeams = tip[stage] || [];
-            if (Array.isArray(realTeams)) {
-                realTeams.forEach(t => {
-                    if (t && Array.isArray(tipTeams) && tipTeams.some(tt => tt && String(tt).trim() === String(t).trim())) {
-                        pts += points;
-                    }
-                });
+        const check = (stage, p) => { 
+            const rt = r[stage] || [];
+            const tt = tip[stage] || [];
+            if (Array.isArray(rt)) {
+                rt.forEach(t => { if (t && Array.isArray(tt) && tt.some(x => String(x).trim() === String(t).trim())) pts += p; });
             }
         };
         check('s32', 2); check('s16', 3); check('s8', 4); check('s4', 5);
@@ -907,89 +905,69 @@ async function renderLeaderboard(data, real) {
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
-    // Helper pro barvy v pavouku
+    // --- POMOCNÉ FUNKCE ---
     const getStatusClass = (stageId, teamName, stageCount) => {
         const aS = r[stageId] || [];
         if (!teamName) return ''; 
-        const validResults = Array.isArray(aS) ? aS.filter(t => t && t.trim() !== "") : (aS && aS.trim() !== "" ? [aS] : []);
-        if (validResults.length === 0) return 'status-pending';
-        const isHit = validResults.some(t => String(t).trim() === String(teamName).trim());
-        if (isHit) return 'status-correct';
-        if (validResults.length >= stageCount || !Array.isArray(aS)) return 'status-wrong';
-        return 'status-pending';
+        const valid = Array.isArray(aS) ? aS.filter(t => t && t.trim() !== "") : [];
+        if (valid.length === 0) return 'status-pending';
+        if (valid.some(t => String(t).trim() === String(teamName).trim())) return 'status-correct';
+        return (valid.length >= stageCount) ? 'status-wrong' : 'status-pending';
     };
 
-    let currentRank = 0;
     let lastPoints = -1;
-    let displayedRank = 0;
+    let currentRank = 0;
 
-    // --- HLAVNÍ VÝPIS TABULKY ---
+    // --- GENEROVÁNÍ TABULKY ---
     body.innerHTML = processed.map((player, i) => {
-        if (player.points !== lastPoints) {
-            currentRank = i + 1;
-            displayedRank = currentRank;
-        }
+        if (player.points !== lastPoints) { currentRank = i + 1; }
         lastPoints = player.points;
 
-        let rankIcon = "", rowStyle = "", nameColor = "#f8fafc", extraLabel = "";
-        if (displayedRank === 1) {
-            rankIcon = '<i class="fas fa-trophy winner-animate rank-icon" style="color: #fbbf24;"></i>';
-            rowStyle = "background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, transparent 100%); border-left: 4px solid #fbbf24;";
+        let rankIcon = "", rowStyle = "", nameColor = "#f8fafc";
+        if (currentRank === 1) {
+            rankIcon = '<i class="fas fa-trophy winner-animate" style="color:#fbbf24; margin-left:5px;"></i>';
+            rowStyle = "background:linear-gradient(90deg, rgba(251,191,36,0.1), transparent); border-left:4px solid #fbbf24;";
             nameColor = "#fbbf24";
-            extraLabel = '<span style="display:block; font-size:10px; color:#fbbf24; opacity:0.8; margin-top: 2px;">AKTUÁLNÍ LÍDR</span>';
-        } else if (displayedRank === 2) {
-            rankIcon = '<i class="fas fa-medal rank-icon" style="color: #cbd5e1;"></i>';
-            rowStyle = "background: linear-gradient(90deg, rgba(203, 213, 225, 0.1) 0%, transparent 100%); border-left: 4px solid #cbd5e1;";
+        } else if (currentRank === 2) {
             nameColor = "#cbd5e1";
-        } else if (displayedRank === 3) {
-            rankIcon = '<i class="fas fa-medal rank-icon" style="color: #cd7f32;"></i>';
-            rowStyle = "background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, transparent 100%); border-left: 4px solid #cd7f32;";
+            rowStyle = "border-left:4px solid #cbd5e1;";
+        } else if (currentRank === 3) {
             nameColor = "#cd7f32";
+            rowStyle = "border-left:4px solid #cd7f32;";
         }
 
         const rowId = player.user_id || player.id;
         
-        // Šipky trendu
-        let trendIcon = '<span style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">-</span>'; 
+        // Trendy
+        let trend = '<span style="color:#64748b; margin-left:8px; font-size:0.8rem;">-</span>'; 
         if (player.previous_rank) {
-            if (displayedRank < player.previous_rank) {
-                trendIcon = `<span style="color: #10b981; font-size: 0.8rem; margin-left: 8px;"><i class="fas fa-arrow-up"></i> ${player.previous_rank - displayedRank}</span>`;
-            } else if (displayedRank > player.previous_rank) {
-                trendIcon = `<span style="color: #ef4444; font-size: 0.8rem; margin-left: 8px;"><i class="fas fa-arrow-down"></i> ${displayedRank - player.previous_rank}</span>`;
-            }
+            const diff = player.previous_rank - currentRank;
+            if (diff > 0) trend = `<span style="color:#10b981; margin-left:8px; font-size:0.8rem;"><i class="fas fa-arrow-up"></i> ${diff}</span>`;
+            else if (diff < 0) trend = `<span style="color:#ef4444; margin-left:8px; font-size:0.8rem;"><i class="fas fa-arrow-down"></i> ${Math.abs(diff)}</span>`;
         }
 
-        // Status platby
         const isPaid = player.paid === true || player.paid === 1 || String(player.paid) === 'true';
         const pColor = isPaid ? '#10b981' : '#ef4444';
-        const pText = isPaid ? '<i class="fas fa-check"></i> ZAPLACENO' : 'NEZAPLACENO';
 
-        // Ochrana soukromí tipů
+        // Soukromí
         const isOwn = loggedUserId && String(loggedUserId) === String(rowId);
         const canSee = !isBeforeDeadline || isOwn;
-        const clickAction = canSee ? `onclick="toggleDetail('det-${rowId}')"` : "";
-        const lockIcon = !canSee ? '<i class="fas fa-lock" style="font-size:0.7rem; opacity:0.5; margin-left:5px;"></i>' : '';
 
         return `
-            <tr class="player-row" ${clickAction} style="cursor:${canSee ? 'pointer':'default'}; ${rowStyle}">
-                <td style="width:75px; padding-left: 15px;">
-                    <span style="color:${nameColor}; display:flex; align-items:center;">
-                        ${displayedRank}. ${rankIcon} ${trendIcon}
-                    </span>
+            <tr class="player-row" ${canSee ? `onclick="toggleDetail('det-${rowId}')"` : ""} style="cursor:${canSee ? 'pointer':'default'}; ${rowStyle}">
+                <td style="width:75px; padding-left:15px; color:${nameColor}; font-weight:bold;">
+                    ${currentRank}.${rankIcon}${trend}
                 </td>
                 <td>
                     <div style="font-weight:800; color:${nameColor}; display:flex; align-items:center; gap:8px;">
-                        ${player.name || 'Anonym'} ${lockIcon}
+                        ${player.name || 'Anonym'} ${!canSee ? '<i class="fas fa-lock" style="opacity:0.5; font-size:0.7rem;"></i>' : ''}
                         <span onclick="event.stopPropagation(); togglePayment('${rowId}', ${isPaid})" 
                               style="padding:2px 6px; border-radius:4px; font-size:0.65rem; background:${pColor}; color:white; cursor:pointer;">
-                            ${pText}
+                            ${isPaid ? 'ZAPLACENO' : 'DLUŽÍ'}
                         </span>
                     </div>
-                    ${extraLabel}
                 </td>
-                <td style="text-align:right; padding-right:15px;">
-                    <div class="pts-pill"><span style="font-weight:900; color:var(--accent);">${player.points}</span> PTS</div>
-                </td>
+                <td style="text-align:right; padding-right:15px; font-weight:900; color:var(--accent);">${player.points} PTS</td>
             </tr>
             ${canSee ? `
             <tr id="det-${rowId}" class="tip-detail-row" style="display:none; background:#0f172a;">
@@ -999,7 +977,7 @@ async function renderLeaderboard(data, real) {
                         <div class="det-groups-grid" style="margin-top:10px;">
                             ${(player.tip.groups||[]).map((g, idx) => {
                                 const adminG = r.groups && r.groups[idx];
-                                const aTeams = (adminG && adminG.teams) ? adminG.teams : adminG;
+                                const aTeams = adminG?.teams || adminG;
                                 return `
                                     <div class="det-group-box">
                                         <b>Sk. ${String.fromCharCode(65+idx)}</b>
@@ -1038,28 +1016,20 @@ async function renderLeaderboard(data, real) {
         `;
     }).join('');
 
-    // --- 📊 STATISTIKY (HLAS LIDU) ---
+    // --- 📊 STATISTIKY ---
     const winnerCounts = {};
     processed.forEach(p => { if(p.tip.winner) winnerCounts[p.tip.winner] = (winnerCounts[p.tip.winner] || 0) + 1; });
     const sortedWinners = Object.entries(winnerCounts).sort((a,b) => b[1] - a[1]);
-    
-    if (sortedWinners.length > 0) {
-        const topTeam = sortedWinners[0];
-        const topPercent = Math.round((topTeam[1] / processed.length) * 100);
-        const darkHorse = Object.entries(winnerCounts).find(t => t[1] === 1);
-        
-        const statsHtml = `
+    const container = document.getElementById('hlas-lidu-container');
+    if (container && sortedWinners.length > 0) {
+        const top = sortedWinners[0];
+        container.innerHTML = `
             <div style="background:#1e293b; border-left:4px solid #38bdf8; padding:20px; border-radius:8px; margin:30px 0; color:#f8fafc;">
                 <h4 style="margin:0 0 10px 0; color:#38bdf8; text-transform:uppercase; font-size:0.8rem;"><i class="fas fa-chart-pie"></i> Hlas lidu</h4>
-                <div style="font-size:0.9rem; line-height:1.6;">
-                    Favorit na zlato: <b>${topTeam[0]}</b> <span style="color:#94a3b8;">(${topPercent}%)</span>
-                    ${darkHorse ? `<br>Černý kůň (jen 1 tip): <b>${darkHorse[0]}</b>` : ''}
-                </div>
+                Favorit: <b>${top[0]}</b> (${Math.round((top[1]/processed.length)*100)}%)
             </div>`;
-        const container = document.getElementById('hlas-lidu-container');
-        if (container) container.innerHTML = statsHtml;
     }
-} // KONEC FUNKCE
+}
     
    async function togglePayment(rowId, currentStatus) {
     // --- 🔒 OCHRANA ADMIN HESLEM 🔒 ---
