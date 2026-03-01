@@ -713,38 +713,53 @@ function renderHlasLidu(data) {
     data.forEach(player => {
         let tip = player.tip_data;
         if (typeof tip === 'string') { try { tip = JSON.parse(tip); } catch(e) { return; } }
-        
         const winner = tip?.winner;
-        if (winner) {
-            counts[winner] = (counts[winner] || 0) + 1;
-        }
+        if (winner) counts[winner] = (counts[winner] || 0) + 1;
     });
 
-    // 2. Seřadíme a vezmeme top 3
-    const sorted = Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
-
+    // 2. Převedeme na pole a seřadíme od nejvíc hlasů po nejméně
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
     if (sorted.length === 0) return;
 
-    // 3. Vykreslíme to
+    // 3. Výběr: Top 2 favoriti + 1 outsider (poslední v seznamu)
+    const favorites = sorted.slice(0, 2);
+    let outsider = null;
+    if (sorted.length > 2) {
+        outsider = sorted[sorted.length - 1]; // Ten úplně poslední s aspoň 1 hlasem
+    }
+
     let html = `
         <div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 12px; padding: 15px; margin-bottom: 25px; text-align: center;">
-            <div style="color: #38bdf8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: bold;">
-                <i class="fas fa-users"></i> Hlas lidu (Kdo vyhraje MS?)
+            <div style="color: #38bdf8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; font-weight: bold;">
+                <i class="fas fa-chart-pie"></i> Analýza tipů: Favorité & Outsider
             </div>
-            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+            <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; align-items: flex-start;">
     `;
 
-    sorted.forEach(([team, count], idx) => {
-        const percent = Math.round((count / data.length) * 100);
+    // Vykreslení favoritů
+    favorites.forEach((f, idx) => {
+        const percent = Math.round((f[1] / data.length) * 100);
         html += `
             <div style="display: flex; flex-direction: column; align-items: center;">
-                <div style="font-weight: 900; color: ${idx === 0 ? '#fbbf24' : '#fff'}; font-size: 1.1rem;">${team}</div>
-                <div style="font-size: 0.7rem; color: #94a3b8;">${count} tipů (${percent}%)</div>
+                <div style="font-size: 0.6rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">${idx === 0 ? 'Hlavní favorit' : 'V závěsu'}</div>
+                <div style="font-weight: 900; color: ${idx === 0 ? '#fbbf24' : '#f8fafc'}; font-size: 1.2rem;">${f[0]}</div>
+                <div style="font-size: 0.75rem; color: #38bdf8;">${f[1]} tipů (${percent}%)</div>
             </div>
         `;
     });
+
+    // Vykreslení outsidera (pokud existuje)
+    if (outsider) {
+        const percent = Math.round((outsider[1] / data.length) * 100);
+        html += `
+            <div style="height: 40px; width: 1px; background: rgba(255,255,255,0.1); align-self: center; display: none; @media (min-width: 600px) { display: block; }"></div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="font-size: 0.6rem; color: #ef4444; text-transform: uppercase; margin-bottom: 4px;">Outsider / Černý kůň</div>
+                <div style="font-weight: 900; color: #ef4444; font-size: 1.1rem; opacity: 0.9;">${outsider[0]}</div>
+                <div style="font-size: 0.75rem; color: #94a3b8;">${outsider[1]} hlas (${percent}%)</div>
+            </div>
+        `;
+    }
 
     html += `</div></div>`;
     cont.innerHTML = html;
