@@ -857,34 +857,42 @@ function renderLeaderboard(data, real) {
 }
 
    async function togglePayment(rowId, currentStatus) {
-    // 1. Obrátíme aktuální stav platby
+    console.log("1. Kliknuto! Spouštím úpravu pro ID:", rowId, "Současný stav:", currentStatus);
     const novyStatus = !currentStatus; 
     
-    // 2. Kontrolní otázka pro admina
-    const akceText = novyStatus ? "ZAPLACENO" : "NEZAPLACENO";
-    if (!confirm(`Opravdu chceš hráči změnit platbu na: ${akceText}?`)) {
+    if (!confirm(`Opravdu chceš hráči změnit platbu na: ${novyStatus ? "ZAPLACENO" : "NEZAPLACENO"}?`)) {
         return; 
     }
 
     try {
-        // 3. Odeslání nového stavu do Supabase
-        const { error } = await supabaseClient
+        console.log("2. Posílám požadavek do Supabase...");
+        
+        // Přidali jsme .select(), aby nám Supabase vrátila upravený řádek (pokud se to povede)
+        const { data, error } = await supabaseClient
             .from('tipy')
             .update({ paid: novyStatus })
-            .eq('user_id', rowId); // <--- TADY JE TA OPRAVA: hledáme podle 'user_id'
+            .eq('user_id', rowId)
+            .select(); 
+
+        console.log("3. Odpověď ze Supabase - Upravená data:", data, "Chyba:", error);
 
         if (error) throw error;
 
-        console.log(`✅ Platba úspěšně změněna na ${novyStatus}`);
-        
-        // 4. Překreslení žebříčku a banku
+        // Pokud pole 'data' neobsahuje žádný záznam, znamená to, že se nic neupravilo!
+        if (!data || data.length === 0) {
+            alert("⚠️ Supabase nic neupravila! Buď je to špatné ID, nebo to blokuje ochrana RLS.");
+            console.error("Chyba: Záznam s tímto ID se nenašel, nebo nemáš práva na UPDATE.");
+            return;
+        }
+
+        console.log("4. ✅ Úspěch! Načítám znovu data pro překreslení...");
         if (typeof loadAll === "function") {
             await loadAll(); 
         }
 
     } catch (error) {
-        console.error("❌ Chyba při úpravě platby v Supabase:", error);
-        alert("Nepodařilo se změnit stav platby. Zkontroluj konzoli.");
+        console.error("❌ Zásadní chyba při úpravě platby:", error);
+        alert("Chyba: " + error.message);
     }
 }
     
