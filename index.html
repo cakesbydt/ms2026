@@ -781,7 +781,7 @@ async function renderLeaderboard(data, real) {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const loggedUserId = user ? user.id : null;
 
-    // --- 💰 VYLEPŠENÁ AKTUALIZACE BANKU S ROZPADEM VÝHER ---
+    // --- 💰 AKTUALIZACE BANKU ---
     const vklad = 200;
     const celkovyBank = data.length * vklad;
     const pocetPlaticich = data.filter(p => p.paid === true || p.paid === 1 || String(p.paid) === 'true').length;
@@ -806,11 +806,11 @@ async function renderLeaderboard(data, real) {
         `;
     }
 
-    // --- POJISTKA ADMIN DAT ---
+    // --- DATA ADMINA ---
     const adminData = real || window.currentResults || {};
     const r = adminData.playoff ? { ...adminData.playoff, groups: adminData.groups } : adminData;
 
-    // --- ZPRACOVÁNÍ BODŮ ---
+    // --- VÝPOČET BODŮ ---
     const processed = data.map(row => {
         let tip = row.tip_data;
         if (typeof tip === 'string') {
@@ -844,17 +844,13 @@ async function renderLeaderboard(data, real) {
             }
         };
         check('s32', 2); check('s16', 3); check('s8', 4); check('s4', 5);
-        const rWin = r.winner ? String(r.winner).trim() : null;
-        const tWin = tip.winner ? String(tip.winner).trim() : null;
-        if (rWin && tWin === rWin) pts += 12;
-        const rBro = r.bronze ? String(r.bronze).trim() : null;
-        const tBro = tip.bronze ? String(tip.bronze).trim() : null;
-        if (rBro && tBro === rBro) pts += 8;
+        if (r.winner && tip.winner && String(r.winner).trim() === String(tip.winner).trim()) pts += 12;
+        if (r.bronze && tip.bronze && String(r.bronze).trim() === String(tip.bronze).trim()) pts += 8;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
-    // Pomocná funkce pro barvy statusů
+    // Helper pro barvy v pavouku
     const getStatusClass = (stageId, teamName, stageCount) => {
         const aS = r[stageId] || [];
         if (!teamName) return ''; 
@@ -862,8 +858,7 @@ async function renderLeaderboard(data, real) {
         if (validResults.length === 0) return 'status-pending';
         const isHit = validResults.some(t => String(t).trim() === String(teamName).trim());
         if (isHit) return 'status-correct';
-        if (!Array.isArray(aS)) return 'status-wrong';
-        else if (validResults.length >= stageCount) return 'status-wrong';
+        if (validResults.length >= stageCount || !Array.isArray(aS)) return 'status-wrong';
         return 'status-pending';
     };
 
@@ -871,7 +866,7 @@ async function renderLeaderboard(data, real) {
     let lastPoints = -1;
     let displayedRank = 0;
 
-    // --- GENEROVÁNÍ HTML TABULKY ---
+    // --- HLAVNÍ VÝPIS TABULKY ---
     body.innerHTML = processed.map((player, i) => {
         if (player.points !== lastPoints) {
             currentRank = i + 1;
@@ -896,127 +891,119 @@ async function renderLeaderboard(data, real) {
         }
 
         const rowId = player.user_id || player.id;
-
-        // TREND ŠIPKY
-        let trendIcon = '<span style="color: #64748b; font-size: 0.8rem; margin-left: 8px;" title="Beze změny">-</span>'; 
+        
+        // Šipky trendu
+        let trendIcon = '<span style="color: #64748b; font-size: 0.8rem; margin-left: 8px;">-</span>'; 
         if (player.previous_rank) {
             if (displayedRank < player.previous_rank) {
-                const skok = player.previous_rank - displayedRank;
-                trendIcon = `<span style="color: #10b981; font-size: 0.8rem; margin-left: 8px; font-weight: bold;" title="Postup o ${skok} míst"><i class="fas fa-arrow-up"></i> ${skok}</span>`;
+                trendIcon = `<span style="color: #10b981; font-size: 0.8rem; margin-left: 8px;"><i class="fas fa-arrow-up"></i> ${player.previous_rank - displayedRank}</span>`;
             } else if (displayedRank > player.previous_rank) {
-                const propad = displayedRank - player.previous_rank;
-                trendIcon = `<span style="color: #ef4444; font-size: 0.8rem; margin-left: 8px; font-weight: bold;" title="Propad o ${propad} míst"><i class="fas fa-arrow-down"></i> ${propad}</span>`;
+                trendIcon = `<span style="color: #ef4444; font-size: 0.8rem; margin-left: 8px;"><i class="fas fa-arrow-down"></i> ${displayedRank - player.previous_rank}</span>`;
             }
         }
 
-        // PLATBA
+        // Status platby
         const isPaid = player.paid === true || player.paid === 1 || String(player.paid) === 'true';
-        const paymentBadgeColor = isPaid ? '#10b981' : '#ef4444';
-        const paymentBadgeText = isPaid ? '<i class="fas fa-check"></i> ZAPLACENO' : 'NEZAPLACENO';
+        const pColor = isPaid ? '#10b981' : '#ef4444';
+        const pText = isPaid ? '<i class="fas fa-check"></i> ZAPLACENO' : 'NEZAPLACENO';
 
-        // LOGIKA UTAJENÍ: Vidím jen své tipy, dokud nezačne turnaj
-        const isOwnTip = loggedUserId && String(loggedUserId) === String(rowId);
-        const canSeeDetail = !isBeforeDeadline || isOwnTip;
-        const rowClickAction = canSeeDetail ? `onclick="toggleDetail('det-${rowId}')"` : "";
-        const rowCursor = canSeeDetail ? "pointer" : "default";
-        const lockIcon = !canSeeDetail ? '<i class="fas fa-lock" style="font-size: 0.7rem; opacity: 0.5; margin-left: 5px;" title="Tipy budou odtajněny po startu turnaje"></i>' : '';
+        // Ochrana soukromí tipů
+        const isOwn = loggedUserId && String(loggedUserId) === String(rowId);
+        const canSee = !isBeforeDeadline || isOwn;
+        const clickAction = canSee ? `onclick="toggleDetail('det-${rowId}')"` : "";
+        const lockIcon = !canSee ? '<i class="fas fa-lock" style="font-size:0.7rem; opacity:0.5; margin-left:5px;"></i>' : '';
 
         return `
-            <tr class="player-row" ${rowClickAction} style="cursor:${rowCursor}; ${rowStyle} transition: all 0.2s;">
-                <td style="width:75px; padding-left: 15px; vertical-align: middle;">
-                    <span class="rank-pill" style="color: ${nameColor}; display: flex; align-items: center;">
+            <tr class="player-row" ${clickAction} style="cursor:${canSee ? 'pointer':'default'}; ${rowStyle}">
+                <td style="width:75px; padding-left: 15px;">
+                    <span style="color:${nameColor}; display:flex; align-items:center;">
                         ${displayedRank}. ${rankIcon} ${trendIcon}
                     </span>
                 </td>
-                <td style="padding: 12px 0; vertical-align: middle;">
-                    <div style="font-weight:800; color: ${nameColor}; font-size: 1.05rem; letter-spacing: 0.3px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <td>
+                    <div style="font-weight:800; color:${nameColor}; display:flex; align-items:center; gap:8px;">
                         ${player.name || 'Anonym'} ${lockIcon}
                         <span onclick="event.stopPropagation(); togglePayment('${rowId}', ${isPaid})" 
-                              style="padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; background: ${paymentBadgeColor}; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                            ${paymentBadgeText}
+                              style="padding:2px 6px; border-radius:4px; font-size:0.65rem; background:${pColor}; color:white; cursor:pointer;">
+                            ${pText}
                         </span>
                     </div>
                     ${extraLabel}
                 </td>
-                <td style="text-align:right; padding-right: 15px; vertical-align: middle;">
-                    <div class="pts-pill">
-                        <span style="font-weight:900; color:var(--accent); font-size: 1.1rem;">${player.points}</span>
-                        <span style="font-size: 0.65rem; color: #64748b; margin-left: 3px; font-weight: bold;">PTS</span>
-                    </div>
+                <td style="text-align:right; padding-right:15px;">
+                    <div class="pts-pill"><span style="font-weight:900; color:var(--accent);">${player.points}</span> PTS</div>
                 </td>
             </tr>
-            ${canSeeDetail ? `
-            <tr id="det-${rowId}" class="tip-detail-row" style="display:none; background: #0f172a;">
-                <td colspan="3" style="padding: 0;">
-                    <div class="detail-container" style="border-left: 4px solid #1e293b; padding: 20px;">
-                        <span class="detail-section-title" style="color:var(--accent); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Skupinová fáze</span>
-                        <div class="det-groups-grid" style="margin-top: 10px;">
-                            ${(player.tip.groups||[]).map((g, idx) => `
-                                <div class="det-group-box">
-                                    <b>Sk. ${String.fromCharCode(65+idx)}</b>
-                                    ${g.map((t, p) => {
-                                        let c = '';
-                                        const adminG = r.groups && r.groups[idx];
-                                        const aTeams = (adminG && adminG.teams) ? adminG.teams : adminG;
-                                        if(aTeams && aTeams[p]) {
-                                            c = (String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
-                                        }
-                                        return \`<div class="\${c}" style="font-size: 0.8rem; padding: 2px 4px; border-radius: 3px; margin: 1px 0;">\${p+1}. \${t}</div>\`;
-                                    }).join('')}
-                                </div>`).join('')}
+            ${canSee ? `
+            <tr id="det-${rowId}" class="tip-detail-row" style="display:none; background:#0f172a;">
+                <td colspan="3" style="padding:20px;">
+                    <div style="border-left:4px solid #1e293b; padding-left:20px;">
+                        <span style="color:var(--accent); font-weight:bold; font-size:0.75rem; text-transform:uppercase;">Skupiny</span>
+                        <div class="det-groups-grid" style="margin-top:10px;">
+                            ${(player.tip.groups||[]).map((g, idx) => {
+                                const adminG = r.groups && r.groups[idx];
+                                const aTeams = (adminG && adminG.teams) ? adminG.teams : adminG;
+                                return `
+                                    <div class="det-group-box">
+                                        <b>Sk. ${String.fromCharCode(65+idx)}</b>
+                                        ${g.map((t, p) => {
+                                            let c = (aTeams && aTeams[p] && String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
+                                            if (!aTeams || !aTeams[p]) c = '';
+                                            return `<div class="${c}" style="font-size:0.8rem; margin:1px 0;">${p+1}. ${t}</div>`;
+                                        }).join('')}
+                                    </div>`;
+                            }).join('')}
                         </div>
-                        <span class="detail-section-title" style="color:var(--winner); font-weight: bold; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 20px;">Play-off pavouk</span>
-                        <div class="det-playoff-stages" style="margin-top: 10px;">
+                        <span style="color:var(--winner); font-weight:bold; font-size:0.75rem; text-transform:uppercase; display:block; margin-top:20px;">Play-off</span>
+                        <div class="det-playoff-stages" style="margin-top:10px;">
                             <div class="det-stage-column">
-                                <div class="det-stage-card"><h5>1/16 Finále</h5><div class="det-team-list">${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}</div></div>
-                                <div class="det-stage-card"><h5>1/8 Finále</h5><div class="det-team-list">${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}</div></div>
+                                <div class="det-stage-card"><h5>1/16</h5><div>${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}</div></div>
+                                <div class="det-stage-card"><h5>1/8</h5><div>${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}</div></div>
                             </div>
                             <div class="det-stage-column">
-                                <div class="det-stage-card"><h5>Čtvrtfinále</h5><div class="det-team-list">${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}</div></div>
-                                <div class="det-stage-card"><h5>Semifinále</h5><div class="det-team-list">${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}</div></div>
+                                <div class="det-stage-card"><h5>1/4</h5><div>${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}</div></div>
+                                <div class="det-stage-card"><h5>1/2</h5><div>${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}</div></div>
                             </div>
                             <div class="det-stage-column">
-                                <div class="det-stage-card" style="border-top: 2px solid #cd7f32; background: rgba(205,127,50,0.05);">
-                                    <h5 style="color: #cd7f32;">🥉 3. Místo</h5>
-                                    <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}" style="font-weight: bold; font-size: 0.9rem;">${player.tip.bronze || '--'}</div>
+                                <div class="det-stage-card" style="border-top:2px solid #cd7f32; background:rgba(205,127,50,0.05);">
+                                    <h5 style="color:#cd7f32;">🥉 3. Místo</h5>
+                                    <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}">${player.tip.bronze || '--'}</div>
                                 </div>
-                                <div class="det-stage-card" style="border-top: 2px solid gold; margin-top: 10px; background: rgba(251,191,36,0.05);">
-                                    <h5 style="color: gold;">🥇 Vítěz</h5>
-                                    <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}" style="font-weight: bold; font-size: 0.9rem;">${player.tip.winner || '--'}</div>
+                                <div class="det-stage-card" style="border-top:2px solid gold; margin-top:10px; background:rgba(251,191,36,0.05);">
+                                    <h5 style="color:gold;">🥇 Vítěz</h5>
+                                    <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}">${player.tip.winner || '--'}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </td>
-            </tr>
-            ` : ''}
+            </tr>` : ''}
         `;
     }).join('');
 
-    // --- 📊 STATISTIKY KOMUNITY (HLAS LIDU) ---
+    // --- 📊 STATISTIKY (HLAS LIDU) ---
     const winnerCounts = {};
-    processed.forEach(p => {
-        const w = p.tip.winner;
-        if (w) winnerCounts[w] = (winnerCounts[w] || 0) + 1;
-    });
-    const sortedWinners = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1]);
+    processed.forEach(p => { if(p.tip.winner) winnerCounts[p.tip.winner] = (winnerCounts[p.tip.winner] || 0) + 1; });
+    const sortedWinners = Object.entries(winnerCounts).sort((a,b) => b[1] - a[1]);
+    
     if (sortedWinners.length > 0) {
         const topTeam = sortedWinners[0];
         const topPercent = Math.round((topTeam[1] / processed.length) * 100);
-        const darkHorse = sortedWinners.reverse().find(t => t[1] === 1);
-        let statsHtml = `
-            <div style="background: #1e293b; border-left: 4px solid #38bdf8; padding: 15px 20px; border-radius: 8px; margin: 30px 0; color: #f8fafc; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                <h4 style="margin: 0 0 10px 0; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px;"><i class="fas fa-chart-pie"></i> Hlas lidu</h4>
-                <div style="font-size: 0.95rem; line-height: 1.6;">
-                    Největší favorit na zlato: <strong>${topTeam[0]}</strong> <span style="color: #94a3b8; font-size: 0.8rem;">(věří mu ${topPercent} % tipujících)</span>
-                    \${darkHorse ? \`<br>Největší outsider (černý kůň): <strong>\${darkHorse[0]}</strong> <span style="color: #94a3b8; font-size: 0.8rem;">(věří mu jen 1 odvážlivec)</span>\` : ''}
+        const darkHorse = Object.entries(winnerCounts).find(t => t[1] === 1);
+        
+        const statsHtml = `
+            <div style="background:#1e293b; border-left:4px solid #38bdf8; padding:20px; border-radius:8px; margin:30px 0; color:#f8fafc;">
+                <h4 style="margin:0 0 10px 0; color:#38bdf8; text-transform:uppercase; font-size:0.8rem;"><i class="fas fa-chart-pie"></i> Hlas lidu</h4>
+                <div style="font-size:0.9rem; line-height:1.6;">
+                    Favorit na zlato: <b>${topTeam[0]}</b> <span style="color:#94a3b8;">(${topPercent}%)</span>
+                    ${darkHorse ? `<br>Černý kůň (jen 1 tip): <b>${darkHorse[0]}</b>` : ''}
                 </div>
-            </div>
-        `;
+            </div>`;
         const container = document.getElementById('hlas-lidu-container');
-        if (container) { container.innerHTML = statsHtml; }
+        if (container) container.innerHTML = statsHtml;
     }
-}
+} // KONEC FUNKCE
+    
    async function togglePayment(rowId, currentStatus) {
     // --- 🔒 OCHRANA ADMIN HESLEM 🔒 ---
     // Zastavíme každého, kdo klikne, a vynutíme heslo
