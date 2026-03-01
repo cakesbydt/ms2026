@@ -800,36 +800,30 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    if (payMessage) payMessage.innerText = playerName;
+    // 1. Vyčištění jména (háčky a čárky pryč)
+    const cleanName = playerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
     
+    // 2. Data pro banku (ACC musí být v kuse!)
     const acc = "295511827"; 
     const bank = "0300"; 
-    const am = "200.00"; 
-    
-    // Odstranění diakritiky pro maximální kompatibilitu
-    const cleanName = playerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const msg = `WC2026 - ${cleanName}`;
-    
-    // Sestavení SPAYD řetězce
-    const spaydData = `SPD*1.0*ACC:${acc}${bank}*AM:${am}*CUR:CZK*MSG:${msg}`;
-    
-    // --- KLÍČOVÉ ZMĚNY PRO ČITELNOST ---
-    // ecc=M (Medium error correction)
-    // margin=4 (Bílý okraj kolem kódu, bez kterého banky kód nevezmou)
-    // qzone=4 (Vynucená tichá zóna)
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&ecc=M&margin=4`;
-    
+    const spaydData = `SPD*1.0*ACC:${acc}${bank}*AM:200.00*CUR:CZK*MSG:WC2026-${cleanName}`;
+
+    // 3. Generování URL (margin=4 vytvoří bílý okraj, který banky potřebují)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(spaydData)}&margin=4`;
+
+    // 4. Vykreslení (Bílé pozadí je jen uvnitř kontejneru, aby to nelezlo přes text)
     if (qrContainer) {
-        // Vynutíme bílé pozadí a padding přímo na obrázku, aby kód nesplýval s tmavým webem
         qrContainer.innerHTML = `
-            <div style="background: white; padding: 15px; border-radius: 12px; display: inline-block; line-height: 0; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
-                <img src="${qrUrl}" alt="QR Platba" style="width: 250px; height: 250px; display: block;">
+            <div style="background: white; padding: 10px; border-radius: 8px; display: inline-block; margin-top: 15px;">
+                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 200px; height: 200px;">
             </div>
         `;
     }
-    
+
+    if (payMessage) payMessage.innerText = playerName;
     if (modal) modal.style.display = 'flex';
 }
+    
 function closePaymentModal() {
     document.getElementById('payment-modal-overlay').style.display = 'none';
 }
