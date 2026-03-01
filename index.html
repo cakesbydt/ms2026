@@ -998,15 +998,31 @@ async function renderLeaderboard(data, real) {
         `;
     }).join('');
 
-    // --- 💰 AKTUALIZACE BANKU ---
+   // --- 💰 AKTUALIZACE BANKU (Včetně výher pro první 3) ---
     const bankEl = document.getElementById('currentBank');
-    if (bankEl) {
-        const total = processed.length * 200;
-        bankEl.innerHTML = `${total.toLocaleString()} Kč <div style="font-size:0.7rem; font-weight:normal; opacity:0.6;">(60% - 30% - 10%)</div>`;
-    }
+    if (bankEl && processed.length > 0) {
+        const vklad = 200;
+        const celkovyBank = processed.length * vklad;
+        
+        // Výpočet odměn
+        const p1 = Math.round(celkovyBank * 0.60);
+        const p2 = Math.round(celkovyBank * 0.30);
+        const p3 = Math.round(celkovyBank * 0.10);
 
-    console.log("✅ ŽEBŘÍČEK HOTOV (Full)");
-}
+        bankEl.innerHTML = `
+            <div style="font-size: 1.8rem; font-weight: 900; color: #fff;">
+                ${celkovyBank.toLocaleString('cs-CZ')} Kč
+            </div>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: center; gap: 15px; font-size: 0.85rem;">
+                <span style="color: #fbbf24;">🥇 ${p1.toLocaleString('cs-CZ')} Kč</span>
+                <span style="color: #cbd5e1;">🥈 ${p2.toLocaleString('cs-CZ')} Kč</span>
+                <span style="color: #cd7f32;">🥉 ${p3.toLocaleString('cs-CZ')} Kč</span>
+            </div>
+            <div style="font-size: 0.7rem; color: #64748b; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px;">
+                Aktuální bank (60% — 30% — 10%)
+            </div>
+        `;
+    }
     
    async function togglePayment(rowId, currentStatus) {
     // --- 🔒 OCHRANA ADMIN HESLEM 🔒 ---
