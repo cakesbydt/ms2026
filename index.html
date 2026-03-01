@@ -800,27 +800,27 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. VYČIŠTĚNÍ JMÉNA: ČSOB nemá ráda mezery a znaky v MSG poli platebního kódu
+    // 1. Očista jména: Jen písmena a čísla, žádné mezery (ČSOB je na to v MSG háklivá)
     const cleanName = playerName.normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // pryč s háčky
-        .replace(/[^a-zA-Z0-9]/g, "");   // pryč s mezerami a znaky
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "");
 
-    // 2. ČÍSLO ÚČTU: Doplníme na 10 číslic (přidáme 0 na začátek) + banka 0300
-    // Tohle je kritické pro ČSOB/Smartbanku!
+    // 2. Formát účtu: 10 číslic (přidána 0 na začátek) + kód banky 0300
+    // Správně: 02955118270300
     const fullAcc = "02955118270300"; 
     
-    // 3. SPAYD STRUKTURA: Přesně podle národní normy
+    // 3. SPAYD řetězec: AM musí mít tečku, MSG nesmí mít mezery
     const spaydData = `SPD*1.0*ACC:${fullAcc}*AM:200.00*CUR:CZK*MSG:WC2026${cleanName}`;
 
-    // 4. GENERÁTOR: Větší velikost (300x300) a margin=4 pro čitelnost čočkou
+    // 4. Generování: margin=4 zajistí bílý okraj přímo v obrázku
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&ecc=M&margin=4`;
 
-    // 5. VYKRESLENÍ: Používáme padding 20px, aby kód "nesvítil" do očí čtečce z tmavého pozadí
+    // 5. Vykreslení: Oprava stylingu, aby se nic nepřekrývalo
     if (qrContainer) {
         qrContainer.innerHTML = `
-            <div style="background: white; padding: 20px; border-radius: 12px; display: inline-block; margin: 15px 0; border: 1px solid #ccc;">
-                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px; margin: 0 auto;">
-                <p style="color: #000; font-size: 12px; margin-top: 10px; font-weight: bold; font-family: sans-serif;">QR PLATBA</p>
+            <div style="background: white; padding: 15px; border-radius: 12px; display: block; margin: 10px auto 20px auto; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 200px; height: 200px;">
+                <p style="color: #000; font-size: 11px; margin: 8px 0 0 0; font-weight: 900; font-family: sans-serif; text-align: center; letter-spacing: 1px;">QR PLATBA</p>
             </div>
         `;
     }
