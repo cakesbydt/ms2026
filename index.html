@@ -379,6 +379,38 @@
     
     @keyframes winner-glow { 0% { filter: drop-shadow(0 0 4px #fbbf24); } 50% { filter: drop-shadow(0 0 15px #fbbf24); } 100% { filter: drop-shadow(0 0 4px #fbbf24); } }
     .winner-icon { animation: winner-glow 2s infinite; font-size: 1.4rem; }
+
+        .bank-container {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* Fotbalová modrá */
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    display: inline-block;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 2px solid #ffd700; /* Zlatý rámeček pro pocit výhry */
+}
+
+.bank-label {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.bank-label i {
+    color: #ffd700; /* Zlatá trofej */
+    margin-right: 5px;
+}
+
+.bank-amount {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
     </style>
 </head>
 <body>
@@ -463,6 +495,14 @@
             <span class="value">+12 b.</span>
             <small>přesný tip</small>
         </div>
+    </div>
+</div>
+            <div class="bank-container">
+    <div class="bank-label">
+        <i class="fas fa-trophy"></i> Aktuální bank
+    </div>
+    <div class="bank-amount" id="currentBank">
+        1000 Kč
     </div>
 </div>
             
