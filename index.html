@@ -1517,31 +1517,32 @@ function confirmAllGroups() {
 }
     
 function selectThird(el, teamName) {
-    // 1. Zjistíme, jestli už tým máme (používáme trim pro jistotu)
+    // 1. Zjistíme aktuální stav
     const name = teamName.trim();
-    const isAlreadySelected = state.thirds.includes(name);
+    const index = state.thirds.indexOf(name);
 
     // 2. LOGIKA PŘIDÁNÍ / ODEBRÁNÍ
-    if (isAlreadySelected) {
-        // Odebrat z pole
-        state.thirds = state.thirds.filter(t => t !== name);
+    if (index > -1) {
+        // Tým už je vybraný -> SMAŽEME HO
+        state.thirds.splice(index, 1);
     } else {
-        // Přidat do pole (pokud jich není 8)
+        // Tým není vybraný -> PŘIDÁME HO (pokud jich není 8)
         if (state.thirds.length < 8) {
             state.thirds.push(name);
         } else {
-            showCustomAlert("Stop!", "Můžeš vybrat maximálně 8 týmů ze 3. míst.");
+            alert("Můžeš vybrat maximálně 8 týmů ze 3. míst.");
             return;
         }
     }
 
-    // 3. VIZUÁLNÍ AKTUALIZACE VŠECH KARET (Hromadný přepočet)
-    // Projdeme úplně všechny karty s touto třídou
+    // 3. KOMPLETNÍ PŘEKRESLENÍ VŠECH KARET (To vyřeší to číslování)
+    // Projdeme všechny karty s třídou .card-third
     document.querySelectorAll('.card-third').forEach(card => {
-        const cardName = card.getAttribute('data-name');
-        const selectedIdx = state.thirds.indexOf(cardName);
+        // Zjistíme jméno týmu z této konkrétní karty (vytáhneme ho z onclicku nebo textu)
+        const currentCardName = card.querySelector('span:nth-child(2)').innerText.trim();
+        const currentIdx = state.thirds.indexOf(currentCardName);
         
-        // Najdeme nebo vytvoříme badge pro číslo
+        // Najdeme nebo vytvoříme odznáček pro číslo
         let badge = card.querySelector('.selection-order');
         if (!badge) {
             badge = document.createElement('div');
@@ -1549,38 +1550,30 @@ function selectThird(el, teamName) {
             card.appendChild(badge);
         }
 
-        if (selectedIdx > -1) {
-            // Tým je vybraný
+        if (currentIdx > -1) {
+            // Tým je v seznamu vybraných -> Zobrazíme číslo
             card.classList.add('selected');
             badge.style.display = 'flex';
-            badge.innerText = selectedIdx + 1; // Pořadí 1, 2, 3...
+            badge.innerText = currentIdx + 1; // Pořadí 1 až 8
         } else {
-            // Tým není vybraný
+            // Tým není vybraný -> Schováme vše
             card.classList.remove('selected');
             badge.style.display = 'none';
         }
     });
 
-    // 4. AKTUALIZACE POČÍTADLA (X / 8)
+    // 4. AKTUALIZACE POČÍTADLA (0/8)
     const counterEl = document.getElementById('thirds-counter');
     if (counterEl) {
         counterEl.innerText = `${state.thirds.length} / 8`;
-        
-        // Změna barvy, když je hotovo
+        // Změna barvy při dokončení
         if (state.thirds.length === 8) {
             counterEl.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
             counterEl.style.color = '#fff';
         } else {
-            counterEl.style.background = 'rgba(251, 191, 36, 0.1)';
-            counterEl.style.color = '#fbbf24';
+            counterEl.style.background = 'linear-gradient(135deg, #fbbf24, #d97706)';
+            counterEl.style.color = '#000';
         }
-    }
-
-    // 5. ZOBRAZENÍ TLAČÍTKA PRO POSTUP
-    const btnNext = document.getElementById('btn-start-playoff');
-    if (btnNext) {
-        // Tlačítko se ukáže jen při přesně 8 týmech
-        btnNext.style.display = state.thirds.length === 8 ? 'inline-block' : 'none';
     }
 }
 
