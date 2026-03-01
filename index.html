@@ -20,6 +20,60 @@
 </header>
     
     <style>
+/* Platební Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none; /* Skryto v základu */
+    justify-content: center; align-items: center;
+    z-index: 9999;
+}
+
+.payment-modal {
+    background: #0f172a;
+    border: 2px solid #fbbf24;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(251, 191, 36, 0.2);
+    position: relative;
+}
+
+.payment-modal h2 { color: #fbbf24; margin-bottom: 10px; }
+.payment-modal p { color: #f8fafc; font-size: 0.9rem; margin-bottom: 20px; }
+
+.qr-placeholder {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin: 0 auto 20px auto;
+    width: 200px; height: 200px;
+}
+
+.payment-info {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: left;
+    font-family: monospace;
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.close-payment-btn {
+    background: #fbbf24;
+    color: #0f172a;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    width: 100%;
+}
+        
 /* Samotný pohyb ve větru */
 @keyframes flutter {
     0% { transform: rotate(-5deg) translateY(0px); }
@@ -721,7 +775,50 @@
 
 <div class="admin-trigger" onclick="checkAdmin()"><i class="fas fa-lock"></i></div>
 
+    <div id="payment-modal-overlay" class="modal-overlay">
+    <div class="payment-modal">
+        <h2>🎉 Tipy uloženy!</h2>
+        <p>Pro zařazení do hry zbývá poslední krok: zaplatit startovné.</p>
+        
+        <div class="qr-placeholder" id="qr-code-container">
+            </div>
+
+        <div class="payment-info">
+            Částka: <b>200 Kč</b><br>
+            Číslo účtu: <b>123456789/0123</b><br>
+            Zpráva: <b id="pay-message">Jmeno Hrace</b>
+        </div>
+
+        <button class="close-payment-btn" onclick="closePaymentModal()">MÁM ZAPLACENO / ZAVŘÍT</button>
+    </div>
+</div>
+    
 <script>
+function showPaymentModal(playerName) {
+    const modal = document.getElementById('payment-modal-overlay');
+    const payMessage = document.getElementById('pay-message');
+    const qrContainer = document.getElementById('qr-code-container');
+    
+    payMessage.innerText = playerName;
+    
+    // Generování QR kódu přes Google Charts API nebo QRServer
+    // Formát pro českou QR platbu (SPAYD): 
+    const acc = "295511827"; //č.ú.
+    const bank = "0300"; //č.ú.
+    const am = "200.00"; //částka
+    const msg = encodeURIComponent(`World Cup 2026 - ${playerName}`);
+    
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SPD*1.0*ACC:${acc}${bank}*AM:${am}*CUR:CZK*MSG:${msg}`;
+    
+    qrContainer.innerHTML = `<img src="${qrUrl}" alt="QR Platba" style="width:100%">`;
+    
+    modal.style.display = 'flex';
+}
+
+function closePaymentModal() {
+    document.getElementById('payment-modal-overlay').style.display = 'none';
+}
+    
 function renderHlasLidu(data) {
     const cont = document.getElementById('hlas-lidu-container');
     if (!cont || !data || data.length === 0) return;
@@ -2058,9 +2155,13 @@ async function nacistAdminVysledky() {
             userDisplay.innerText = `${email} (${name})`;
         }
 
-        showCustomAlert("Děkujeme, " + name + "!", "Tvůj tip byl úspěšně uložen do databáze. Můžeš ho kdykoliv do začátku turnaje upravit.");
+        // ... uvnitř try bloku v saveToSupabase ...
+if (error) throw error;
 
-        if (typeof loadAll === 'function') await loadAll(); 
+// Místo staré hlášky otevřeme platební okno
+showPaymentModal(name);
+
+if (typeof loadAll === 'function') await loadAll();
 
     } catch (error) {
         console.error("Supabase chyba:", error);
