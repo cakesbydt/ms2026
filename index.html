@@ -391,16 +391,64 @@
     .team-item { background: rgba(30, 41, 59, 0.8); padding: 14px; margin: 8px 0; border-radius: 10px; border-left: 4px solid var(--accent); display: flex; justify-content: space-between; cursor: grab; border: 1px solid rgba(255,255,255,0.05); transition: transform 0.2s;}
     .team-item:hover { transform: translateX(5px); background: rgba(56, 189, 248, 0.05); }
     
-    .thirds-header-row { display: flex !important; align-items: center !important; justify-content: flex-start !important; gap: 20px !important; width: 100% !important; padding: 10px 0 25px 0 !important; border-bottom: 1px solid rgba(255,255,255,0.05) !important; margin-bottom: 25px !important; }
-    .thirds-title-text { font-size: 1.2rem !important; font-weight: 800 !important; color: #fff !important; white-space: nowrap !important; text-transform: uppercase; letter-spacing: 1px;}
-    .main-content { width: 100%; max-width: 1200px; margin: 0 auto; padding: 10px; box-sizing: border-box; overflow-x: hidden; }
-    .phase-navigation { display: block !important; text-align: center !important; width: 100% !important; max-width: 100vw !important; padding: 10px !important; box-sizing: border-box !important; overflow: hidden !important; }
-    .thirds-wrapper { display: block !important; width: 100% !important; padding: 20px; box-sizing: border-box; }
-    #thirds-actual-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 15px; width: 100%; }
-    @media (max-width: 1000px) { #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; } }
-    @media (max-width: 600px) {
-        .phase-navigation button, .phase-navigation a { display: inline-block !important; vertical-align: middle !important; margin: 4px !important; padding: 8px 12px !important; white-space: nowrap !important; max-width: calc(100% - 20px) !important; }
+   /* --- TŘETÍ MÍSTA (Opravený Header) --- */
+.thirds-header-row { 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: flex-start !important; 
+    gap: 10px !important; /* Menší mezera pro mobily */
+    width: 100% !important; 
+    padding: 10px 0 25px 0 !important; 
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important; 
+    margin-bottom: 25px !important; 
+    flex-wrap: wrap !important; /* Povolí zalomení, pokud je nadpis dlouhý */
+}
+
+.thirds-title-text { 
+    font-size: 1.1rem !important; /* Mírně menší písmo */
+    font-weight: 800 !important; 
+    color: #fff !important; 
+    white-space: normal !important; /* ZMĚNA: Text se teď na mobilu zalomí na dva řádky */
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+    line-height: 1.3;
+}
+
+/* --- GRID (Opravené sloupce pro mobily) --- */
+#thirds-actual-grid { 
+    display: grid !important; 
+    grid-template-columns: repeat(4, 1fr) !important; 
+    gap: 15px; 
+    width: 100%; 
+}
+
+/* Tablet - 3 sloupce */
+@media (max-width: 1000px) { 
+    #thirds-actual-grid { grid-template-columns: repeat(3, 1fr) !important; } 
+}
+
+/* Mobil - 2 sloupce (tady byla ta chyba!) */
+@media (max-width: 600px) { 
+    #thirds-actual-grid { 
+        grid-template-columns: repeat(2, 1fr) !important; 
+        gap: 10px !important; 
+    } 
+    
+    .thirds-wrapper {
+        padding: 10px !important; /* Menší padding, aby zbylo víc místa pro karty */
     }
+}
+
+/* --- ZBYTEK NAVIGATION --- */
+.phase-navigation { 
+    display: block !important; 
+    text-align: center !important; 
+    width: 100% !important; 
+    max-width: 100vw !important; 
+    padding: 10px !important; 
+    box-sizing: border-box !important; 
+    overflow: hidden !important; 
+}
     
     @keyframes winner-glow { 0% { filter: drop-shadow(0 0 4px #fbbf24); } 50% { filter: drop-shadow(0 0 15px #fbbf24); } 100% { filter: drop-shadow(0 0 4px #fbbf24); } }
     .winner-icon { animation: winner-glow 2s infinite; font-size: 1.4rem; }
