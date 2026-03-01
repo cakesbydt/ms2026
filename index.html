@@ -852,11 +852,11 @@ const supabaseClient = supabase.createClient(SB_URL, SB_KEY);
 // 🚀 NOVÁ PŘEHLEDNÁ STRUKTURA TÝMŮ
 let state = { 
     groups: [
-        { id: 'A', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
-        { id: 'B', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'A', teams: ["Anglie", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'B', teams: ["Tým 1", "Tým 2", "Německo", "Tým 4"], done: false },
         { id: 'C', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
-        { id: 'D', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
-        { id: 'E', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
+        { id: 'D', teams: ["Tým 1", "Pepa", "Tým 3", "Tým 4"], done: false },
+        { id: 'E', teams: ["Tým 1", "Tým 2", "Tým 3", "Karel"], done: false },
         { id: 'F', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
         { id: 'G', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
         { id: 'H', teams: ["Tým 1", "Tým 2", "Tým 3", "Tým 4"], done: false },
@@ -1799,7 +1799,7 @@ function cfS(sid, count) {
     const cont = document.getElementById('admin-form-container'); 
     if (!cont) return;
 
-    // 🚀 Tady je pojistka: seznam všech týmů bereme VŽDY z tvého nového nastavení v kódu
+    // 🚀 ZDROJ PRAVDY: Seznam všech týmů bereme VŽDY z tvé nové definice v kódu
     const allTeams = state.groups.flatMap(g => g.teams);
 
     const res = window.currentResults || {};
@@ -1811,12 +1811,16 @@ function cfS(sid, count) {
                     <b style="color:var(--accent); font-size: 1.1rem; margin-bottom: 10px; display:block;">Skupina ${g.id}</b>`;
         
         for(let p=0; p<4; p++) {
-            // Tohle je vybraný tým z DB
+            // savedValue je to, co je uložené v DB (může být starý název)
             const savedValue = res.groups?.[i]?.[p] || "";
             
             h += `<select id="a-g-${i}-${p}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                     <option value="" ${savedValue === '' ? 'selected' : ''}>-- ${p+1}. místo --</option>
-                    ${g.teams.map(t => `<option value="${t}" ${String(t).trim() === String(savedValue).trim() ? 'selected' : ''}>${t}</option>`).join('')}
+                    ${g.teams.map(t => {
+                        // Kontrola: pokud se název v DB shoduje s názvem v kódu, označíme ho jako vybraný
+                        const isSelected = String(t).trim() === String(savedValue).trim();
+                        return `<option value="${t}" ${isSelected ? 'selected' : ''}>${t}</option>`;
+                    }).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
@@ -1837,7 +1841,10 @@ function cfS(sid, count) {
             
             h += `<select id="a-${s.id}-${j}" style="width:100%;margin-top:8px;background:rgba(0,0,0,0.4);color:white;border:1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
                     <option value="" ${savedValue === '' ? 'selected' : ''}>-- vybrat --</option>
-                    ${allTeams.map(t => `<option value="${t}" ${String(t).trim() === String(savedValue).trim() ? 'selected' : ''}>${t}</option>`).join('')}
+                    ${allTeams.map(t => {
+                        const isSelected = String(t).trim() === String(savedValue).trim();
+                        return `<option value="${t}" ${isSelected ? 'selected' : ''}>${t}</option>`;
+                    }).join('')}
                   </select>`;
         }
         finalHTML += h + `</div>`;
