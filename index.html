@@ -826,64 +826,36 @@ async function loadAll() {
 }
 
 async function renderLeaderboard(data, real) {
+    console.log("🚀 START: renderLeaderboard", { pocet_tipu: data?.length });
+    
     const body = document.getElementById('public-body');
-    if (!body) return;
+    if (!body) return console.error("❌ Kritická chyba: V HTML chybí id='public-body'");
 
-    // --- 🕒 KONTROLA ČASU ---
-    const deadline = new Date("2026-06-11T20:00:00").getTime();
-    const isBeforeDeadline = new Date().getTime() < deadline;
-
-    // --- 👤 ZÍSKÁNÍ PŘIHLÁŠENÉHO UŽIVATELE (Ošetřeno) ---
+    // --- 👤 ZÍSKÁNÍ PŘIHLÁŠENÉHO UŽIVATELE ---
     let loggedUserId = null;
     try {
         const { data: authData } = await supabaseClient.auth.getUser();
-        if (authData && authData.user) loggedUserId = authData.user.id;
-    } catch (e) {
-        console.warn("Uživatel není přihlášen:", e);
-    }
+        if (authData?.user) loggedUserId = authData.user.id;
+    } catch (e) { console.warn("Uživatel nepřihlášen."); }
 
-    // --- 💰 VÝPOČET BANKU ---
-    const vklad = 200;
-    const celkovyBank = (data || []).length * vklad;
-    const pocetPlaticich = (data || []).filter(p => p.paid === true || p.paid === 1 || String(p.paid) === 'true').length;
-    const vybranyBank = pocetPlaticich * vklad;
-    
-    const prize1 = Math.round(celkovyBank * 0.60);
-    const prize2 = Math.round(celkovyBank * 0.30);
-    const prize3 = Math.round(celkovyBank * 0.10);
-    
-    const bankElement = document.getElementById('currentBank');
-    if (bankElement) {
-        bankElement.innerHTML = `
-            ${celkovyBank.toLocaleString('cs-CZ')} Kč
-            <div style="font-size: 12px; color: #cbd5e1; font-weight: normal; margin-top: 5px;">
-                Vybráno: <span style="color: #10b981; font-weight: bold;">${vybranyBank.toLocaleString('cs-CZ')} Kč</span>
-            </div>
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; display: flex; justify-content: center; gap: 15px;">
-                <span style="color: #fbbf24;">🥇 ${prize1.toLocaleString('cs-CZ')} Kč</span>
-                <span style="color: #cbd5e1;">🥈 ${prize2.toLocaleString('cs-CZ')} Kč</span>
-                <span style="color: #cd7f32;">🥉 ${prize3.toLocaleString('cs-CZ')} Kč</span>
-            </div>
-        `;
-    }
+    // --- 🕒 KONTROLA DEADLINE (11.6.2026 20:00) ---
+    const isBeforeDeadline = new Date().getTime() < new Date("2026-06-11T20:00:00").getTime();
 
-    // --- DATA ADMINA ---
+    // --- 📦 DATA ADMINA A VÝPOČET BODŮ ---
     const adminData = real || window.currentResults || {};
     const r = adminData.playoff ? { ...adminData.playoff, groups: adminData.groups } : adminData;
 
-    // --- VÝPOČET BODŮ ---
     const processed = (data || []).map(row => {
         let tip = row.tip_data;
-        if (typeof tip === 'string') {
-            try { tip = JSON.parse(tip); } catch (e) { tip = {}; }
-        }
+        if (typeof tip === 'string') { try { tip = JSON.parse(tip); } catch(e) { tip = {}; } }
         if (!tip) tip = {};
         
         let pts = 0;
+        // Bodování skupin
         if (r.groups && tip.groups) {
-            r.groups.forEach((adminG, i) => {
+            r.groups.forEach((g, i) => {
                 const tipG = tip.groups[i] || [];
-                const aTeams = adminG.teams || adminG;
+                const aTeams = g.teams || g;
                 if (Array.isArray(aTeams)) {
                     aTeams.forEach((team, pos) => {
                         if (team && tipG[pos] && String(team).trim() === String(tipG[pos]).trim()) pts += 4;
@@ -891,78 +863,55 @@ async function renderLeaderboard(data, real) {
                 }
             });
         }
-        const check = (stage, p) => { 
-            const rt = r[stage] || [];
-            const tt = tip[stage] || [];
-            if (Array.isArray(rt)) {
-                rt.forEach(t => { if (t && Array.isArray(tt) && tt.some(x => String(x).trim() === String(t).trim())) pts += p; });
-            }
+        // Bodování playoff
+        const ck = (sid, p) => {
+            const rt = r[sid] || [];
+            const tt = tip[sid] || [];
+            if (Array.isArray(rt)) rt.forEach(t => { if (t && Array.isArray(tt) && tt.some(x => String(x).trim() === String(t).trim())) pts += p; });
         };
-        check('s32', 2); check('s16', 3); check('s8', 4); check('s4', 5);
+        ck('s32', 2); ck('s16', 3); ck('s8', 4); ck('s4', 5);
         if (r.winner && tip.winner && String(r.winner).trim() === String(tip.winner).trim()) pts += 12;
         if (r.bronze && tip.bronze && String(r.bronze).trim() === String(tip.bronze).trim()) pts += 8;
 
         return { ...row, tip, points: pts };
     }).sort((a, b) => b.points - a.points);
 
-    // --- POMOCNÉ FUNKCE ---
-    const getStatusClass = (stageId, teamName, stageCount) => {
-        const aS = r[stageId] || [];
-        if (!teamName) return ''; 
-        const valid = Array.isArray(aS) ? aS.filter(t => t && t.trim() !== "") : [];
-        if (valid.length === 0) return 'status-pending';
-        if (valid.some(t => String(t).trim() === String(teamName).trim())) return 'status-correct';
-        return (valid.length >= stageCount) ? 'status-wrong' : 'status-pending';
-    };
-
+    // --- 🖌️ RENDEROVÁNÍ TABULKY ---
     let lastPoints = -1;
     let currentRank = 0;
 
-    // --- GENEROVÁNÍ TABULKY ---
     body.innerHTML = processed.map((player, i) => {
         if (player.points !== lastPoints) { currentRank = i + 1; }
         lastPoints = player.points;
 
-        let rankIcon = "", rowStyle = "", nameColor = "#f8fafc";
-        if (currentRank === 1) {
-            rankIcon = '<i class="fas fa-trophy winner-animate" style="color:#fbbf24; margin-left:5px;"></i>';
-            rowStyle = "background:linear-gradient(90deg, rgba(251,191,36,0.1), transparent); border-left:4px solid #fbbf24;";
-            nameColor = "#fbbf24";
-        } else if (currentRank === 2) {
-            nameColor = "#cbd5e1";
-            rowStyle = "border-left:4px solid #cbd5e1;";
-        } else if (currentRank === 3) {
-            nameColor = "#cd7f32";
-            rowStyle = "border-left:4px solid #cd7f32;";
-        }
-
         const rowId = player.user_id || player.id;
-        
-        // Trendy
-        let trend = '<span style="color:#64748b; margin-left:8px; font-size:0.8rem;">-</span>'; 
-        if (player.previous_rank) {
-            const diff = player.previous_rank - currentRank;
-            if (diff > 0) trend = `<span style="color:#10b981; margin-left:8px; font-size:0.8rem;"><i class="fas fa-arrow-up"></i> ${diff}</span>`;
-            else if (diff < 0) trend = `<span style="color:#ef4444; margin-left:8px; font-size:0.8rem;"><i class="fas fa-arrow-down"></i> ${Math.abs(diff)}</span>`;
-        }
-
-        const isPaid = player.paid === true || player.paid === 1 || String(player.paid) === 'true';
-        const pColor = isPaid ? '#10b981' : '#ef4444';
-
-        // Soukromí
         const isOwn = loggedUserId && String(loggedUserId) === String(rowId);
         const canSee = !isBeforeDeadline || isOwn;
+        const isPaid = player.paid === true || player.paid === 1 || String(player.paid) === 'true';
+
+        // Trendy (Šipky)
+        let trend = '<span style="color:#64748b; margin-left:8px; font-size:0.75rem;">-</span>';
+        if (player.previous_rank) {
+            const diff = player.previous_rank - currentRank;
+            if (diff > 0) trend = `<span style="color:#10b981; margin-left:8px; font-size:0.75rem;"><i class="fas fa-arrow-up"></i> ${diff}</span>`;
+            else if (diff < 0) trend = `<span style="color:#ef4444; margin-left:8px; font-size:0.75rem;"><i class="fas fa-arrow-down"></i> ${Math.abs(diff)}</span>`;
+        }
+
+        // Barvy pro top 3
+        let nameStyle = "color:#f8fafc;";
+        let rowStyle = "";
+        if (currentRank === 1) { nameStyle = "color:#fbbf24;"; rowStyle = "background:rgba(251,191,36,0.05); border-left:4px solid #fbbf24;"; }
+        else if (currentRank === 2) { nameStyle = "color:#cbd5e1;"; rowStyle = "border-left:4px solid #cbd5e1;"; }
+        else if (currentRank === 3) { nameStyle = "color:#cd7f32;"; rowStyle = "border-left:4px solid #cd7f32;"; }
 
         return `
             <tr class="player-row" ${canSee ? `onclick="toggleDetail('det-${rowId}')"` : ""} style="cursor:${canSee ? 'pointer':'default'}; ${rowStyle}">
-                <td style="width:75px; padding-left:15px; color:${nameColor}; font-weight:bold;">
-                    ${currentRank}.${rankIcon}${trend}
-                </td>
-                <td>
-                    <div style="font-weight:800; color:${nameColor}; display:flex; align-items:center; gap:8px;">
-                        ${player.name || 'Anonym'} ${!canSee ? '<i class="fas fa-lock" style="opacity:0.5; font-size:0.7rem;"></i>' : ''}
+                <td style="width:70px; padding-left:15px; font-weight:bold; ${nameStyle}">${currentRank}.${trend}</td>
+                <td style="padding:12px 0;">
+                    <div style="font-weight:800; ${nameStyle} display:flex; align-items:center; gap:8px;">
+                        ${player.name || 'Anonym'} ${!canSee ? '🔒' : ''}
                         <span onclick="event.stopPropagation(); togglePayment('${rowId}', ${isPaid})" 
-                              style="padding:2px 6px; border-radius:4px; font-size:0.65rem; background:${pColor}; color:white; cursor:pointer;">
+                              style="padding:2px 6px; border-radius:4px; font-size:0.6rem; background:${isPaid ? '#10b981':'#ef4444'}; color:white; cursor:pointer;">
                             ${isPaid ? 'ZAPLACENO' : 'DLUŽÍ'}
                         </span>
                     </div>
@@ -972,63 +921,40 @@ async function renderLeaderboard(data, real) {
             ${canSee ? `
             <tr id="det-${rowId}" class="tip-detail-row" style="display:none; background:#0f172a;">
                 <td colspan="3" style="padding:20px;">
-                    <div style="border-left:4px solid #1e293b; padding-left:20px;">
-                        <span style="color:var(--accent); font-weight:bold; font-size:0.75rem; text-transform:uppercase;">Skupiny</span>
-                        <div class="det-groups-grid" style="margin-top:10px;">
-                            ${(player.tip.groups||[]).map((g, idx) => {
-                                const adminG = r.groups && r.groups[idx];
-                                const aTeams = adminG?.teams || adminG;
-                                return `
-                                    <div class="det-group-box">
-                                        <b>Sk. ${String.fromCharCode(65+idx)}</b>
-                                        ${g.map((t, p) => {
-                                            let c = (aTeams && aTeams[p] && String(aTeams[p]).trim() === String(t).trim()) ? 'status-correct' : 'status-wrong';
-                                            if (!aTeams || !aTeams[p]) c = '';
-                                            return `<div class="${c}" style="font-size:0.8rem; margin:1px 0;">${p+1}. ${t}</div>`;
-                                        }).join('')}
-                                    </div>`;
-                            }).join('')}
+                    <div style="border-left:3px solid var(--accent); padding-left:15px;">
+                        <span style="color:var(--accent); font-weight:bold; font-size:0.7rem; text-transform:uppercase;">Tipy na medaile</span>
+                        <div style="margin-top:10px; color:white; font-size:0.9rem;">
+                            🥇 Vítěz: <b>${player.tip.winner || '--'}</b><br>
+                            🥉 3. místo: <b>${player.tip.bronze || '--'}</b>
                         </div>
-                        <span style="color:var(--winner); font-weight:bold; font-size:0.75rem; text-transform:uppercase; display:block; margin-top:20px;">Play-off</span>
-                        <div class="det-playoff-stages" style="margin-top:10px;">
-                            <div class="det-stage-column">
-                                <div class="det-stage-card"><h5>1/16</h5><div>${(player.tip.s32||[]).map(t => `<span class="det-team-tag ${getStatusClass('s32', t, 16)}">${t}</span>`).join('')}</div></div>
-                                <div class="det-stage-card"><h5>1/8</h5><div>${(player.tip.s16||[]).map(t => `<span class="det-team-tag ${getStatusClass('s16', t, 8)}">${t}</span>`).join('')}</div></div>
-                            </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card"><h5>1/4</h5><div>${(player.tip.s8||[]).map(t => `<span class="det-team-tag ${getStatusClass('s8', t, 4)}">${t}</span>`).join('')}</div></div>
-                                <div class="det-stage-card"><h5>1/2</h5><div>${(player.tip.s4||[]).map(t => `<span class="det-team-tag ${getStatusClass('s4', t, 4)}">${t}</span>`).join('')}</div></div>
-                            </div>
-                            <div class="det-stage-column">
-                                <div class="det-stage-card" style="border-top:2px solid #cd7f32; background:rgba(205,127,50,0.05);">
-                                    <h5 style="color:#cd7f32;">🥉 3. Místo</h5>
-                                    <div class="det-team-tag ${getStatusClass('bronze', player.tip.bronze, 1)}">${player.tip.bronze || '--'}</div>
-                                </div>
-                                <div class="det-stage-card" style="border-top:2px solid gold; margin-top:10px; background:rgba(251,191,36,0.05);">
-                                    <h5 style="color:gold;">🥇 Vítěz</h5>
-                                    <div class="det-team-tag ${getStatusClass('winner', player.tip.winner, 1)}">${player.tip.winner || '--'}</div>
-                                </div>
-                            </div>
-                        </div>
+                        <div style="margin-top:10px; font-size:0.7rem; color:#64748b;">Kompletní pavouk se odemkne po startu turnaje.</div>
                     </div>
                 </td>
             </tr>` : ''}
         `;
     }).join('');
 
-    // --- 📊 STATISTIKY ---
-    const winnerCounts = {};
-    processed.forEach(p => { if(p.tip.winner) winnerCounts[p.tip.winner] = (winnerCounts[p.tip.winner] || 0) + 1; });
-    const sortedWinners = Object.entries(winnerCounts).sort((a,b) => b[1] - a[1]);
-    const container = document.getElementById('hlas-lidu-container');
-    if (container && sortedWinners.length > 0) {
-        const top = sortedWinners[0];
-        container.innerHTML = `
-            <div style="background:#1e293b; border-left:4px solid #38bdf8; padding:20px; border-radius:8px; margin:30px 0; color:#f8fafc;">
-                <h4 style="margin:0 0 10px 0; color:#38bdf8; text-transform:uppercase; font-size:0.8rem;"><i class="fas fa-chart-pie"></i> Hlas lidu</h4>
-                Favorit: <b>${top[0]}</b> (${Math.round((top[1]/processed.length)*100)}%)
-            </div>`;
+    // --- 💰 AKTUALIZACE BANKU ---
+    const bankEl = document.getElementById('currentBank');
+    if (bankEl) {
+        const total = processed.length * 200;
+        bankEl.innerHTML = `${total.toLocaleString()} Kč <div style="font-size:0.7rem; font-weight:normal; opacity:0.6;">(60% - 30% - 10%)</div>`;
     }
+
+    // --- 📊 HLAS LIDU ---
+    const container = document.getElementById('hlas-lidu-container');
+    if (container && processed.length > 0) {
+        const winners = {};
+        processed.forEach(p => { if(p.tip.winner) winners[p.tip.winner] = (winners[p.tip.winner] || 0) + 1; });
+        const sorted = Object.entries(winners).sort((a,b) => b[1] - a[1]);
+        if (sorted[0]) {
+            container.innerHTML = `<div style="background:#1e293b; padding:15px; border-radius:8px; border-left:4px solid #38bdf8; margin-top:20px;">
+                <small style="color:#38bdf8; font-weight:bold; text-transform:uppercase;">Hlas lidu</small><br>
+                Favorit: <b>${sorted[0][0]}</b> (${Math.round((sorted[0][1]/processed.length)*100)}%)
+            </div>`;
+        }
+    }
+    console.log("✅ ŽEBŘÍČEK HOTOV");
 }
     
    async function togglePayment(rowId, currentStatus) {
