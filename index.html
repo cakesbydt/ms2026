@@ -857,29 +857,30 @@ function renderLeaderboard(data, real) {
 }
 
    async function togglePayment(rowId, currentStatus) {
-    // 1. Obrátíme aktuální stav platby (z true na false nebo z false na true)
+    // 1. Obrátíme aktuální stav platby
     const novyStatus = !currentStatus; 
     
     // 2. Kontrolní otázka pro admina
     const akceText = novyStatus ? "ZAPLACENO" : "NEZAPLACENO";
     if (!confirm(`Opravdu chceš hráči změnit platbu na: ${akceText}?`)) {
-        return; // Pokud admin klikne na Zrušit, nic se nestane
+        return; 
     }
 
     try {
-        // 3. Odeslání nového stavu do Supabase (tabulka 'tipy')
+        // 3. Odeslání nového stavu do Supabase
         const { error } = await supabaseClient
             .from('tipy')
             .update({ paid: novyStatus })
-            .eq('id', rowId); // Zapisujeme k řádku se správným ID
+            .eq('user_id', rowId); // <--- TADY JE TA OPRAVA: hledáme podle 'user_id'
 
         if (error) throw error;
 
-        console.log(`✅ Platba u ID ${rowId} úspěšně změněna na ${novyStatus}`);
+        console.log(`✅ Platba úspěšně změněna na ${novyStatus}`);
         
-        // 4. MAGIE: Zavoláme tvou funkci pro načtení a překreslení
-        // Tohle okamžitě aktualizuje tabulku i částku v banku!
-        await loadAll(); 
+        // 4. Překreslení žebříčku a banku
+        if (typeof loadAll === "function") {
+            await loadAll(); 
+        }
 
     } catch (error) {
         console.error("❌ Chyba při úpravě platby v Supabase:", error);
