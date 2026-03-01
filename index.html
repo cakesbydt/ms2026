@@ -800,28 +800,27 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. Očista jména (ČSOB i AirBank jsou háklivé na MSG)
+    // 1. Očista jména - čím kratší zpráva, tím větší "tečky" v QR kódu a lepší čtení
     const cleanName = playerName.normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9]/g, "");
+        .replace(/[^a-zA-Z0-9]/g, "").substring(0, 10);
 
-    // 2. IBAN Formát (Pro 295511827 / 0300) - nejpřesnější cesta
-    const iban = "CZ7803000000000295511827"; 
+    // 2. KLÍČOVÁ OPRAVA: Číslo účtu MUSÍ mít 10 číslic. 
+    // Tvoje 295511827 -> doplníme nulu -> 0295511827
+    const acc = "0295511827"; 
+    const bank = "0300"; 
     
-    // 3. Sestavení SPAYD řetězce přesně podle normy
-    const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC2026${cleanName}`;
+    // 3. Sestavení řetězce - AM:200 (bez desetin je pro některé banky čitelnější)
+    const spaydData = `SPD*1.0*ACC:${acc}${bank}*AM:200*CUR:CZK*MSG:WC26${cleanName}`;
 
-    // 4. Generování s margin=4 (bílý okraj) a ecc=M (střední korekce chyb)
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&ecc=M&margin=4`;
+    // 4. ECC=L (Low) - vytvoří největší možné body v QR kódu, které se nejlépe skenují
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&ecc=L&margin=4`;
 
-    // 5. VYKRESLENÍ: Fixujeme pozici, aby nic nepřekrývalo text
     if (qrContainer) {
         qrContainer.innerHTML = `
-            <div style="background: white; padding: 20px; border-radius: 15px; display: inline-block; margin: 20px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #ddd;">
-                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px; margin: 0 auto;">
-                <div style="color: #000; font-family: sans-serif; margin-top: 10px;">
-                    <span style="font-size: 10px; font-weight: 900; letter-spacing: 2px; opacity: 0.5;">CZECH QR PAYMENT</span>
-                </div>
+            <div style="background: white; padding: 20px; border-radius: 12px; display: block; margin: 15px auto; width: fit-content; box-shadow: 0 5px 20px rgba(0,0,0,0.4);">
+                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px;">
+                <p style="color: #000; font-family: sans-serif; font-size: 11px; font-weight: 900; margin-top: 10px; text-align: center; letter-spacing: 2px;">QR PLATBA</p>
             </div>
         `;
     }
