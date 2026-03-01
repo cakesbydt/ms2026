@@ -856,23 +856,34 @@ function renderLeaderboard(data, real) {
     }).join('');
 }
 
-    async function togglePayment(rowId, currentStatus) {
-    const novyStatus = !currentStatus; // Obrátí stav (z false na true a naopak)
+   async function togglePayment(rowId, currentStatus) {
+    // 1. Obrátíme aktuální stav platby (z true na false nebo z false na true)
+    const novyStatus = !currentStatus; 
     
-    // Potvrzovací okno, ať si neklikneš omylem
-    if(!confirm(`Opravdu chceš změnit stav platby na: ${novyStatus ? 'ZAPLACENO' : 'NEZAPLACENO'}?`)) return;
+    // 2. Kontrolní otázka pro admina
+    const akceText = novyStatus ? "ZAPLACENO" : "NEZAPLACENO";
+    if (!confirm(`Opravdu chceš hráči změnit platbu na: ${akceText}?`)) {
+        return; // Pokud admin klikne na Zrušit, nic se nestane
+    }
 
     try {
-        // SEM DOPLŇ KÓD PRO ULOŽENÍ DO TVÉ DATABÁZE
-        // Příklad pro Supabase:
-        // await supabase.from('tvuj_nazev_tabulky').update({ paid: novyStatus }).eq('id', rowId);
+        // 3. Odeslání nového stavu do Supabase (tabulka 'tipy')
+        const { error } = await supabaseClient
+            .from('tipy')
+            .update({ paid: novyStatus })
+            .eq('id', rowId); // Zapisujeme k řádku se správným ID
 
-        alert('Stav platby byl upraven!');
-        // Znovu načti data, ať se tabulka a bank překreslí
-        // loadDataAndRender(); 
+        if (error) throw error;
+
+        console.log(`✅ Platba u ID ${rowId} úspěšně změněna na ${novyStatus}`);
+        
+        // 4. MAGIE: Zavoláme tvou funkci pro načtení a překreslení
+        // Tohle okamžitě aktualizuje tabulku i částku v banku!
+        await loadAll(); 
+
     } catch (error) {
-        console.error("Chyba při updatu platby:", error);
-        alert("Něco se pokazilo.");
+        console.error("❌ Chyba při úpravě platby v Supabase:", error);
+        alert("Nepodařilo se změnit stav platby. Zkontroluj konzoli.");
     }
 }
     
