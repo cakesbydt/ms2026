@@ -686,6 +686,15 @@
 <div class="admin-trigger" onclick="checkAdmin()"><i class="fas fa-lock"></i></div>
 
 <script>
+function scrollToContent() {
+    // Najdeme hlavní kontejner tipovačky (např. tvůj main-content nebo konkrétní sekci)
+    const element = document.querySelector('.main-content'); 
+    if (element) {
+        // Srolujeme plynule k začátku obsahu, ne k vlajkám v headeru
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+    
 function initCountdown() {
     // TADY NASTAV PŘESNÝ ČAS UZÁVĚRKY (Rok, Měsíc-1, Den, Hodina, Minuta, Vteřina)
     // MS 2026 začíná 11. června 2026. Zde je nastaveno 11. 6. 2026 ve 20:00.
@@ -1140,17 +1149,26 @@ async function renderLeaderboard(data, real) {
     }
 
    function goBack(currentId, prevId, prevDot) {
-    // 1. Skryje aktuální sekci (např. 'sec-s32')
+    // 1. Skryje aktuální sekci (např. 'phase-thirds')
     const current = document.getElementById(currentId);
-    if (current) current.classList.add('hidden');
+    if (current) {
+        current.classList.add('hidden');
+    }
 
-    // 2. Ukáže předchozí sekci (např. 'phase-thirds')
-    // Poznámka: Pokud máš ID 'phase-thirds', musí tam být tento název
+    // 2. Ukáže předchozí sekci (např. 'phase-groups')
     const prev = document.getElementById(prevId);
-    if (prev) prev.classList.remove('hidden');
+    if (prev) {
+        prev.classList.remove('hidden');
 
-    // --- TADY JE TA OPRAVA ---
-    // 3. Aktualizuje barvu v horním panelu podle prevDot
+        // --- 🚀 FIX PRO MOBILY: CHYTRÉ SCROLLOVÁNÍ 🚀 ---
+        // Zajistí, že se stránka plynule posune na začátek sekce, na kterou se vracíš.
+        // Parametr 'block: start' zajistí, že horní hrana sekce bude u horního okraje displeje.
+        setTimeout(() => {
+            prev.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 50); 
+    }
+
+    // 3. Aktualizuje barvu v horním panelu (stepperu) podle prevDot
     if (prevDot && typeof updateStepper === "function") {
         updateStepper(prevDot);
     }
@@ -1380,31 +1398,39 @@ function confirmThirds() {
         return alert("Musíš vybrat přesně 8 týmů ze 3. míst!");
     }
 
-    // 2. Vizuální zpětná vazba - ozelenění tečky výběru 3. míst (stepper)
+    // 2. Vizuální zpětná vazba - stepper
     const dotS2 = document.getElementById('dot-s2');
     if(dotS2) {
         dotS2.classList.remove('active');
         dotS2.classList.add('completed');
     }
 
-    // 3. Skrytí aktuální fáze výběru a zobrazení kontejneru pro pavouka
+    // 3. Přepnutí sekcí
     const thirdsDiv = document.getElementById('phase-thirds') || document.getElementById('sec-thirds');
-    if(thirdsDiv) thirdsDiv.classList.add('hidden');
-
     const playoffCont = document.getElementById('playoff-container');
+
+    if(thirdsDiv) thirdsDiv.classList.add('hidden');
     if(playoffCont) playoffCont.classList.remove('hidden');
 
-    // 4. GENEROVÁNÍ PAVOUKA (Voláme naši připravenou funkci)
-    // Tato funkce interně složí týmy do správných dvojic a zavolá genStage
+    // 4. GENEROVÁNÍ PAVOUKA
     prepareS32(state.thirds);
 
-    // 5. Aktivace nové tečky v stepperu pro pavouka (pokud máš funkci updateStepper)
+    // 5. Aktivace nové tečky v stepperu
     if (typeof updateStepper === "function") {
         updateStepper('dot-s32');
     }
 
-    // 6. Scroll nahoru, ať uživatel vidí začátek pavouka
-    window.scrollTo(0, 0);
+    // --- 🚀 FIX PRO MOBILY: CHYTRÉ SCROLLOVÁNÍ 🚀 ---
+    // Místo window.scrollTo(0,0) použijeme zaměření na kontejner pavouka.
+    // setTimeout zajistí, že se scroll spustí až ve chvíli, kdy prohlížeč pavouka vykreslí.
+    if(playoffCont) {
+        setTimeout(() => {
+            playoffCont.scrollIntoView({ 
+                behavior: 'smooth', // Plynulý pohyb
+                block: 'start'      // Zarovnat horní hranu sekce k hornímu okraji displeje
+            });
+        }, 100); 
+    }
 }
 
  function prepareS32(vybrane3) {
