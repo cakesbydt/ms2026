@@ -618,12 +618,14 @@
     </div>
 </div>
 
-            <div id="hlas-lidu-container"></div>
-            
-            <div class="section-box">
-                <div class="section-header">📊 ŽEBŘÍČEK HRÁČŮ</div>
-                <table id="leaderboard"><tbody id="public-body"></tbody></table>
-            </div>
+           <div id="hlas-lidu-container"></div>
+
+<div class="section-box" id="section-leaderboard">
+    <div class="section-header">📊 ŽEBŘÍČEK HRÁČŮ</div>
+    <table id="leaderboard">
+        <tbody id="public-body"></tbody>
+    </table>
+</div>
         </aside>
 
         <main>
@@ -1473,10 +1475,10 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         </div>`;
     
     // --- PŘEPNUTÍ VIDITELNOSTI ---
-    // Nejdřív skryjeme úplně všechno (všechny sekce i hlavní boxy)
-    document.querySelectorAll('#playoff-container .section-box, main > .section-box, .section-box').forEach(div => {
-        div.classList.add('hidden');
-    });
+ // Schováme všechny boxy formuláře, ale žebříček necháme svítit
+document.querySelectorAll('.section-box:not(#section-leaderboard)').forEach(div => {
+    div.classList.add('hidden');
+});
 
     // Pak ukážeme jen to, co chceme
     stageDiv.classList.remove('hidden');
@@ -1547,7 +1549,9 @@ function cfS(sid, count) {
         state.playoff.bronze = bronzeEl ? bronzeEl.innerText : "Nezvoleno"; 
 
         // Skryjeme pavouka
-        document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
+       document.querySelectorAll('.section-box:not(#section-leaderboard)').forEach(d => {
+    d.classList.add('hidden');
+});
         
         // Ukážeme finální potvrzovací box
         const finalBox = document.getElementById('final-box');
