@@ -988,28 +988,24 @@ function renderLeaderboard(data, real) {
             </tr>`;
     }).join('');
 
-// --- 📊 STATISTIKY KOMUNITY 📊 ---
-    // Spočítáme tipy na vítěze
+// --- 📊 STATISTIKY KOMUNITY (HLAS LIDU) 📊 ---
     const winnerCounts = {};
     processed.forEach(p => {
         const w = p.tip.winner;
         if (w) winnerCounts[w] = (winnerCounts[w] || 0) + 1;
     });
 
-    // Seřadíme od nejvíce tipovaných
     const sortedWinners = Object.entries(winnerCounts).sort((a, b) => b[1] - a[1]);
     
     if (sortedWinners.length > 0) {
         const topTeam = sortedWinners[0];
         const topPercent = Math.round((topTeam[1] / processed.length) * 100);
         
-        // Hledáme "černého koně" (tým s přesně 1 tipem, pokud existuje)
         const darkHorse = sortedWinners.reverse().find(t => t[1] === 1);
 
-        // Vytvoříme HTML prvek a vložíme ho za tabulku (nebo ho můžeš vložit do připraveného divu)
         let statsHtml = `
-            <div style="background: #1e293b; border-left: 4px solid #38bdf8; padding: 15px 20px; border-radius: 8px; margin-top: 30px; color: #f8fafc;">
-                <h4 style="margin: 0 0 10px 0; color: #38bdf8;"><i class="fas fa-chart-pie"></i> Hlas lidu</h4>
+            <div style="background: #1e293b; border-left: 4px solid #38bdf8; padding: 15px 20px; border-radius: 8px; margin: 30px 0; color: #f8fafc; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <h4 style="margin: 0 0 10px 0; color: #38bdf8; text-transform: uppercase; letter-spacing: 1px;"><i class="fas fa-chart-pie"></i> Hlas lidu</h4>
                 <div style="font-size: 0.95rem; line-height: 1.6;">
                     Největší favorit na zlato: <strong>${topTeam[0]}</strong> <span style="color: #94a3b8; font-size: 0.8rem;">(věří mu ${topPercent} % tipujících)</span>
                     ${darkHorse ? `<br>Největší outsider (černý kůň): <strong>${darkHorse[0]}</strong> <span style="color: #94a3b8; font-size: 0.8rem;">(věří mu jen 1 odvážlivec)</span>` : ''}
@@ -1017,16 +1013,12 @@ function renderLeaderboard(data, real) {
             </div>
         `;
         
-        // Najdeme konec žebříčku a přilepíme to tam (pokud už tam stats-box je, smažeme starý)
-        const oldStats = document.getElementById('community-stats');
-        if(oldStats) oldStats.remove();
-        
-        const statsDiv = document.createElement('div');
-        statsDiv.id = 'community-stats';
-        statsDiv.innerHTML = statsHtml;
-        body.parentNode.appendChild(statsDiv); 
+        // ZMĚNA TADY: Najdeme tvůj nový kontejner a vložíme to do něj
+        const container = document.getElementById('hlas-lidu-container');
+        if (container) {
+            container.innerHTML = statsHtml;
+        }
     }
-}
 
    async function togglePayment(rowId, currentStatus) {
     console.log("1. Kliknuto! Spouštím úpravu pro ID:", rowId, "Současný stav:", currentStatus);
