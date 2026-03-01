@@ -1517,84 +1517,72 @@ function confirmAllGroups() {
 }
     
 function selectThird(el, teamName) {
-    // 1. Logika přidání/odebrání (to už nám funguje)
-    const isAlreadySelected = state.thirds.includes(teamName);
+    // 1. Zjistíme, jestli už tým máme (používáme trim pro jistotu)
+    const name = teamName.trim();
+    const isAlreadySelected = state.thirds.includes(name);
 
+    // 2. LOGIKA PŘIDÁNÍ / ODEBRÁNÍ
     if (isAlreadySelected) {
-        // ODEBRAT
-        state.thirds = state.thirds.filter(t => t !== teamName);
-        el.classList.remove('selected');
-        // Skryjeme číslo na odznačené kartě
-        const badge = el.querySelector('.selection-order');
-        if (badge) badge.style.display = 'none';
+        // Odebrat z pole
+        state.thirds = state.thirds.filter(t => t !== name);
     } else {
-        // PŘIDAT
+        // Přidat do pole (pokud jich není 8)
         if (state.thirds.length < 8) {
-            state.thirds.push(teamName);
-            el.classList.add('selected');
+            state.thirds.push(name);
         } else {
-            alert("Můžeš vybrat maximálně 8 týmů.");
+            showCustomAlert("Stop!", "Můžeš vybrat maximálně 8 týmů ze 3. míst.");
             return;
         }
     }
 
-    // 2. Aktualizace počítadla
-    const counterEl = document.getElementById('thirds-counter');
-    if (counterEl) {
-        counterEl.innerText = `${state.thirds.length} / 8`;
-        counterEl.style.background = state.thirds.length === 8 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #fbbf24, #d97706)';
-        counterEl.style.color = state.thirds.length === 8 ? '#fff' : '#000';
-    }
+    // 3. VIZUÁLNÍ AKTUALIZACE VŠECH KARET (Hromadný přepočet)
+    // Projdeme úplně všechny karty s touto třídou
+    document.querySelectorAll('.card-third').forEach(card => {
+        const cardName = card.getAttribute('data-name');
+        const selectedIdx = state.thirds.indexOf(cardName);
+        
+        // Najdeme nebo vytvoříme badge pro číslo
+        let badge = card.querySelector('.selection-order');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'selection-order';
+            card.appendChild(badge);
+        }
 
-    // 3. Přepočet a zobrazení pořadových čísel (1, 2, 3...)
-    // Nejdřív skryjeme všechna čísla pro jistotu
-    document.querySelectorAll('.card-third .selection-order').forEach(badge => {
-        badge.style.display = 'none';
-    });
-
-    // Teď projdeme vybrané týmy přesně v tom pořadí, v jakém jsi je naklikal
-    state.thirds.forEach((selectedTeamName, index) => {
-        document.querySelectorAll('.card-third').forEach(card => {
-            // Kontrola přes data-name nebo text uvnitř
-            if (card.getAttribute('data-name') === selectedTeamName || card.innerText.includes(selectedTeamName)) {
-                
-                // Zkusíme najít odznak v kartě. Pokud v HTML není, JS ho sám vytvoří!
-                let badge = card.querySelector('.selection-order');
-                if (!badge) {
-                    badge = document.createElement('div');
-                    badge.className = 'selection-order';
-                    card.appendChild(badge);
-                }
-                
-                // Zobrazíme ho a nastavíme číslo pořadí
-                badge.style.display = 'flex';
-                badge.innerText = index + 1; 
-                
-                // Restart animace pro pěkný efekt při každém posunu čísel
-                badge.style.animation = 'none';
-                badge.offsetHeight; /* Trigger reflow */
-                badge.style.animation = null; 
-            }
-        });
-    });
-}
-    
-    // Překreslení čísel u všech (pokud by uživatel nějaký odebral z prostředka)
-    document.querySelectorAll('.third-team-card.selected').forEach(card => {
-        const name = card.getAttribute('data-name'); // nebo jak bereš jméno z HTML
-        const currentIdx = state.thirds.indexOf(name);
-        const badge = card.querySelector('.rank-badge');
-        if (badge && currentIdx > -1) {
-            badge.innerText = currentIdx + 1;
+        if (selectedIdx > -1) {
+            // Tým je vybraný
+            card.classList.add('selected');
+            badge.style.display = 'flex';
+            badge.innerText = selectedIdx + 1; // Pořadí 1, 2, 3...
+        } else {
+            // Tým není vybraný
+            card.classList.remove('selected');
+            badge.style.display = 'none';
         }
     });
 
-    // Zobrazení tlačítka pro postup do pavouka
-    const btnNext = document.getElementById('btn-start-playoff');
-    if(btnNext) {
-        btnNext.style.display = state.thirds.length === 8 ? 'inline-block' : 'none';
+    // 4. AKTUALIZACE POČÍTADLA (X / 8)
+    const counterEl = document.getElementById('thirds-counter');
+    if (counterEl) {
+        counterEl.innerText = `${state.thirds.length} / 8`;
+        
+        // Změna barvy, když je hotovo
+        if (state.thirds.length === 8) {
+            counterEl.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+            counterEl.style.color = '#fff';
+        } else {
+            counterEl.style.background = 'rgba(251, 191, 36, 0.1)';
+            counterEl.style.color = '#fbbf24';
+        }
     }
 
+    // 5. ZOBRAZENÍ TLAČÍTKA PRO POSTUP
+    const btnNext = document.getElementById('btn-start-playoff');
+    if (btnNext) {
+        // Tlačítko se ukáže jen při přesně 8 týmech
+        btnNext.style.display = state.thirds.length === 8 ? 'inline-block' : 'none';
+    }
+}
 
 function confirmThirds() {
     // 1. Validace počtu vybraných týmů
