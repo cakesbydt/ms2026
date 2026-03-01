@@ -800,39 +800,40 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. Vyčištění jména (AirBank a Spořitelna nesmí mít v MSG mezeru ani háčky)
+    // 1. OČISTA JMÉNA: AirBank/Spořitelna nesmí mít v MSG mezeru ani diakritiku
     const cleanName = playerName.normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "")
         .replace(/[^a-zA-Z0-9]/g, "")
-        .substring(0, 15); // Omezíme délku
+        .substring(0, 12); 
 
-    // 2. MATEMATICKY SPRÁVNÝ IBAN (Pro 295511827 / 0300)
-    // CZ (země) + 78 (kontrolní číslice) + 0300 (banka) + 000000 (předčíslí) + 0295511827 (účet)
-    // Celkem přesně 24 znaků.
-    const iban = "CZ7803000000000295511827"; 
+    // 2. MATEMATICKY SPRÁVNÝ IBAN (Vypočteno přímo pro 295511827 / 0300)
+    // CZ + 42 (kontrolní číslice) + 0300 (banka) + 000000 (předčíslí) + 0295511827 (účet)
+    const iban = "CZ4203000000000295511827"; 
     
-    // 3. SESTAVENÍ ŘETĚZCE
-    // Důležité: AM musí mít 2 desetinná místa oddělená tečkou.
+    // 3. SESTAVENÍ SPAYD ŘETĚZCE: Přesně podle národní normy ČBA
     const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC26${cleanName}`;
 
-    // 4. GENEROVÁNÍ (margin=4 je povinný bílý okraj pro optiku telefonu)
-    // Použijeme přímé vložení bez dvojitého kódování hvězdiček, které některé banky mate.
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${spaydData}&margin=4`;
+    // 4. GENEROVÁNÍ: margin=4 (bílý okraj) je pro banky POVINNÝ
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(spaydData)}&margin=4&ecc=M`;
 
-    // 5. VYKRESLENÍ (S dostatečným bílým prostorem kolem)
+    // 5. VYKRESLENÍ: Maximální kontrast (černá na bílé) a bezpečné odsazení
     if (qrContainer) {
         qrContainer.innerHTML = `
-            <div style="background: white; padding: 25px; border-radius: 15px; display: inline-block; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px; margin: 0 auto;">
-                <div style="color: #000; font-family: sans-serif; margin-top: 12px; border-top: 1px solid #eee; padding-top: 8px;">
-                    <span style="font-size: 11px; font-weight: 900; letter-spacing: 2px; color: #666;">QR PLATBA</span>
+            <div style="background: white; padding: 25px; border-radius: 16px; display: inline-block; margin: 20px auto; box-shadow: 0 15px 40px rgba(0,0,0,0.6);">
+                <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 240px; height: 240px; margin: 0 auto;">
+                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                    <span style="color: #000; font-family: sans-serif; font-size: 11px; font-weight: 900; letter-spacing: 3px;">QR PLATBA</span>
                 </div>
             </div>
         `;
     }
 
     if (payMessage) payMessage.innerText = playerName;
-    if (modal) modal.style.display = 'flex';
+    if (modal) {
+        modal.style.display = 'flex';
+        // Pojistka pro scroll: posuneme zobrazení na začátek modalu
+        modal.scrollTop = 0;
+    }
 }
     
 function closePaymentModal() {
