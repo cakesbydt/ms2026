@@ -875,24 +875,19 @@ function renderLeaderboard(data, real) {
         const rowId = player.user_id || player.id;
         
         // --- 📈 LOGIKA PRO TREND (ŠIPKY) 📈 ---
-        // Výchozí stav (pomlčka), pokud se hráč neposunul, nebo ještě nemáme data z minula
         let trendIcon = '<span style="color: #64748b; font-size: 0.8rem; margin-left: 8px;" title="Beze změny">-</span>'; 
         
         if (player.previous_rank) {
             if (displayedRank < player.previous_rank) {
-                // Šel nahoru (nižší číslo = lepší pozice)
                 const skok = player.previous_rank - displayedRank;
                 trendIcon = `<span style="color: #10b981; font-size: 0.8rem; margin-left: 8px; font-weight: bold;" title="Postup o ${skok} míst"><i class="fas fa-arrow-up"></i> ${skok}</span>`;
             } else if (displayedRank > player.previous_rank) {
-                // Spadl dolů
                 const propad = displayedRank - player.previous_rank;
                 trendIcon = `<span style="color: #ef4444; font-size: 0.8rem; margin-left: 8px; font-weight: bold;" title="Propad o ${propad} míst"><i class="fas fa-arrow-down"></i> ${propad}</span>`;
             }
         }
         // ----------------------------------------
 
-        // Tady následuje to tvoje tlačítko pro platbu a pak `return \`<tr... `
-        // --- LOGIKA PRO STATUS PLATBY ---
         const isPaid = player.paid === true || player.paid === 1 || String(player.paid) === 'true';
         const paymentBadgeColor = isPaid ? '#10b981' : '#ef4444';
         const paymentBadgeText = isPaid ? '<i class="fas fa-check"></i> ZAPLACENO' : 'NEZAPLACENO';
@@ -987,10 +982,8 @@ function renderLeaderboard(data, real) {
                 </td>
             </tr>`;
     }).join('');
-    }
 
-
-// --- 📊 STATISTIKY KOMUNITY (HLAS LIDU) 📊 ---
+    // --- 📊 STATISTIKY KOMUNITY (HLAS LIDU) 📊 ---
     const winnerCounts = {};
     processed.forEach(p => {
         const w = p.tip.winner;
@@ -1015,13 +1008,12 @@ function renderLeaderboard(data, real) {
             </div>
         `;
         
-        // ZMĚNA TADY: Najdeme tvůj nový kontejner a vložíme to do něj
         const container = document.getElementById('hlas-lidu-container');
         if (container) {
             container.innerHTML = statsHtml;
         }
     }
-
+} // <--- TADY JE KONEČNĚ TA SPRÁVNÁ ZÁVORKA
    async function togglePayment(rowId, currentStatus) {
     console.log("1. Kliknuto! Spouštím úpravu pro ID:", rowId, "Současný stav:", currentStatus);
     const novyStatus = !currentStatus; 
