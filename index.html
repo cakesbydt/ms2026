@@ -800,36 +800,36 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. Nastavíme jméno v textu pod QR kódem
     if (payMessage) payMessage.innerText = playerName;
     
-    // 2. TVOJE REÁLNÉ ÚDAJE (Pevně definované uvnitř funkce)
     const acc = "295511827"; 
     const bank = "0300"; 
     const am = "200.00"; 
-    // Zpráva pro příjemce (bez diakritiky je to pro banky jistota)
+    
+    // Odstranění diakritiky pro maximální kompatibilitu
     const cleanName = playerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const msg = `WC2026 - ${cleanName}`;
     
-    // 3. SESTAVENÍ SPAYD ŘETĚZCE (Formát pro české banky)
-    // Pozor: ACC musí být v kuse (číslo + banka)
+    // Sestavení SPAYD řetězce
     const spaydData = `SPD*1.0*ACC:${acc}${bank}*AM:${am}*CUR:CZK*MSG:${msg}`;
     
-    // 4. KONTROLA V KONZOLI (Stiskni F12 a uvidíš, co se generuje)
-    console.log("🛠️ Generuji QR platbu pro:", playerName);
-    console.log("🔗 SPAYD řetězec:", spaydData);
-
-    // 5. GENEROVÁNÍ OBRÁZKU
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(spaydData)}`;
+    // --- KLÍČOVÉ ZMĚNY PRO ČITELNOST ---
+    // ecc=M (Medium error correction)
+    // margin=4 (Bílý okraj kolem kódu, bez kterého banky kód nevezmou)
+    // qzone=4 (Vynucená tichá zóna)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&ecc=M&margin=4`;
     
     if (qrContainer) {
-        qrContainer.innerHTML = `<img src="${qrUrl}" alt="QR Platba" style="width:100%; max-width:250px; border-radius: 10px; border: 5px solid white;">`;
+        // Vynutíme bílé pozadí a padding přímo na obrázku, aby kód nesplýval s tmavým webem
+        qrContainer.innerHTML = `
+            <div style="background: white; padding: 15px; border-radius: 12px; display: inline-block; line-height: 0; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+                <img src="${qrUrl}" alt="QR Platba" style="width: 250px; height: 250px; display: block;">
+            </div>
+        `;
     }
     
-    // 6. ZOBRAZENÍ MODALU
     if (modal) modal.style.display = 'flex';
 }
-
 function closePaymentModal() {
     document.getElementById('payment-modal-overlay').style.display = 'none';
 }
