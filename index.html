@@ -411,6 +411,33 @@
     letter-spacing: 1px;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
 }
+
+        .countdown-wrapper {
+    background: #1e293b;
+    padding: 15px 20px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #38bdf8;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.countdown-title {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+.countdown-numbers {
+    color: #fff;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+.countdown-numbers span {
+    color: #38bdf8; /* Modrá barva pro samotná čísla */
+}
     </style>
 </head>
 <body>
@@ -418,6 +445,18 @@
 <div class="app-wrapper">
     <header>
         <h1>🏆 MS 2026 TIPOVAČKA</h1>
+        <div class="countdown-wrapper">
+    <div class="countdown-title">Tipování se uzavře za:</div>
+    <div id="countdown-timer" class="countdown-numbers">
+        <span id="cd-days">00</span>d : 
+        <span id="cd-hours">00</span>h : 
+        <span id="cd-mins">00</span>m : 
+        <span id="cd-secs">00</span>s
+    </div>
+    <div id="countdown-expired" style="display: none; color: #ef4444; font-weight: bold; font-size: 1.2rem;">
+        <i class="fas fa-lock"></i> Tipování je uzavřeno! Turnaj začal.
+    </div>
+</div>
        <div class="step-indicator">
     <span class="step-dot active" id="dot-s1">Skupiny</span>
     <span class="step-dot" id="dot-s2">3. místa</span>
@@ -544,14 +583,28 @@
             <div id="playoff-container"></div>
             <div id="sec-thirds" class="hidden"></div>
             
-            <div id="final-box" class="hidden section-box" style="border: 2px solid var(--winner); text-align: center; background: linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(34,197,94,0.1) 100%);">
-                <div class="section-header" style="background: rgba(34,197,94,0.2); border-bottom: 1px solid var(--winner); justify-content: center;">🏆 FINÁLNÍ ODESLÁNÍ</div>
-                <div class="section-content" style="padding: 40px;">
-                    <h2 id="winner-display" style="color:var(--winner); margin: 0 0 30px 0; font-size: 2rem; font-weight: 900; text-shadow: 0 0 20px rgba(34,197,94,0.4);"></h2>
-                    <input type="text" id="user-name" placeholder="Zadej své jméno pro žebříček" style="margin-bottom:25px; text-align:center; font-size:1.2rem; padding: 16px; max-width: 400px; display: block; margin-left: auto; margin-right: auto;">
-                    <button class="btn btn-primary" style="font-size: 1.2rem; padding: 18px 40px; max-width: 400px; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 10px 25px rgba(34,197,94,0.4);" onclick="saveToSupabase()">ODESLAT TIP DO ŽEBŘÍČKU</button>
-                </div>
+           <div id="final-box" class="hidden section-box" style="border: 2px solid var(--winner); text-align: center; background: linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(34,197,94,0.1) 100%);">
+    <div class="section-header" style="background: rgba(34,197,94,0.2); border-bottom: 1px solid var(--winner); justify-content: center;">🏆 FINÁLNÍ ODESLÁNÍ</div>
+    <div class="section-content" style="padding: 40px;">
+        <h2 id="winner-display" style="color:var(--winner); margin: 0 0 30px 0; font-size: 2rem; font-weight: 900; text-shadow: 0 0 20px rgba(34,197,94,0.4);"></h2>
+        
+        <div class="countdown-wrapper" style="max-width: 400px; margin: 0 auto 25px auto; background: #0f172a; padding: 15px; border-radius: 10px; border: 1px solid #38bdf8;">
+            <div class="countdown-title" style="color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">Tipování se uzavře za:</div>
+            <div id="countdown-timer" class="countdown-numbers" style="color: #fff; font-size: 1.8rem; font-weight: 900;">
+                <span id="cd-days" style="color: #38bdf8;">00</span>d : 
+                <span id="cd-hours" style="color: #38bdf8;">00</span>h : 
+                <span id="cd-mins" style="color: #38bdf8;">00</span>m : 
+                <span id="cd-secs" style="color: #38bdf8;">00</span>s
             </div>
+            <div id="countdown-expired" style="display: none; color: #ef4444; font-weight: bold; font-size: 1.2rem;">
+                <i class="fas fa-lock"></i> Tipování je uzavřeno!
+            </div>
+        </div>
+        <input type="text" id="user-name" placeholder="Zadej své jméno pro žebříček" style="margin-bottom:25px; text-align:center; font-size:1.2rem; padding: 16px; max-width: 400px; display: block; margin-left: auto; margin-right: auto;">
+        
+        <button id="btn-odeslat-tip" class="btn btn-primary" style="font-size: 1.2rem; padding: 18px 40px; max-width: 400px; background: linear-gradient(135deg, #22c55e, #16a34a); box-shadow: 0 10px 25px rgba(34,197,94,0.4);" onclick="saveToSupabase()">ODESLAT TIP DO ŽEBŘÍČKU</button>
+    </div>
+</div>
         </main>
     </div>
 </div>
@@ -559,6 +612,59 @@
 <div class="admin-trigger" onclick="checkAdmin()"><i class="fas fa-lock"></i></div>
 
 <script>
+function initCountdown() {
+    // TADY NASTAV PŘESNÝ ČAS UZÁVĚRKY (Rok, Měsíc-1, Den, Hodina, Minuta, Vteřina)
+    // MS 2026 začíná 11. června 2026. Zde je nastaveno 11. 6. 2026 ve 20:00.
+    const deadline = new Date("2026-06-11T20:00:00").getTime();
+
+    const timerInterval = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = deadline - now;
+
+        // TADY DOPLŇ PŘESNÁ ID TVÝCH TLAČÍTEK PRO ODESLÁNÍ A ÚPRAVU TIPU
+        const btnOdeslat = document.getElementById('btn-odeslat-tip'); 
+        const btnUpravit = document.getElementById('btn-upravit-tip');
+
+        if (distance < 0) {
+            // ČAS VYPRŠEL
+            clearInterval(timerInterval);
+            
+            // Přepnutí vzhledu odpočtu na "Uzavřeno"
+            document.getElementById("countdown-timer").style.display = "none";
+            document.getElementById("countdown-expired").style.display = "block";
+
+            // NEKOMPROMISNÍ ZABLOKOVÁNÍ TLAČÍTEK
+            if (btnOdeslat) {
+                btnOdeslat.disabled = true;
+                btnOdeslat.style.opacity = "0.3";
+                btnOdeslat.style.cursor = "not-allowed";
+                btnOdeslat.innerText = "Tipování skončilo"; // Přepíše text tlačítka
+            }
+            if (btnUpravit) {
+                btnUpravit.disabled = true;
+                btnUpravit.style.opacity = "0.3";
+                btnUpravit.style.cursor = "not-allowed";
+                btnUpravit.innerText = "Úpravy zamčeny";
+            }
+        } else {
+            // ČAS BĚŽÍ - Výpočet zbývajícího času
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Vypsání do HTML (padEnd s 0 zajistí formát "05" místo "5")
+            document.getElementById("cd-days").innerText = days.toString().padStart(2, '0');
+            document.getElementById("cd-hours").innerText = hours.toString().padStart(2, '0');
+            document.getElementById("cd-mins").innerText = minutes.toString().padStart(2, '0');
+            document.getElementById("cd-secs").innerText = seconds.toString().padStart(2, '0');
+        }
+    }, 1000); // Aktualizace každou vteřinu
+}
+
+// Spuštění odpočtu, jakmile se načte stránka
+document.addEventListener('DOMContentLoaded', initCountdown);
+    
     // Zabrání prohlížeči v automatických pokusech o obnovu skrolu
 if ('scrollRestoration' in history) { history.scrollRestoration = 'manual'; }
     const SB_URL = "https://vlabocwezmpwnxrwxihs.supabase.co";
