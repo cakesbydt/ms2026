@@ -786,7 +786,7 @@
 
         <div class="payment-info">
             Částka: <b>200 Kč</b><br>
-            Číslo účtu: <b>123456789/0123</b><br>
+            Číslo účtu: <b>295511827/0300</b><br>
             Zpráva: <b id="pay-message">Jmeno Hrace</b>
         </div>
 
@@ -808,7 +808,7 @@ function showPaymentModal(playerName) {
 
     // 2. MATEMATICKY SPRÁVNÝ IBAN (Vypočteno přímo pro 295511827 / 0300)
     // CZ + 42 (kontrolní číslice) + 0300 (banka) + 000000 (předčíslí) + 0295511827 (účet)
-    const iban = "CZ4203000000000295511827"; 
+    const iban = "CZ1203000000000295511827"; 
     
     // 3. SESTAVENÍ SPAYD ŘETĚZCE: Přesně podle národní normy ČBA
     const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC26${cleanName}`;
