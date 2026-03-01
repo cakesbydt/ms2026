@@ -2148,26 +2148,24 @@ async function nacistAdminVysledky() {
 
         if (error) throw error;
 
-        // --- NOVÁ ČÁST: AKTUALIZACE JMÉNA V HLAVIČCE ---
+        // 5. AKTUALIZACE JMÉNA V HLAVIČCE (pokud existuje element)
         const userDisplay = document.getElementById('user-email-display');
         if (userDisplay && name) {
             const email = userDisplay.innerText.split(' ')[0]; 
             userDisplay.innerText = `${email} (${name})`;
         }
 
-        // ... uvnitř try bloku v saveToSupabase ...
-if (error) throw error;
+        // 6. ZOBRAZENÍ PLATEBNÍHO OKNA (Místo starého alertu)
+        showPaymentModal(name);
 
-// Místo staré hlášky otevřeme platební okno
-showPaymentModal(name);
-
-if (typeof loadAll === 'function') await loadAll();
+        // 7. REFRESH ŽEBŘÍČKU
+        if (typeof loadAll === 'function') await loadAll();
 
     } catch (error) {
         console.error("Supabase chyba:", error);
         showCustomAlert("Chyba", "Něco se nepovedlo při ukládání: " + error.message);
     }
-} // <--- TATO ZÁVORKA TI TAM CHYBĚLA
+}
     
     // Pomocné funkce pro ovládání okna
 function showCustomAlert(title, message) {
