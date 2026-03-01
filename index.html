@@ -562,7 +562,19 @@
     <div id="admin-panel" class="hidden section-box" style="border-color: var(--lose);">
     <div class="section-header" style="background: var(--lose)">🔧 ADMIN PANEL</div>
     <div class="section-content" id="admin-form-container" style="padding:20px; display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:15px;"></div>
-    
+    <div style="grid-column: 1 / -1; margin: 10px 0 20px 0; padding: 20px; background: rgba(56, 189, 248, 0.05); border: 2px dashed rgba(56, 189, 248, 0.3); border-radius: 12px; text-align: center;">
+    <h4 style="color: #38bdf8; margin: 0 0 10px 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
+        <i class="fas fa-chart-line"></i> Aktualizace trendů
+    </h4>
+    <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 15px;">
+        Kliknutím uložíš aktuální pozice hráčů jako "minulé". Žebříček pak ukáže zelené/červené šipky posunu.
+    </p>
+    <button id="btn-update-trends" type="button" class="btn" 
+            style="background: #38bdf8; color: #0f172a; font-weight: 800; padding: 10px 20px; font-size: 0.85rem;" 
+            onclick="updateRankTrends()">
+        ZMRAZIT AKTUÁLNÍ POŘADÍ
+    </button>
+</div>
     <div style="padding: 20px;"><button type="button" class="btn btn-primary" onclick="saveAdminResults()">ULOŽIT VÝSLEDKY</button></div>
 </div>
 
@@ -1994,6 +2006,82 @@ function getTeamsForStage(id, fallbackTeams) {
     }
     return state.history[id] || [];
 }
+
+
+async function updateRankTrends() {
+    const heslo = prompt("Zadej administrátorské heslo pro trendy:");
+    if (heslo !== "TVOJE_HESLO") return alert("Přístup zamítnut!");
+
+    const btn = document.getElementById('btn-update-trends');
+    const originalText = btn.innerHTML;
+    
+    // Loading stav
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Počítám ranky...';
+
+    try {
+        // 1. Načteme všechna data
+        const { data: tipy, error: err1 } = await supabaseClient.from('tipy').select('*');
+        const { data: real, error: err2 } = await supabaseClient.from('admin_vysledky').select('*').eq('id', 1).single();
+
+        if (err1 || err2) throw new Error("Nepodařilo se spojit s databází.");
+
+        // 2. Logika výpočtu bodů (musí být stejná jako v žebříčku)
+        const r = real.playoff ? { ...real.playoff, groups: real.groups } : real;
+        
+        const rankedPlayers = tipy.map(p => {
+            let tip = p.tip_data;
+            if (typeof tip === 'string') tip = JSON.parse(tip);
+            if (!tip) tip = {};
+
+            let pts = 0;
+            // Skupiny (4 body za přesné umístění)
+            if (r.groups && tip.groups) {
+                r.groups.forEach((g, i) => {
+                    const tipG = tip.groups[i] || [];
+                    const aT = g.teams || g;
+                    if (Array.isArray(aT)) {
+                        aT.forEach((t, pos) => { if (t && tipG[pos] && String(t).trim() === String(tipG[pos]).trim()) pts += 4; });
+                    }
+                });
+            }
+            // Playoff (body za účast týmu v daném kole)
+            const ck = (sid, val) => {
+                const rt = r[sid] || [];
+                const tt = tip[sid] || [];
+                if (Array.isArray(rt)) rt.forEach(t => { if (t && Array.isArray(tt) && tt.some(x => String(x).trim() === String(t).trim())) pts += val; });
+            };
+            ck('s32', 2); ck('s16', 3); ck('s8', 4); ck('s4', 5);
+            if (r.winner && tip.winner && String(r.winner).trim() === String(tip.winner).trim()) pts += 12;
+            if (r.bronze && tip.bronze && String(r.bronze).trim() === String(tip.bronze).trim()) pts += 8;
+
+            return { id: p.id, points: pts };
+        });
+
+        // 3. Seřazení hráčů podle bodů (vytvoření pořadí)
+        rankedPlayers.sort((a, b) => b.points - a.points);
+
+        // 4. Hromadný update do Supabase (previous_rank)
+        console.log("Zapisuji nové trendy do DB...");
+        for (let i = 0; i < rankedPlayers.length; i++) {
+            const currentRank = i + 1;
+            await supabaseClient
+                .from('tipy')
+                .update({ previous_rank: currentRank })
+                .eq('id', rankedPlayers[i].id);
+        }
+
+        alert("Hotovo! Pořadí bylo uloženo jako výchozí bod pro šipky.");
+        if (typeof loadAll === "function") await loadAll(); // Obnovit žebříček
+
+    } catch (err) {
+        console.error(err);
+        alert("Chyba: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}    
 
 
 // Tuto funkci zavoláš v adminu ve chvíli, kdy klikneš na "Vyhodnotit"
