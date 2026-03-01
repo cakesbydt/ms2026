@@ -454,14 +454,20 @@
     .winner-icon { animation: winner-glow 2s infinite; font-size: 1.4rem; }
 
         .bank-container {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* Fotbalová modrá */
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); /* Tvá fotbalová modrá */
     color: white;
-    padding: 15px 25px;
+    padding: 20px;
     border-radius: 12px;
-    display: inline-block;
+    
+    /* KLÍČOVÉ ZMĚNY PRO ZAROVNÁNÍ: */
+    display: block;               /* Změna z inline-block na block */
+    max-width: 400px;             /* Stejná šířka jako odpočet */
+    margin: 0 auto 25px auto;    /* Středění a mezera pod boxem */
+    box-sizing: border-box;       /* Padding se počítá do šířky */
+    
     text-align: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    border: 2px solid #ffd700; /* Zlatý rámeček pro pocit výhry */
+    border: 2px solid #ffd700;    /* Zlatý rámeček */
 }
 
 .bank-label {
@@ -469,13 +475,8 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     opacity: 0.9;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     font-weight: 600;
-}
-
-.bank-label i {
-    color: #ffd700; /* Zlatá trofej */
-    margin-right: 5px;
 }
 
 .bank-amount {
@@ -483,6 +484,18 @@
     font-weight: 900;
     letter-spacing: 1px;
     text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+}
+
+/* Styl pro rozpis výher pod hlavní částkou */
+.bank-prizes {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
         .countdown-wrapper {
