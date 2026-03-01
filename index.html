@@ -1013,8 +1013,19 @@ function renderLeaderboard(data, real) {
             container.innerHTML = statsHtml;
         }
     }
-} // <--- TADY JE KONEČNĚ TA SPRÁVNÁ ZÁVORKA
+}
    async function togglePayment(rowId, currentStatus) {
+    // --- 🔒 OCHRANA ADMIN HESLEM 🔒 ---
+    // Zastavíme každého, kdo klikne, a vynutíme heslo
+    const heslo = prompt("Tato akce je pouze pro admina. Zadej heslo:");
+    
+    // TADY SI ZMĚŇ HESLO NA NĚJAKÉ SVOJE
+    if (heslo !== "Matysek.2019") {
+        alert("❌ Nesprávné heslo! Úprava platby zamítnuta.");
+        return; // Okamžitě ukončí funkci, zbytek kódu se vůbec nespustí
+    }
+    // ----------------------------------
+
     console.log("1. Kliknuto! Spouštím úpravu pro ID:", rowId, "Současný stav:", currentStatus);
     const novyStatus = !currentStatus; 
     
