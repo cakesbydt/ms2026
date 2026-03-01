@@ -1493,11 +1493,12 @@ function confirmThirds() {
 // Opravené:
 genStage('Šestnáctifinále', s32Teams, 16, 's32', 'phase-thirds', 'dot-s2');
 }
- // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně číslování a barevného stepperu)
+ // 3. KOMPLETNĚ PŘEPSANÁ genStage (včetně fixu pro mobilní scrollování)
 function genStage(title, teams, count, id, prevPhase, prevDot) {
     const cont = document.getElementById('playoff-container');
-    
-    // --- MAPOVÁNÍ STEPPERU ---
+    if (!cont) return;
+
+    // --- MAPOVÁNÍ STEPPERU (Aktualizace barev nahoře) ---
     const dotMap = {
         's32': 'dot-s32',
         's16': 'dot-s16',
@@ -1507,17 +1508,15 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         's2':  'dot-fin'
     };
     
-    // Pokud ID existuje v mapě, aktualizujeme barvy v záhlaví (žlutá pro aktivní)
-    if (dotMap[id]) {
+    if (dotMap[id] && typeof updateStepper === "function") {
         updateStepper(dotMap[id]);
     }
-    // -------------------------
 
-    // Uložíme nebo načteme týmy z historie
+    // Načtení týmů z historie nebo stavu
     const currentTeams = getTeamsForStage(id, teams);
     const prevWins = state.playoff[id] || [];
 
-    // Vytvoříme unikátní DIV pro toto kolo, pokud ještě neexistuje
+    // Vytvoření nebo získání DIVu pro danou fázi
     let stageDiv = document.getElementById(`sec-${id}`);
     if (!stageDiv) {
         stageDiv = document.createElement('div');
@@ -1526,10 +1525,13 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         cont.appendChild(stageDiv);
     }
 
+    // Sestavení HTML šablony
     let h = `
         <div class="section-header">
-            <span style="font-size: 1.2rem;">${title}</span>
-            <button class="btn btn-back" onclick="goBack('sec-${id}', '${prevPhase}', '${prevDot}')"><i class="fas fa-arrow-left"></i> ZPĚT</button>
+            <span style="font-size: 1.2rem; font-weight: 800;">${title}</span>
+            <button class="btn btn-back" onclick="goBack('sec-${id}', '${prevPhase}', '${prevDot}')">
+                <i class="fas fa-arrow-left"></i> ZPĚT
+            </button>
         </div>
         <div class="section-content">
             <div class="playoff-form-grid">`;
@@ -1538,20 +1540,17 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
         let t1 = currentTeams[i*2] || '??';
         let t2 = currentTeams[i*2+1] || '??';
         
-        // --- LOGIKA BARVENÍ VÍTĚZŮ ---
         let sel1 = '';
         let sel2 = '';
 
+        // Logika označení vybraných vítězů
         if (id === 's2') {
-            // Kontrola pro Finále (Vítěz turnaje)
             if (state.playoff.winner === t1 && t1 !== '??') sel1 = 'selected';
             if (state.playoff.winner === t2 && t2 !== '??') sel2 = 'selected';
         } else if (id === 's3') {
-            // Kontrola pro zápas O 3. místo (Bronz)
             if (state.playoff.bronze === t1 && t1 !== '??') sel1 = 'selected';
             if (state.playoff.bronze === t2 && t2 !== '??') sel2 = 'selected';
         } else {
-            // Standardní barvení pro kola s32, s16, s8, s4
             sel1 = prevWins.includes(t1) ? 'selected' : '';
             sel2 = prevWins.includes(t2) ? 'selected' : '';
         }
@@ -1567,13 +1566,34 @@ function genStage(title, teams, count, id, prevPhase, prevDot) {
             </div>`;
     }
     
-    stageDiv.innerHTML = h + `</div><div style="padding: 0 25px 25px 25px;"><button class="btn btn-primary" style="font-size: 1.1rem; padding: 16px;" onclick="cfS('${id}', ${count})">Potvrdit kolo <i class="fas fa-check" style="margin-left: 8px;"></i></button></div></div>`;
+    // Uzavření gridu a přidání potvrzovacího tlačítka
+    stageDiv.innerHTML = h + `
+            </div>
+            <div style="padding: 0 25px 25px 25px;">
+                <button class="btn btn-primary" style="font-size: 1.1rem; padding: 16px; width: 100%;" onclick="cfS('${id}', ${count})">
+                    Potvrdit kolo <i class="fas fa-check" style="margin-left: 8px;"></i>
+                </button>
+            </div>
+        </div>`;
     
-    // Zobrazení správného kola a skrytí ostatních
-    document.querySelectorAll('#playoff-container .section-box, main > .section-box').forEach(div => div.classList.add('hidden'));
-    stageDiv.classList.remove('hidden');
-}
+    // --- PŘEPNUTÍ VIDITELNOSTI ---
+    // Nejdřív skryjeme úplně všechno (všechny sekce i hlavní boxy)
+    document.querySelectorAll('#playoff-container .section-box, main > .section-box, .section-box').forEach(div => {
+        div.classList.add('hidden');
+    });
 
+    // Pak ukážeme jen to, co chceme
+    stageDiv.classList.remove('hidden');
+
+    // --- 🚀 FIX PRO MOBILY: CHYTRÉ SCROLLOVÁNÍ 🚀 ---
+    // Místo scrollTo(0,0) zamíříme přímo na začátek nové tabulky
+    setTimeout(() => {
+        stageDiv.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
+    }, 50);
+}
 
     function pk(sid, mi, ti) {
         const m = document.getElementById(`m-${sid}-${mi}`);
@@ -1601,22 +1621,18 @@ function cfS(sid, count) {
         if(nextDiv) nextDiv.remove();
     }
 
-    // --- LOGIKA POSTUPU MEZI KOLY (Dle formátu 2026) ---
+    // --- LOGIKA POSTUPU MEZI KOLY ---
+    // Poznámka: genStage v sobě už má nový scroll-fix, takže tady ho nemusíme volat extra
     if(sid === 's32') {
-        // Po Šestnáctifinále (16 zápasů) následuje Osmifinále (8 zápasů)
-        // wins obsahuje 16 vítězů v pořadí, které v s16 vytvoří zápasy 89 až 96
         genStage('Osmifinále (1/8)', wins, 8, 's16', 'sec-s32', 'dot-s32');
     } 
     else if(sid === 's16') {
-        // Po Osmifinále (8 zápasů) následuje Čtvrtfinále (4 zápasy)
         genStage('Čtvrtfinále', wins, 4, 's8', 'sec-s16', 'dot-s16');
     } 
     else if(sid === 's8') {
-        // Po Čtvrtfinále následuje Semifinále (2 zápasy)
         genStage('Semifinále', wins, 2, 's4', 'sec-s8', 'dot-s8');
     } 
     else if(sid === 's4') {
-        // Semifinále určuje finalisty (wins) a poražené pro boj o 3. místo (loss)
         // Aktivujeme stepper pro finálovou část
         const dot4 = document.getElementById('dot-s4');
         if(dot4) dot4.classList.add('active'); 
@@ -1625,27 +1641,33 @@ function cfS(sid, count) {
         genStage('O 3. Místo', loss, 1, 's3', 'sec-s4', 'dot-s4'); 
     } 
     else if(sid === 's3') {
-        // Po 3. místě se jde na hlavní Finále
         const finalists = state.playoff['s4']; // Vítězové ze semifinále
         genStage('Finále', finalists, 1, 's2', 'sec-s3', 'dot-s3');
     } 
     else if(sid === 's2') {
-        // --- KONEC PAVOUKA ---
+        // --- 🏆 KONEC PAVOUKA - FINÁLNÍ SHRNUTÍ 🏆 ---
         state.playoff.winner = wins[0]; 
         const bronzeEl = document.querySelector('#sec-s3 .selected');
         state.playoff.bronze = bronzeEl ? bronzeEl.innerText : "Nezvoleno"; 
 
+        // Skryjeme pavouka
         document.querySelectorAll('.section-box').forEach(d => d.classList.add('hidden'));
         
+        // Ukážeme finální potvrzovací box
         const finalBox = document.getElementById('final-box');
         if(finalBox) {
             finalBox.classList.remove('hidden');
             const winDisp = document.getElementById('winner-display');
             if(winDisp) winDisp.innerText = "TVŮJ VÍTĚZ: " + wins[0];
+
+            // --- 🚀 FIX PRO MOBILY: POSLEDNÍ SCROLL ---
+            setTimeout(() => {
+                finalBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
     }
 
-    window.scrollTo(0,0);
+    // TADY BYLO window.scrollTo(0,0) - SMAZÁNO!
 }
     function checkAdmin() {
     const now = new Date().getTime();
