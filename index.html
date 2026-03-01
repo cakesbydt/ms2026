@@ -811,32 +811,47 @@ function showPaymentModal(playerName) {
     const modal = document.getElementById('payment-modal-overlay');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. MINIMALIZACE DAT: Čím méně znaků, tím větší a čitelnější body v QR kódu
-    // Air Bank miluje krátké řetězce.
+    // 1. ZJEDNODUŠENÍ DAT: Čím méně znaků, tím větší a čitelnější body v QR kódu.
+    // Krátká zpráva (např. WC26Ptacek) zajistí, že kód bude mít menší hustotu a banka ho snadněji přečte.
+    const cleanName = playerName.normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .substring(0, 8); // Jen 8 znaků jména
+
     const iban = "CZ1203000000000295511827"; 
     
-    // Zprávu zkrátíme jen na to nejnutnější, aby kód nebyl "hustý"
-    const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:TIP2026`;
+    // Sestavení zprávy, která je krátká a přitom identifikovatelná
+    const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC26${cleanName}`;
 
-    // 2. GENERÁTOR S MAXIMÁLNÍ ČITELNOSTÍ
-    // ecc=L (největší body), margin=4 (bílý okraj), size=400 (vysoké rozlišení)
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(spaydData)}&ecc=L&margin=5`;
+    // 2. GENERÁTOR S MAXIMÁLNÍ VELIKOSTÍ A ČITELNOSTÍ
+    // size=500 (velké rozlišení), ecc=L (největší body), margin=4 (bílý okraj)
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(spaydData)}&ecc=L&margin=5`;
 
     if (qrContainer) {
+        // Vymažeme případné styly z předchozích pokusů a nastavíme čistý vertikální layout
+        qrContainer.style.width = "100%";
+        qrContainer.style.display = "flex";
+        qrContainer.style.flexDirection = "column";
+        qrContainer.style.alignItems = "center";
+
         qrContainer.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                 
                 <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); margin-bottom: 25px; display: inline-block;">
-                    <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px; image-rendering: pixelated;">
-                    <div style="color: black; font-family: sans-serif; font-weight: 900; font-size: 14px; margin-top: 15px; text-align: center; letter-spacing: 2px;">QR PLATBA</div>
+                    <img src="${qrUrl}" alt="QR Platba" 
+                         style="display: block; width: 280px; height: 280px; 
+                                image-rendering: pixelated; /* Pro Chrome/Edge */
+                                image-rendering: -moz-crisp-edges; /* Pro Firefox */
+                                -ms-interpolation-mode: nearest-neighbor; /* Pro staré IE */">
+                    <div style="color: black; font-family: sans-serif; font-weight: 900; font-size: 14px; margin-top: 20px; text-align: center; letter-spacing: 3px;">QR PLATBA</div>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; width: 100%; max-width: 320px; border: 1px solid rgba(255,255,255,0.1); text-align: left;">
-                    <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Platební instrukce</div>
-                    <div style="font-size: 1rem; margin-bottom: 8px;">Částka: <b style="color: #22c55e;">200 Kč</b></div>
-                    <div style="font-size: 0.9rem; margin-bottom: 8px;">Účet: <b>295511827 / 0300</b></div>
-                    <div style="font-size: 0.9rem; opacity: 0.9;">Hráč: <b>${playerName}</b></div>
-                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px; font-style: italic;">Pozn: Do banky propíšeme kód TIP2026 pro spárování.</div>
+                    <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Platební údaje</div>
+                    <div style="margin-bottom: 8px; font-size: 1rem;">Částka: <b style="color: #22c55e;">200 Kč</b></div>
+                    <div style="margin-bottom: 8px; font-size: 0.9rem;">Číslo účtu: <b>295511827 / 0300</b></div>
+                    <div style="font-size: 0.9rem;">Hráč: <b>${playerName}</b></div>
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px; font-style: italic;">Pozn: Do banky propíšeme zkrácenou zprávu pro spárování.</div>
                 </div>
             </div>
         `;
