@@ -807,44 +807,57 @@
     
 <script>
 
-    function showPaymentModal(playerName) {
+function showPaymentModal(playerName) {
     const modal = document.getElementById('payment-modal-overlay');
     const qrContainer = document.getElementById('qr-code-container');
     
-    // 1. Očista jména (bez diakritiky a mezer pro banku)
+    // 1. Očista jména
     const cleanName = playerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "").substring(0, 15);
     
-    // 2. Správný IBAN CZ12 (výpočet pro 295511827 / 0300)
+    // 2. Správný IBAN CZ12
     const iban = "CZ1203000000000295511827"; 
     const spaydData = `SPD*1.0*ACC:${iban}*AM:200.00*CUR:CZK*MSG:WC26${cleanName}`;
     
-    // 3. QR kód s bílým okrajem (margin=4) pro čtečky
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(spaydData)}&margin=4&ecc=M`;
+    // 3. Generování s větším okrajem (margin=5) a nižší korekcí chyb (ecc=L) pro větší body
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(spaydData)}&margin=5&ecc=L`;
 
-    // 4. Vykreslení - Čistý vertikální layout
     if (qrContainer) {
+        qrContainer.style.width = "100%";
+        qrContainer.style.display = "flex";
+        qrContainer.style.flexDirection = "column";
+        qrContainer.style.alignItems = "center";
+
         qrContainer.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%;">
+            <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                 
-                <div style="background: white; padding: 15px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: inline-block;">
-                    <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px;">
-                    <p style="color: #000; font-family: sans-serif; font-size: 10px; font-weight: 900; margin: 10px 0 0 0; text-align: center; letter-spacing: 2px; opacity: 0.4;">QR PLATBA</p>
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); display: inline-block; margin-bottom: 25px;">
+                    <img src="${qrUrl}" alt="QR Platba" style="display: block; width: 220px; height: 220px; margin: 0 auto;">
+                    <p style="color: #000; font-family: sans-serif; font-size: 11px; font-weight: 900; margin: 15px 0 0 0; text-align: center; letter-spacing: 3px; opacity: 0.3;">QR PLATBA</p>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; width: 100%; max-width: 300px; text-align: left; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;">
-                    <div style="color: #fbbf24; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Platební údaje</div>
+                <div style="background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; width: 100%; max-width: 320px; text-align: left; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box;">
+                    <div style="color: #fbbf24; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">Platební údaje</div>
                     
-                    <div style="margin-bottom: 5px; font-size: 0.95rem;">Částka: <b style="color: #22c55e;">200 Kč</b></div>
-                    <div style="margin-bottom: 5px; font-size: 0.85rem;">Účet: <b style="font-family: monospace;">295511827 / 0300</b></div>
-                    <div style="font-size: 0.85rem;">Zpráva: <b>WC26 ${playerName}</b></div>
+                    <div style="margin-bottom: 6px; display: flex; justify-content: space-between; font-size: 1rem;">
+                        <span style="opacity: 0.7;">Částka:</span>
+                        <b style="color: #22c55e;">200 Kč</b>
+                    </div>
+                    
+                    <div style="margin-bottom: 6px; display: flex; flex-direction: column;">
+                        <span style="opacity: 0.7; font-size: 0.8rem;">Číslo účtu:</span>
+                        <b style="font-family: monospace; letter-spacing: 0.5px;">295511827 / 0300</b>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="opacity: 0.7; font-size: 0.8rem;">Zpráva:</span>
+                        <b style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">WC26 ${playerName}</b>
+                    </div>
                 </div>
             </div>
         `;
     }
 
     if (modal) {
-        modal.style.display = 'flex';
-        // Odstraníme "display: none !important" z tvého HTML stylu, aby to flex přebil
         modal.style.setProperty('display', 'flex', 'important');
     }
 }
