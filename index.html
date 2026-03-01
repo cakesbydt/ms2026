@@ -800,20 +800,34 @@ function showPaymentModal(playerName) {
     const payMessage = document.getElementById('pay-message');
     const qrContainer = document.getElementById('qr-code-container');
     
-    payMessage.innerText = playerName;
+    // 1. Nastavíme jméno v textu pod QR kódem
+    if (payMessage) payMessage.innerText = playerName;
     
-    // Generování QR kódu přes Google Charts API nebo QRServer
-    // Formát pro českou QR platbu (SPAYD): 
-    const acc = "295511827"; //č.ú.
-    const bank = "0300"; //č.ú.
-    const am = "200.00"; //částka
-    const msg = encodeURIComponent(`World Cup 2026 - ${playerName}`);
+    // 2. TVOJE REÁLNÉ ÚDAJE (Pevně definované uvnitř funkce)
+    const acc = "295511827"; 
+    const bank = "0300"; 
+    const am = "200.00"; 
+    // Zpráva pro příjemce (bez diakritiky je to pro banky jistota)
+    const cleanName = playerName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const msg = `WC2026 - ${cleanName}`;
     
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=SPD*1.0*ACC:${acc}${bank}*AM:${am}*CUR:CZK*MSG:${msg}`;
+    // 3. SESTAVENÍ SPAYD ŘETĚZCE (Formát pro české banky)
+    // Pozor: ACC musí být v kuse (číslo + banka)
+    const spaydData = `SPD*1.0*ACC:${acc}${bank}*AM:${am}*CUR:CZK*MSG:${msg}`;
     
-    qrContainer.innerHTML = `<img src="${qrUrl}" alt="QR Platba" style="width:100%">`;
+    // 4. KONTROLA V KONZOLI (Stiskni F12 a uvidíš, co se generuje)
+    console.log("🛠️ Generuji QR platbu pro:", playerName);
+    console.log("🔗 SPAYD řetězec:", spaydData);
+
+    // 5. GENEROVÁNÍ OBRÁZKU
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(spaydData)}`;
     
-    modal.style.display = 'flex';
+    if (qrContainer) {
+        qrContainer.innerHTML = `<img src="${qrUrl}" alt="QR Platba" style="width:100%; max-width:250px; border-radius: 10px; border: 5px solid white;">`;
+    }
+    
+    // 6. ZOBRAZENÍ MODALU
+    if (modal) modal.style.display = 'flex';
 }
 
 function closePaymentModal() {
